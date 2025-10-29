@@ -33,35 +33,43 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
           onMuteToggle();
         }}
         style={{
-          background: "none",
+          background: "rgba(255, 255, 255, 0.2)",
           border: "none",
-          padding: 0,
+          padding: 8,
           cursor: "pointer",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: "44px",
+          minHeight: "44px",
+          WebkitTapHighlightColor: "transparent",
+          touchAction: "manipulation",
         }}
       >
         {muted || volume === 0 ? (
-          <VolumeOff size={20} color="red" />
+          <VolumeOff size={20} color="#fff" />
         ) : (
-          <Volume size={20} color="green" />
+          <Volume size={20} color="#fff" />
         )}
       </button>
-      <input
-        type="range"
-        min={0}
-        max={1}
-        step={0.01}
-        value={muted ? 0 : volume}
-        onChange={(e) => {
-          e.stopPropagation();
-          onVolumeChange(Number(e.target.value));
-        }}
-        style={{
-          width: isMobile ? 60 : 80,
-          height: isMobile ? 80 : "auto",
-          transform: isMobile ? "rotate(-90deg)" : "none",
-          transformOrigin: "center",
-        }}
-      />
+      {!isMobile && (
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={muted ? 0 : volume}
+          onChange={(e) => {
+            e.stopPropagation();
+            onVolumeChange(Number(e.target.value));
+          }}
+          style={{
+            width: 80,
+            height: "auto",
+          }}
+        />
+      )}
     </div>
   );
 };

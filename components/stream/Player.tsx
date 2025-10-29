@@ -423,36 +423,34 @@ PlayerProps) {
               }}
               style={{
                 pointerEvents: "auto",
-                background: "rgba(59, 130, 246, 0.9)", // Regular blue
+                background: "rgba(59, 130, 246, 0.8)", // Semi-transparent blue like in image
                 border: "none",
                 color: "#fff",
-                fontSize: 32,
+                fontSize: 40,
                 borderRadius: "50%",
-                width: 80,
-                height: 80,
+                width: 100,
+                height: 100,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                boxShadow:
-                  "0 4px 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.3)",
+                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
                 transition: "all 0.3s ease",
-                WebkitTapHighlightColor: "transparent", // Fix iPhone touch
-                touchAction: "manipulation", // Fix iPhone touch
+                WebkitTapHighlightColor: "transparent",
+                touchAction: "manipulation",
+                backdropFilter: "blur(10px)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.1)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 25px rgba(59, 130, 246, 1), 0 0 40px rgba(59, 130, 246, 0.5)";
+                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.background = "rgba(59, 130, 246, 0.9)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.3)";
+                e.currentTarget.style.background = "rgba(59, 130, 246, 0.8)";
               }}
               aria-label="Play"
             >
-              <Play size={32} />
+              <Play size={40} />
             </button>
           </div>
         )}
@@ -503,8 +501,8 @@ PlayerProps) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: "rgba(59, 130, 246, 0.2)", // Glassy blue background
-              padding: "8px 16px",
+              background: "rgba(59, 130, 246, 0.8)", // Semi-transparent blue like in image
+              padding: "12px 16px",
               borderBottomLeftRadius: 8,
               borderBottomRightRadius: 8,
               display: "flex",
@@ -513,6 +511,7 @@ PlayerProps) {
               gap: 12,
               zIndex: 50,
               WebkitTapHighlightColor: "transparent",
+              backdropFilter: "blur(10px)",
             }}
           >
             {/* Play/Pause Button */}
@@ -523,30 +522,36 @@ PlayerProps) {
               }}
               title={playing ? "Pause" : "Play"}
               style={{
-                background: "rgba(59, 130, 246, 0.8)", // Glassy blue background
+                background: "rgba(59, 130, 246, 0.9)",
                 border: "none",
                 color: "#fff",
-                fontSize: 20,
+                fontSize: 18,
                 borderRadius: "50%",
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(59, 130, 246, 0.3)",
-                WebkitTapHighlightColor: "transparent", // Fix iPhone touch
-                touchAction: "manipulation", // Fix iPhone touch
-                minHeight: "44px", // iOS minimum touch target
-                minWidth: "44px", // iOS minimum touch target
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                WebkitTapHighlightColor: "transparent",
+                touchAction: "manipulation",
+                minHeight: "44px",
+                minWidth: "44px",
               }}
             >
-              {playing ? <Pause /> : <Play />}
+              {playing ? <Pause size={18} /> : <Play size={18} />}
             </button>
 
-            {/* Progress Bar */}
+            {/* Progress Bar Container */}
             <div
-              style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}
+              style={{ 
+                flex: 1, 
+                display: "flex", 
+                flexDirection: "column", 
+                alignItems: "center", 
+                gap: 4 
+              }}
             >
               <ProgressBar
                 currentTime={currentTime}
@@ -554,12 +559,17 @@ PlayerProps) {
                 onSeek={handleSeek}
                 buffered={buffered}
               />
+              {/* Time Display below progress bar */}
+              <span style={{ 
+                color: "#fff", 
+                fontSize: 12, 
+                fontWeight: "500",
+                alignSelf: "flex-start",
+                marginLeft: 4
+              }}>
+                {formatTime(currentTime)}
+              </span>
             </div>
-
-            {/* Time Display */}
-            <span style={{ color: "#fff", fontSize: 14, minWidth: 50 }}>
-              -{formatTime(duration - currentTime)}
-            </span>
 
             {/* Volume Control */}
             <VolumeControl
