@@ -423,34 +423,34 @@ PlayerProps) {
               }}
               style={{
                 pointerEvents: "auto",
-                background: "rgba(59, 130, 246, 0.8)", // Semi-transparent blue like in image
+                background: "rgba(59, 130, 246, 0.6)", // More transparent blue
                 border: "none",
                 color: "#fff",
-                fontSize: 40,
+                fontSize: 24,
                 borderRadius: "50%",
-                width: 100,
-                height: 100,
+                width: 60,
+                height: 60,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
+                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
                 transition: "all 0.3s ease",
                 WebkitTapHighlightColor: "transparent",
                 touchAction: "manipulation",
-                backdropFilter: "blur(10px)",
+                backdropFilter: "blur(5px)",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.background = "rgba(59, 130, 246, 0.9)";
+                e.currentTarget.style.background = "rgba(59, 130, 246, 0.7)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.background = "rgba(59, 130, 246, 0.8)";
+                e.currentTarget.style.background = "rgba(59, 130, 246, 0.6)";
               }}
               aria-label="Play"
             >
-              <Play size={40} />
+              <Play size={24} />
             </button>
           </div>
         )}
@@ -501,7 +501,7 @@ PlayerProps) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: "rgba(59, 130, 246, 0.8)", // Semi-transparent blue like in image
+              background: "rgba(59, 130, 246, 0.4)", // More transparent blue
               padding: "12px 16px",
               borderBottomLeftRadius: 8,
               borderBottomRightRadius: 8,
@@ -511,7 +511,7 @@ PlayerProps) {
               gap: 12,
               zIndex: 50,
               WebkitTapHighlightColor: "transparent",
-              backdropFilter: "blur(10px)",
+              backdropFilter: "blur(15px)",
             }}
           >
             {/* Play/Pause Button */}

@@ -17,27 +17,19 @@ const FullscreenButton: React.FC<FullscreenButtonProps> = ({
     }}
     title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
     style={{
-      background: "rgba(255, 255, 255, 0.2)",
+      background: "rgba(135, 206, 235, 0.6)",
       border: "none",
       cursor: "pointer",
-      fontSize: 22,
+      fontSize: 20,
       color: "#fff",
-      padding: 8,
-      borderRadius: "50%",
+      padding: 4,
+      borderRadius: 4,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      minWidth: "44px",
-      minHeight: "44px",
-      WebkitTapHighlightColor: "transparent",
-      touchAction: "manipulation",
     }}
   >
-    {isFullscreen ? (
-      <Minimize size={20} color="#fff" />
-    ) : (
-      <Maximize size={20} color="#fff" />
-    )}
+    {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
   </button>
 );
 

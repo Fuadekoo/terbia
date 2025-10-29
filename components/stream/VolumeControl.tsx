@@ -17,6 +17,16 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
   const isMobile =
     typeof window !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
 
+  const handleVolumeIncrease = () => {
+    const newVolume = Math.min(1, volume + 0.1);
+    onVolumeChange(newVolume);
+  };
+
+  const handleVolumeDecrease = () => {
+    const newVolume = Math.max(0, volume - 0.1);
+    onVolumeChange(newVolume);
+  };
+
   return (
     <div
       className="volume-control"
@@ -24,9 +34,35 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
         display: "flex",
         alignItems: "center",
         gap: 8,
-        flexDirection: isMobile ? "column" : "row",
+        flexDirection: "row", // Always horizontal
       }}
     >
+      {/* Volume Decrease Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleVolumeDecrease();
+        }}
+        style={{
+          background: "rgba(255, 255, 255, 0.2)",
+          border: "none",
+          padding: 6,
+          cursor: "pointer",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: "36px",
+          minHeight: "36px",
+          WebkitTapHighlightColor: "transparent",
+          touchAction: "manipulation",
+        }}
+        title="Decrease Volume"
+      >
+        <span style={{ color: "#fff", fontSize: "16px", fontWeight: "bold" }}>-</span>
+      </button>
+
+      {/* Mute/Unmute Button */}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -46,6 +82,7 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
           WebkitTapHighlightColor: "transparent",
           touchAction: "manipulation",
         }}
+        title={muted ? "Unmute" : "Mute"}
       >
         {muted || volume === 0 ? (
           <VolumeOff size={20} color="#fff" />
@@ -53,6 +90,33 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
           <Volume size={20} color="#fff" />
         )}
       </button>
+
+      {/* Volume Increase Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleVolumeIncrease();
+        }}
+        style={{
+          background: "rgba(255, 255, 255, 0.2)",
+          border: "none",
+          padding: 6,
+          cursor: "pointer",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: "36px",
+          minHeight: "36px",
+          WebkitTapHighlightColor: "transparent",
+          touchAction: "manipulation",
+        }}
+        title="Increase Volume"
+      >
+        <span style={{ color: "#fff", fontSize: "16px", fontWeight: "bold" }}>+</span>
+      </button>
+
+      {/* Volume Slider (Desktop only) */}
       {!isMobile && (
         <input
           type="range"
@@ -65,8 +129,13 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
             onVolumeChange(Number(e.target.value));
           }}
           style={{
-            width: 80,
-            height: "auto",
+            width: 60,
+            height: 4,
+            background: "rgba(255, 255, 255, 0.3)",
+            borderRadius: 2,
+            outline: "none",
+            WebkitAppearance: "none",
+            appearance: "none",
           }}
         />
       )}
