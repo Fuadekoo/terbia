@@ -46,10 +46,11 @@ PlayerProps) {
   // Compute the video source based on type
   let videoSrc = src;
   if (type === "local") {
-    videoSrc = `/api/stream?file=${encodeURIComponent(src)}`;
+    // For local videos, use the new videos API endpoint
+    videoSrc = `/api/videos/${encodeURIComponent(src)}`;
   } else if (type === "url" && !src.startsWith("blob:")) {
     videoSrc = `/api/remote-stream?url=${encodeURIComponent(src)}`;
-  }else if (type === "direct") {
+  } else if (type === "direct") {
     // For direct type, use the src as-is (for our custom video API endpoints)
     videoSrc = src;
   }
