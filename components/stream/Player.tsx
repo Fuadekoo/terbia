@@ -28,6 +28,7 @@ function Player({
 PlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -190,46 +191,79 @@ PlayerProps) {
   }, [volume, muted]);
 
   // Fullscreen handlers
-  const handleFullscreen = () => {
+  const handleFullscreen = async () => {
     // iOS devices: use video element fullscreen for better experience
     if (isIOS && videoRef.current) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const video = videoRef.current as any;
-      if (video.webkitEnterFullscreen) {
-        video.webkitEnterFullscreen();
-      } else if (video.webkitRequestFullscreen) {
-        video.webkitRequestFullscreen();
+      try {
+        if (video.webkitEnterFullscreen) {
+          video.webkitEnterFullscreen();
+          return;
+        } else if (video.webkitRequestFullscreen) {
+          video.webkitRequestFullscreen();
+          return;
+        }
+      } catch (error) {
+        console.error("iOS fullscreen error:", error);
       }
+    }
+
+    // Non-iOS devices: use video container or video element fullscreen
+    // Prefer video container over outer container for better fullscreen experience
+    const targetElement = videoContainerRef.current || containerRef.current || videoRef.current;
+    if (!targetElement) {
+      console.warn("No element available for fullscreen");
       return;
     }
 
-    // Non-iOS devices: use container fullscreen
-    if (!containerRef.current) return;
-    if (!isFullscreen) {
-      // Try different fullscreen methods for cross-browser support
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const element = containerRef.current as any;
-      if (element.requestFullscreen) {
-        element.requestFullscreen();
-      } else if (element.webkitRequestFullscreen) {
-        element.webkitRequestFullscreen();
-      } else if (element.mozRequestFullScreen) {
-        element.mozRequestFullScreen();
-      } else if (element.msRequestFullscreen) {
-        element.msRequestFullscreen();
+    try {
+      if (!isFullscreen) {
+        // Enter fullscreen
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const element = targetElement as any;
+        
+        if (element.requestFullscreen) {
+          await element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) {
+          await element.webkitRequestFullscreen();
+        } else if (element.mozRequestFullScreen) {
+          await element.mozRequestFullScreen();
+        } else if (element.msRequestFullscreen) {
+          await element.msRequestFullscreen();
+        } else {
+          console.warn("Fullscreen API not supported");
+        }
+      } else {
+        // Exit fullscreen
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const doc = document as any;
+        
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (doc.webkitExitFullscreen) {
+          await doc.webkitExitFullscreen();
+        } else if (doc.mozCancelFullScreen) {
+          await doc.mozCancelFullScreen();
+        } else if (doc.msExitFullscreen) {
+          await doc.msExitFullscreen();
+        }
       }
-    } else {
-      // Exit fullscreen
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const doc = document as any;
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (doc.webkitExitFullscreen) {
-        doc.webkitExitFullscreen();
-      } else if (doc.mozCancelFullScreen) {
-        doc.mozCancelFullScreen();
-      } else if (doc.msExitFullscreen) {
-        doc.msExitFullscreen();
+    } catch (error) {
+      console.error("Fullscreen error:", error);
+      // Try alternative: request fullscreen on video element
+      if (!isFullscreen && videoRef.current) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const video = videoRef.current as any;
+          if (video.requestFullscreen) {
+            await video.requestFullscreen();
+          } else if (video.webkitRequestFullscreen) {
+            await video.webkitRequestFullscreen();
+          }
+        } catch (videoError) {
+          console.error("Video fullscreen fallback error:", videoError);
+        }
       }
     }
   };
@@ -342,6 +376,7 @@ PlayerProps) {
       }}
     >
       <div
+        ref={videoContainerRef}
         onMouseEnter={() => !isMobile && setShowControls(true)}
         onMouseLeave={() => !isMobile && setShowControls(false)}
         className={cn(
