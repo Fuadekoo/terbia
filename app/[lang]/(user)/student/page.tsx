@@ -106,6 +106,9 @@ export default function Page() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }}>
+      <style jsx>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
         <img src={BRAND_LOGO_URL} alt="Brand" style={{ width: 32, height: 32, borderRadius: 6 }} />
         <h1 style={{ fontSize: 24, margin: 0, textAlign: 'center', color: '#0369a1' }}>{title}</h1>
@@ -168,7 +171,7 @@ export default function Page() {
                 style={{ padding: '10px 14px', background: '#0f62fe', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
                 disabled={navigating}
               >
-                {navigating ? (<><Loader2 size={16} /> Redirecting...</>) : 'Start learning'}
+                {navigating ? (<><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Redirecting...</>) : 'Start learning'}
               </button>
             </div>
           )}
@@ -225,12 +228,14 @@ export default function Page() {
                       <div style={{ color: '#475569', fontSize: 13, marginTop: 8 }}>
                         Kickstart your learning with engaging lessons and hands-on practice.
                       </div>
-                      <div style={{ display: 'flex', gap: 14, marginTop: 12, color: '#334155', fontSize: 12 }}>
-                        {/* add progress bar here that show the coursespackage progress that express the completed chapters in the package from all chapters in the  package */}
+                      <div style={{ marginTop: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <span style={{ fontSize: 12, color: '#334155' }}>{pkg.progressPercentage ?? 0}%</span>
+                        </div>
                         <Progress value={pkg.progressPercentage ?? 0} />
                       </div>
                     <button onClick={() => handleChoose(chooseData.students[0].studentId, pkg.id)} style={{ width: '100%', marginTop: 14, padding: '12px 14px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} disabled={pendingChoice === `${chooseData.students[0].studentId}:${pkg.id}`}>
-                      {pendingChoice === `${chooseData.students[0].studentId}:${pkg.id}` ? (<><Loader2 size={16} /> Continuing...</>) : 'continue Learning'}
+                      {pendingChoice === `${chooseData.students[0].studentId}:${pkg.id}` ? (<><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Continuing...</>) : 'continue Learning'}
                     </button>
                     </div>
                   </div>
@@ -264,7 +269,7 @@ export default function Page() {
                       </div>
                       <div style={{ textAlign: 'center', marginTop: 10, color: '#0c4a6e', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                         {pkg.name}
-                        {pendingChoice === `${showPackagesFor.studentId}:${pkg.id}` && <Loader2 size={16} />}
+                        {pendingChoice === `${showPackagesFor.studentId}:${pkg.id}` && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
                       </div>
                     </button>
                   ))}
