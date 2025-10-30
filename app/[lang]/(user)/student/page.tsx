@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { startStudentFlow, chooseStudentPackage } from '@/actions/student/telegram';
+import { Loader2 } from 'lucide-react';
 import { retrieveRawInitData } from '@telegram-apps/sdk';
 
 type TGInitData = { chat?: { id?: number }; user?: { id?: number } };
@@ -20,6 +21,8 @@ export default function Page() {
   const [startRes, setStartRes] = useState<StartSingle | StartChoose | StartError | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showPackagesFor, setShowPackagesFor] = useState<null | { studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string }> }>(null);
+  const [navigating, setNavigating] = useState(false);
+  const [pendingChoice, setPendingChoice] = useState<string | null>(null);
 
   useEffect(() => {
     // Try to read chat id from Telegram WebApp initDataUnsafe
@@ -71,6 +74,7 @@ export default function Page() {
     if (!chatId) return;
     setLoading(true);
     setError(null);
+    setPendingChoice(`${studentId}:${packageId}`);
     try {
       const r = await chooseStudentPackage(chatId, studentId, packageId);
       if (r.success) {
@@ -82,6 +86,7 @@ export default function Page() {
       setError('Failed to set package');
     } finally {
       setLoading(false);
+      setPendingChoice(null);
     }
   };
 
@@ -158,10 +163,11 @@ export default function Page() {
             <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
               <div style={{ marginBottom: 8 }}>Package: <b>{singleData.packageName}</b></div>
               <button
-                onClick={() => { window.location.href = singleData.url; }}
-                style={{ padding: '10px 14px', background: '#0f62fe', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+                onClick={() => { setNavigating(true); window.location.href = singleData.url; }}
+                style={{ padding: '10px 14px', background: '#0f62fe', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                disabled={navigating}
               >
-                Start learning
+                {navigating ? (<><Loader2 size={16} /> Redirecting...</>) : 'Start learning'}
               </button>
             </div>
           )}
@@ -219,16 +225,12 @@ export default function Page() {
                         Kickstart your learning with engaging lessons and hands-on practice.
                       </div>
                       <div style={{ display: 'flex', gap: 14, marginTop: 12, color: '#334155', fontSize: 12 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span>⏱️</span>
-                          <span>04:00</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span>📚</span>
-                          <span> {chooseData.students[0].packages.length} courses</span>
-                        </div>
+                        {/* add progress bar here that show the coursespackage progress that express the completed chapters in the package from all chapters in the  package */}
+                        
                       </div>
-                      <button onClick={() => handleChoose(chooseData.students[0].studentId, pkg.id)} style={{ width: '100%', marginTop: 14, padding: '12px 14px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 800 }}>continue Learning</button>
+                    <button onClick={() => handleChoose(chooseData.students[0].studentId, pkg.id)} style={{ width: '100%', marginTop: 14, padding: '12px 14px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} disabled={pendingChoice === `${chooseData.students[0].studentId}:${pkg.id}`}>
+                      {pendingChoice === `${chooseData.students[0].studentId}:${pkg.id}` ? (<><Loader2 size={16} /> Continuing...</>) : 'continue Learning'}
+                    </button>
                     </div>
                   </div>
                 ))}
@@ -259,7 +261,10 @@ export default function Page() {
                       <div style={{ width: 120, height: 120, borderRadius: '50%', border: '4px solid #0ea5e9', background: '#e0f2fe', color: '#075985', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 800 }}>
                         {pkg.name.slice(0, 10)}
                       </div>
-                      <div style={{ textAlign: 'center', marginTop: 10, color: '#0c4a6e', fontWeight: 700 }}>{pkg.name}</div>
+                      <div style={{ textAlign: 'center', marginTop: 10, color: '#0c4a6e', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        {pkg.name}
+                        {pendingChoice === `${showPackagesFor.studentId}:${pkg.id}` && <Loader2 size={16} />}
+                      </div>
                     </button>
                   ))}
                 </div>
