@@ -330,3 +330,26 @@ export async function chooseStudentPackage(
     return { success: false, error: "Failed to set package" };
   }
 }
+
+// Validate that a given chatId is authorized to access a specific student (wdt_ID)
+export async function validateStudentAccess(
+  chatId: string,
+  studentId: number
+): Promise<{ authorized: boolean }> {
+  try {
+    if (!chatId || !String(chatId).trim() || !studentId) {
+      return { authorized: false };
+    }
+    const exists = await prisma.wpos_wpdatatable_23.findFirst({
+      where: {
+        chat_id: String(chatId),
+        wdt_ID: Number(studentId),
+        status: { in: ["Active", "Not yet", "On progress"] },
+      },
+      select: { wdt_ID: true },
+    });
+    return { authorized: Boolean(exists) };
+  } catch {
+    return { authorized: false };
+  }
+}

@@ -27,18 +27,21 @@ import { getPackageData } from "@/actions/student/package";
 import MainMenu from "@/components/custom/student/bestMenu";
 import TraditionalQA from "@/components/traditionalQA";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { validateStudentAccess } from "@/actions/student/telegram";
+import { retrieveRawInitData } from "@telegram-apps/sdk";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
-
 function Page() {
   const params = useParams();
   const lang = "en";
   const wdt_ID = Number(params?.wdt_ID ?? 0);
   const courseId = String(params?.courseId ?? "");
   const chapterId = String(params?.chapterId ?? "");
+  const [authorized, setAuthorized] = React.useState<boolean | null>(null);
+  const [chatId, setChatId] = React.useState<string | null>(null);
   const [packageData] = useAction(
     getPackageData,
     [true, (response) => console.log(response)],
@@ -58,6 +61,35 @@ function Page() {
     courseId
   );
   const [error, setError] = React.useState<string | null>(null);
+  // Gate by Telegram chat id like the student landing page
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = retrieveRawInitData();
+      if (raw) {
+        const p = new URLSearchParams(raw);
+        const json = p.get("chat") || p.get("user");
+        if (json) {
+          const obj = JSON.parse(json) as { id?: number };
+          if (obj?.id) setChatId(String(obj.id));
+        }
+      }
+    } catch {}
+    if (!chatId) {
+      const w = window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { chat?: { id?: number }; user?: { id?: number } } } } };
+      const unsafe = w.Telegram?.WebApp?.initDataUnsafe;
+      const id = unsafe?.chat?.id ?? unsafe?.user?.id;
+      if (id) setChatId(String(id));
+    }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (!chatId || !wdt_ID) return;
+      const res = await validateStudentAccess(chatId, wdt_ID);
+      setAuthorized(res.authorized);
+    })();
+  }, [chatId, wdt_ID]);
   const [sidebarActiveTab, setSidebarActiveTab] = React.useState<
     "mainmenu" | "ai"
   >("mainmenu");
@@ -137,6 +169,25 @@ function Page() {
         defaultTab = "quiz";
       }
     }
+  }
+
+  // Restrict access when not authorized
+  if (authorized === false) {
+    return (
+      <motion.div className="flex items-center justify-center min-h-[60vh]" variants={containerVariants} initial="hidden" animate="visible">
+        <div className="text-center p-6 border rounded-xl bg-red-50 text-red-700">
+          Access denied. Please open from Telegram using your registered account.
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (authorized === null) {
+    return (
+      <motion.div className="flex items-center justify-center min-h-[60vh]" variants={containerVariants} initial="hidden" animate="visible">
+        <div className="text-center p-6 border rounded-xl">Verifying access…</div>
+      </motion.div>
+    );
   }
 
   // return <div className="">there is no content available</div>;
