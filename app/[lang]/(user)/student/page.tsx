@@ -95,11 +95,15 @@ export default function Page() {
 
   const singleData = hasData(startRes) && startRes.data.mode === 'single' ? startRes.data : null;
   const chooseData = hasData(startRes) && startRes.data.mode === 'choose' ? startRes.data : null;
-  const AVATAR_URL = process.env.NEXT_PUBLIC_STUDENT_AVATAR_URL || 'https://dummyimage.com/220x220/f3c1e6/ffffff&text=%20';
+  const AVATAR_URL = process.env.NEXT_PUBLIC_STUDENT_AVATAR_URL || 'https://dummyimage.com/220x220/bae6fd/0369a1&text=%20';
+  const BRAND_LOGO_URL = process.env.NEXT_PUBLIC_BRAND_LOGO_URL || 'https://dummyimage.com/64x64/0ea5e9/ffffff&text=DK';
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: 16 }}>
-      <h1 style={{ fontSize: 24, marginBottom: 16, textAlign: 'center' }}>{title}</h1>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
+        <img src={BRAND_LOGO_URL} alt="Brand" style={{ width: 32, height: 32, borderRadius: 6 }} />
+        <h1 style={{ fontSize: 24, margin: 0, textAlign: 'center', color: '#0369a1' }}>{title}</h1>
+      </div>
 
       {!chatId && (
         <div style={{ padding: 16, border: '1px solid #eee', borderRadius: 12, background: '#fafafa', marginBottom: 12 }}>
@@ -164,8 +168,7 @@ export default function Page() {
 
           {!loading && chooseData && (
             <div>
-              <div style={{ marginBottom: 12, fontWeight: 600, textAlign: 'center' }}>Who&apos;s learning?</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 18, justifyItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 24, justifyItems: 'center' }}>
                 {chooseData.students.map((s) => (
                   <button
                     key={s.studentId}
@@ -181,9 +184,9 @@ export default function Page() {
                     <img
                       src={AVATAR_URL}
                       alt={s.name || 'Student avatar'}
-                      style={{ width: 110, height: 110, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.25)', boxShadow: '0 6px 16px rgba(0,0,0,0.25)', display: 'block', margin: '0 auto' }}
+                      style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '4px solid #38bdf8', boxShadow: '0 10px 24px rgba(2,132,199,0.25)', display: 'block', margin: '0 auto', background: '#e0f2fe' }}
                     />
-                    <div style={{ marginTop: 10, color: '#ddd', textAlign: 'center', fontWeight: 600, letterSpacing: 0.2 as number, filter: 'blur(1.1px)' }}>{s.name || 'Student'}</div>
+                    <div style={{ marginTop: 10, color: '#0284c7', textAlign: 'center', fontWeight: 700 }}>{s.name || 'Student'}</div>
                   </button>
                 ))}
               </div>
@@ -191,26 +194,29 @@ export default function Page() {
           )}
 
           {showPackagesFor && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-              <div style={{ background: '#111', color: '#fff', width: 'min(560px, 92vw)', borderRadius: 16, padding: 20, boxShadow: '0 10px 30px rgba(0,0,0,0.45)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <img src={AVATAR_URL} alt={showPackagesFor.name || 'Student avatar'} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.25)' }} />
-                    <div style={{ fontWeight: 700 }}>{showPackagesFor.name || 'Student'}</div>
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,132,199,0.25)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+              <div style={{ background: 'linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%)', color: '#0c4a6e', width: 'min(640px, 94vw)', borderRadius: 18, padding: 22, boxShadow: '0 18px 48px rgba(2,132,199,0.35)', border: '1px solid #7dd3fc' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <img src={BRAND_LOGO_URL} alt="Brand" style={{ width: 28, height: 28, borderRadius: 6 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <img src={AVATAR_URL} alt={showPackagesFor.name || 'Student avatar'} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '3px solid #38bdf8' }} />
+                      <div style={{ fontWeight: 800, color: '#075985' }}>{showPackagesFor.name || 'Student'}</div>
+                    </div>
                   </div>
-                  <button onClick={() => setShowPackagesFor(null)} style={{ background: 'transparent', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 18 }}>✕</button>
+                  <button onClick={() => setShowPackagesFor(null)} style={{ background: '#0284c7', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 14, borderRadius: 8, padding: '6px 10px' }}>Close</button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 16, justifyItems: 'center' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 18, justifyItems: 'center' }}>
                   {showPackagesFor.packages.map((pkg) => (
                     <button
                       key={pkg.id}
                       onClick={() => handleChoose(showPackagesFor.studentId, pkg.id)}
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
                     >
-                      <div style={{ width: 110, height: 110, borderRadius: '50%', border: '3px solid #2d7ef7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: '#fff', fontWeight: 700 }}>
+                      <div style={{ width: 120, height: 120, borderRadius: '50%', border: '4px solid #0ea5e9', background: '#e0f2fe', color: '#075985', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 800 }}>
                         {pkg.name.slice(0, 10)}
                       </div>
-                      <div style={{ textAlign: 'center', marginTop: 8, color: '#ddd' }}>{pkg.name}</div>
+                      <div style={{ textAlign: 'center', marginTop: 10, color: '#0c4a6e', fontWeight: 700 }}>{pkg.name}</div>
                     </button>
                   ))}
                 </div>
