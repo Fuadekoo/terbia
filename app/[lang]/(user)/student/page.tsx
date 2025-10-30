@@ -195,14 +195,40 @@ export default function Page() {
 
           {!loading && chooseData && chooseData.students.length === 1 && (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 18 }}>
                 {chooseData.students[0].packages.map((pkg) => (
-                  <div key={pkg.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 14, boxShadow: '0 6px 16px rgba(2,132,199,0.08)' }}>
-                    <div style={{ fontWeight: 700, color: '#075985', marginBottom: 8 }}>{pkg.name}</div>
-                    <div style={{ height: 8, background: '#e2e8f0', borderRadius: 9999, overflow: 'hidden', marginBottom: 10 }}>
-                      <div style={{ width: '0%', height: '100%', background: '#38bdf8' }} />
+                  <div key={pkg.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 10px 24px rgba(2,132,199,0.08)' }}>
+                    <div style={{ height: 140, background: 'linear-gradient(135deg, #e0f2fe 0%, #bbf7d0 100%)', position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: '50%', background: '#fff', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #0284c7', marginLeft: 4 }} />
+                      </div>
                     </div>
-                    <button onClick={() => handleChoose(chooseData.students[0].studentId, pkg.id)} style={{ width: '100%', padding: '10px 12px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>Start</button>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <span style={{ fontSize: 12, color: '#0369a1', background: '#e0f2fe', border: '1px solid #bae6fd', padding: '4px 10px', borderRadius: 9999 }}>beginner</span>
+                        <span style={{ fontSize: 12, color: '#111827' }}>⭐ 4.8</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                        <div style={{ fontWeight: 800, color: '#0f172a', lineHeight: 1.35, fontSize: 18, flex: 1 }}>
+                          {pkg.name}
+                        </div>
+                        <div style={{ color: '#0284c7', fontWeight: 800, whiteSpace: 'nowrap' }}>200 ETB</div>
+                      </div>
+                      <div style={{ color: '#475569', fontSize: 13, marginTop: 8 }}>
+                        Kickstart your learning with engaging lessons and hands-on practice.
+                      </div>
+                      <div style={{ display: 'flex', gap: 14, marginTop: 12, color: '#334155', fontSize: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>⏱️</span>
+                          <span>04:00</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>📚</span>
+                          <span>0 activities</span>
+                        </div>
+                      </div>
+                      <button onClick={() => handleChoose(chooseData.students[0].studentId, pkg.id)} style={{ width: '100%', marginTop: 14, padding: '12px 14px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 800 }}>Enroll Now</button>
+                    </div>
                   </div>
                 ))}
               </div>
