@@ -22,7 +22,7 @@ export default function Page() {
   const [startRes, setStartRes] = useState<StartSingle | StartChoose | StartError | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showPackagesFor, setShowPackagesFor] = useState<null | { studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string }> }>(null);
-  const [navigating, setNavigating] = useState(false);
+  
   const [pendingChoice, setPendingChoice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -104,6 +104,12 @@ export default function Page() {
   const AVATAR_URL = process.env.NEXT_PUBLIC_STUDENT_AVATAR_URL || 'https://dummyimage.com/220x220/bae6fd/0369a1&text=%20';
   const BRAND_LOGO_URL = process.env.NEXT_PUBLIC_BRAND_LOGO_URL || 'https://dummyimage.com/64x64/0ea5e9/ffffff&text=DK';
 
+  // Auto-redirect when there is a single package path
+  useEffect(() => {
+    if (!singleData) return;
+    window.location.href = singleData.url;
+  }, [singleData]);
+
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }}>
       <style jsx>{`
@@ -164,15 +170,8 @@ export default function Page() {
           )}
 
           {!loading && singleData && (
-            <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
-              <div style={{ marginBottom: 8 }}>Package: <b>{singleData.packageName}</b></div>
-              <button
-                onClick={() => { setNavigating(true); window.location.href = singleData.url; }}
-                style={{ padding: '10px 14px', background: '#0f62fe', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
-                disabled={navigating}
-              >
-                {navigating ? (<><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Redirecting...</>) : 'Start learning'}
-              </button>
+            <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Redirecting...
             </div>
           )}
 
