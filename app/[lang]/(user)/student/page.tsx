@@ -95,10 +95,11 @@ export default function Page() {
 
   const singleData = hasData(startRes) && startRes.data.mode === 'single' ? startRes.data : null;
   const chooseData = hasData(startRes) && startRes.data.mode === 'choose' ? startRes.data : null;
+  const AVATAR_URL = process.env.NEXT_PUBLIC_STUDENT_AVATAR_URL || 'https://dummyimage.com/220x220/f3c1e6/ffffff&text=%20';
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', padding: 16 }}>
-      <h1 style={{ fontSize: 22, marginBottom: 12 }}>{title}</h1>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: 16 }}>
+      <h1 style={{ fontSize: 24, marginBottom: 16, textAlign: 'center' }}>{title}</h1>
 
       {!chatId && (
         <div style={{ padding: 16, border: '1px solid #eee', borderRadius: 12, background: '#fafafa', marginBottom: 12 }}>
@@ -163,8 +164,8 @@ export default function Page() {
 
           {!loading && chooseData && (
             <div>
-              <div style={{ marginBottom: 8, fontWeight: 600 }}>Who&apos;s learning?</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 18 }}>
+              <div style={{ marginBottom: 12, fontWeight: 600, textAlign: 'center' }}>Who&apos;s learning?</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 18, justifyItems: 'center' }}>
                 {chooseData.students.map((s) => (
                   <button
                     key={s.studentId}
@@ -177,10 +178,12 @@ export default function Page() {
                     }}
                     style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center' }}
                   >
-                    <div style={{ width: 110, height: 110, borderRadius: '50%', background: s.avatar.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, margin: '0 auto' }}>
-                      {s.avatar.initials}
-                    </div>
-                    <div style={{ marginTop: 10, color: '#ddd' }}>{s.name || 'Student'}</div>
+                    <img
+                      src={AVATAR_URL}
+                      alt={s.name || 'Student avatar'}
+                      style={{ width: 110, height: 110, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.25)', boxShadow: '0 6px 16px rgba(0,0,0,0.25)', display: 'block', margin: '0 auto' }}
+                    />
+                    <div style={{ marginTop: 10, color: '#ddd', textAlign: 'center', fontWeight: 600, letterSpacing: 0.2 as number, filter: 'blur(1.1px)' }}>{s.name || 'Student'}</div>
                   </button>
                 ))}
               </div>
@@ -192,14 +195,12 @@ export default function Page() {
               <div style={{ background: '#111', color: '#fff', width: 'min(560px, 92vw)', borderRadius: 16, padding: 20, boxShadow: '0 10px 30px rgba(0,0,0,0.45)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: showPackagesFor.avatar.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                      {showPackagesFor.avatar.initials}
-                    </div>
+                    <img src={AVATAR_URL} alt={showPackagesFor.name || 'Student avatar'} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.25)' }} />
                     <div style={{ fontWeight: 700 }}>{showPackagesFor.name || 'Student'}</div>
                   </div>
                   <button onClick={() => setShowPackagesFor(null)} style={{ background: 'transparent', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 18 }}>✕</button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 16, justifyItems: 'center' }}>
                   {showPackagesFor.packages.map((pkg) => (
                     <button
                       key={pkg.id}
