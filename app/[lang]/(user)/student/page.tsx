@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { startStudentFlow, chooseStudentPackage, getTelegramUser } from '@/actions/student/telegram';
+import { startStudentFlow, chooseStudentPackage } from '@/actions/student/telegram';
 import { retrieveRawInitData } from '@telegram-apps/sdk';
 
 type TGInitData = { chat?: { id?: number }; user?: { id?: number } };
@@ -17,9 +17,7 @@ const hasData = (res: StartSingle | StartChoose | StartError | null): res is Has
 export default function Page() {
   const [chatId, setChatId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(true);
   const [startRes, setStartRes] = useState<StartSingle | StartChoose | StartError | null>(null);
-  const [profiles, setProfiles] = useState<Array<{ wdt_ID: number; name: string | null; status: string | null }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [showPackagesFor, setShowPackagesFor] = useState<null | { studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string }> }>(null);
 
@@ -67,23 +65,7 @@ export default function Page() {
     run();
   }, [chatId]);
 
-  useEffect(() => {
-    const loadProfiles = async () => {
-      if (!chatId) return;
-      setProfileLoading(true);
-      try {
-        const r = await getTelegramUser(chatId);
-        if (r.success && r.users) {
-          setProfiles(
-            r.users.map((u) => ({ wdt_ID: u.wdt_ID, name: u.name, status: u.status }))
-          );
-        }
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-    loadProfiles();
-  }, [chatId]);
+  // Removed extra profile pre-list rendering to keep UI minimal/professional
 
   const handleChoose = async (studentId: number, packageId: string) => {
     if (!chatId) return;
@@ -108,7 +90,7 @@ export default function Page() {
     if (!chatId) return 'Loading Telegram user...';
     if (loading) return 'Preparing your learning path...';
     if (hasData(startRes) && startRes.data.mode === 'single') return 'Continue Learning';
-    return 'Select Student and Package';
+    return "Who's learning?";
   }, [chatId, loading, startRes]);
 
   const singleData = hasData(startRes) && startRes.data.mode === 'single' ? startRes.data : null;
@@ -155,28 +137,6 @@ export default function Page() {
 
       {chatId && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
-            <div style={{ fontWeight: 600, marginBottom: 8 }}>Your Telegram Chat ID</div>
-            <div style={{ fontFamily: 'monospace' }}>{chatId}</div>
-          </div>
-
-          {!profileLoading && profiles.length > 0 && (
-            <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>Profiles</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(92px, 1fr))', gap: 16 }}>
-                {profiles.map((p) => (
-                  <div key={p.wdt_ID} style={{ textAlign: 'center' }}>
-                    <div style={{ width: 92, height: 92, borderRadius: '50%', background: '#f0f2f5', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 28, color: '#444' }}>
-                      {(p.name || 'S').slice(0, 1).toUpperCase()}
-                    </div>
-                    <div style={{ marginTop: 8, fontSize: 12, color: '#333' }}>{p.name || 'Student'}</div>
-                    <div style={{ fontSize: 11, color: '#777' }}>{p.status || 'Unknown'}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {loading && (
             <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8 }}>Loading...</div>
           )}
