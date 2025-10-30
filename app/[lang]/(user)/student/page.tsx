@@ -103,6 +103,7 @@ export default function Page() {
   const chooseData = hasData(startRes) && startRes.data.mode === 'choose' ? startRes.data : null;
   const AVATAR_URL = process.env.NEXT_PUBLIC_STUDENT_AVATAR_URL || 'https://dummyimage.com/220x220/bae6fd/0369a1&text=%20';
   const BRAND_LOGO_URL = process.env.NEXT_PUBLIC_BRAND_LOGO_URL || 'https://dummyimage.com/64x64/0ea5e9/ffffff&text=DK';
+  const [selectedStudent, setSelectedStudent] = useState<null | { studentId: number; name: string | null; packages: Array<{ id: string; name: string; progressPercentage?: number }> }>(null);
 
   // Auto-redirect when there is a single package path
   useEffect(() => {
@@ -177,44 +178,71 @@ export default function Page() {
 
           {!loading && chooseData && chooseData.students.length > 1 && (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 18 }}>
-                {chooseData.students.flatMap((s) =>
-                  s.packages.map((pkg) => (
-                    <div key={`${s.studentId}-${pkg.id}`} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 10px 24px rgba(2,132,199,0.08)' }}>
-                      <div style={{ height: 140, position: 'relative' }}>
-                        <img src="/quranlogo.png" alt="Package thumbnail" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: '50%', background: '#ffffffd9', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #0284c7', marginLeft: 4 }} />
+              {!selectedStudent && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 24, justifyItems: 'center' }}>
+                  {chooseData.students.map((s) => (
+                    <button
+                      key={s.studentId}
+                      onClick={() => {
+                        if (s.packages.length === 1) {
+                          handleChoose(s.studentId, s.packages[0].id);
+                        } else {
+                          setSelectedStudent({ studentId: s.studentId, name: s.name, packages: s.packages });
+                        }
+                      }}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center' }}
+                    >
+                      <img
+                        src={AVATAR_URL}
+                        alt={s.name || 'Student avatar'}
+                        style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '4px solid #38bdf8', boxShadow: '0 10px 24px rgba(2,132,199,0.25)', display: 'block', margin: '0 auto', background: '#e0f2fe' }}
+                      />
+                      <div style={{ marginTop: 10, color: '#0284c7', textAlign: 'center', fontWeight: 700 }}>{s.name || 'Student'}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {selectedStudent && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 18 }}>
+                    {selectedStudent.packages.map((pkg) => (
+                      <div key={`${selectedStudent.studentId}-${pkg.id}`} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 10px 24px rgba(2,132,199,0.08)' }}>
+                        <div style={{ height: 140, position: 'relative' }}>
+                          <img src="/quranlogo.png" alt="Package thumbnail" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: '50%', background: '#ffffffd9', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #0284c7', marginLeft: 4 }} />
+                          </div>
+                        </div>
+                        <div style={{ padding: 14 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <span style={{ fontSize: 12, color: '#0369a1', background: '#e0f2fe', border: '1px solid #bae6fd', padding: '4px 10px', borderRadius: 9999 }}>beginner</span>
+                            <span style={{ fontSize: 12, color: '#111827' }}>⭐ 4.8</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                            <div style={{ fontWeight: 800, color: '#0f172a', lineHeight: 1.35, fontSize: 18, flex: 1 }}>
+                              {pkg.name}
+                            </div>
+                            <div style={{ color: '#0284c7', fontWeight: 800, whiteSpace: 'nowrap' }}>Available</div>
+                          </div>
+                          <div style={{ color: '#475569', fontSize: 13, marginTop: 8 }}>
+                            {selectedStudent.name || 'Student'}
+                          </div>
+                          <div style={{ marginTop: 12 }}>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                              <span style={{ fontSize: 12, color: '#334155' }}>{pkg.progressPercentage ?? 0}%</span>
+                            </div>
+                            <Progress value={pkg.progressPercentage ?? 0} />
+                          </div>
+                          <button onClick={() => handleChoose(selectedStudent.studentId, pkg.id)} style={{ width: '100%', marginTop: 14, padding: '12px 14px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} disabled={pendingChoice === `${selectedStudent.studentId}:${pkg.id}`}>
+                            {pendingChoice === `${selectedStudent.studentId}:${pkg.id}` ? (<><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Continuing...</>) : 'continue Learning'}
+                          </button>
                         </div>
                       </div>
-                      <div style={{ padding: 14 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                          <span style={{ fontSize: 12, color: '#0369a1', background: '#e0f2fe', border: '1px solid #bae6fd', padding: '4px 10px', borderRadius: 9999 }}>beginner</span>
-                          <span style={{ fontSize: 12, color: '#111827' }}>⭐ 4.8</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                          <div style={{ fontWeight: 800, color: '#0f172a', lineHeight: 1.35, fontSize: 18, flex: 1 }}>
-                            {pkg.name}
-                          </div>
-                          <div style={{ color: '#0284c7', fontWeight: 800, whiteSpace: 'nowrap' }}>Available</div>
-                        </div>
-                        <div style={{ color: '#475569', fontSize: 13, marginTop: 8 }}>
-                          {s.name || 'Student'}
-                        </div>
-                        <div style={{ marginTop: 12 }}>
-                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <span style={{ fontSize: 12, color: '#334155' }}>{pkg.progressPercentage ?? 0}%</span>
-                          </div>
-                          <Progress value={pkg.progressPercentage ?? 0} />
-                        </div>
-                        <button onClick={() => handleChoose(s.studentId, pkg.id)} style={{ width: '100%', marginTop: 14, padding: '12px 14px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} disabled={pendingChoice === `${s.studentId}:${pkg.id}`}>
-                          {pendingChoice === `${s.studentId}:${pkg.id}` ? (<><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Continuing...</>) : 'continue Learning'}
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
