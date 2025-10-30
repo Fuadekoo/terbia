@@ -21,6 +21,7 @@ export default function Page() {
   const [startRes, setStartRes] = useState<StartSingle | StartChoose | StartError | null>(null);
   const [profiles, setProfiles] = useState<Array<{ wdt_ID: number; name: string | null; status: string | null }>>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showPackagesFor, setShowPackagesFor] = useState<null | { studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string }> }>(null);
 
   useEffect(() => {
     // Try to read chat id from Telegram WebApp initDataUnsafe
@@ -162,14 +163,14 @@ export default function Page() {
           {!profileLoading && profiles.length > 0 && (
             <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
               <div style={{ fontWeight: 600, marginBottom: 8 }}>Profiles</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(92px, 1fr))', gap: 16 }}>
                 {profiles.map((p) => (
-                  <div key={p.wdt_ID} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 9999, background: '#f0f2f5' }} />
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: 500 }}>{p.name || 'Student'}</span>
-                      <span style={{ fontSize: 12, color: '#666' }}>{p.status || 'Unknown'}</span>
+                  <div key={p.wdt_ID} style={{ textAlign: 'center' }}>
+                    <div style={{ width: 92, height: 92, borderRadius: '50%', background: '#f0f2f5', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 28, color: '#444' }}>
+                      {(p.name || 'S').slice(0, 1).toUpperCase()}
                     </div>
+                    <div style={{ marginTop: 8, fontSize: 12, color: '#333' }}>{p.name || 'Student'}</div>
+                    <div style={{ fontSize: 11, color: '#777' }}>{p.status || 'Unknown'}</div>
                   </div>
                 ))}
               </div>
@@ -201,31 +202,58 @@ export default function Page() {
           )}
 
           {!loading && chooseData && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {chooseData.students.map((s) => (
-                <div key={s.studentId} style={{ padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 9999, background: s.avatar.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+            <div>
+              <div style={{ marginBottom: 8, fontWeight: 600 }}>Who&apos;s learning?</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 18 }}>
+                {chooseData.students.map((s) => (
+                  <button
+                    key={s.studentId}
+                    onClick={() => {
+                      if (s.packages.length === 1) {
+                        handleChoose(s.studentId, s.packages[0].id);
+                      } else {
+                        setShowPackagesFor(s);
+                      }
+                    }}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center' }}
+                  >
+                    <div style={{ width: 110, height: 110, borderRadius: '50%', background: s.avatar.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, margin: '0 auto' }}>
                       {s.avatar.initials}
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{s.name || 'Student'}</div>
-                      <div style={{ fontSize: 12, color: '#666' }}>ID: {s.studentId}</div>
+                    <div style={{ marginTop: 10, color: '#ddd' }}>{s.name || 'Student'}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showPackagesFor && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+              <div style={{ background: '#111', color: '#fff', width: 'min(560px, 92vw)', borderRadius: 16, padding: 20, boxShadow: '0 10px 30px rgba(0,0,0,0.45)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: showPackagesFor.avatar.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                      {showPackagesFor.avatar.initials}
                     </div>
+                    <div style={{ fontWeight: 700 }}>{showPackagesFor.name || 'Student'}</div>
                   </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {s.packages.map((pkg) => (
-                      <button
-                        key={pkg.id}
-                        onClick={() => handleChoose(s.studentId, pkg.id)}
-                        style={{ padding: '8px 12px', background: '#f4f4f4', border: '1px solid #e0e0e0', borderRadius: 9999, cursor: 'pointer' }}
-                      >
-                        {pkg.name}
-                      </button>
-                    ))}
-                  </div>
+                  <button onClick={() => setShowPackagesFor(null)} style={{ background: 'transparent', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 18 }}>✕</button>
                 </div>
-              ))}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 16 }}>
+                  {showPackagesFor.packages.map((pkg) => (
+                    <button
+                      key={pkg.id}
+                      onClick={() => handleChoose(showPackagesFor.studentId, pkg.id)}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                    >
+                      <div style={{ width: 110, height: 110, borderRadius: '50%', border: '3px solid #2d7ef7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: '#fff', fontWeight: 700 }}>
+                        {pkg.name.slice(0, 10)}
+                      </div>
+                      <div style={{ textAlign: 'center', marginTop: 8, color: '#ddd' }}>{pkg.name}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
