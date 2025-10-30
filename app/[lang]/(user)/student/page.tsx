@@ -3,11 +3,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { startStudentFlow, chooseStudentPackage } from '@/actions/student/telegram';
 import { Loader2 } from 'lucide-react';
 import { retrieveRawInitData } from '@telegram-apps/sdk';
+import { Progress } from '@/components/ui/progress';
 
 type TGInitData = { chat?: { id?: number }; user?: { id?: number } };
 
 type StartSingle = { success: true; data: { mode: 'single'; url: string; packageName: string; studentId: number; studentName: string | null } };
-type StartChoose = { success: true; data: { mode: 'choose'; students: Array<{ studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string }> }> } };
+type StartChoose = { success: true; data: { mode: 'choose'; students: Array<{ studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string; progressPercentage?: number }> }> } };
 type StartError = { success: false; error: string };
 
 type HasData = StartSingle | StartChoose;
@@ -226,7 +227,7 @@ export default function Page() {
                       </div>
                       <div style={{ display: 'flex', gap: 14, marginTop: 12, color: '#334155', fontSize: 12 }}>
                         {/* add progress bar here that show the coursespackage progress that express the completed chapters in the package from all chapters in the  package */}
-                        
+                        <Progress value={pkg.progressPercentage ?? 0} />
                       </div>
                     <button onClick={() => handleChoose(chooseData.students[0].studentId, pkg.id)} style={{ width: '100%', marginTop: 14, padding: '12px 14px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} disabled={pendingChoice === `${chooseData.students[0].studentId}:${pkg.id}`}>
                       {pendingChoice === `${chooseData.students[0].studentId}:${pkg.id}` ? (<><Loader2 size={16} /> Continuing...</>) : 'continue Learning'}

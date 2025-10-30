@@ -73,7 +73,7 @@ interface StartFlowResultChoose {
     studentId: number;
     name: string | null;
     avatar: { initials: string; color: string };
-    packages: Array<{ id: string; name: string }>;
+    packages: Array<{ id: string; name: string; progressPercentage?: number }>;
   }>;
 }
 
@@ -141,6 +141,23 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
     const choosePayload: StartFlowResultChoose["students"] = [];
     const immediate: Array<StartFlowResultSingle> = [];
 
+    async function computePackageProgress(studentId: number, packageId: string): Promise<number> {
+      try {
+        const chapters = await prisma.chapter.findMany({
+          where: { course: { packageId } },
+          select: { id: true },
+        });
+        const chapterIds = chapters.map((ch) => ch.id);
+        if (chapterIds.length === 0) return 0;
+        const completedChapters = await prisma.studentProgress.count({
+          where: { studentId, chapterId: { in: chapterIds }, isCompleted: true },
+        });
+        return Math.round((completedChapters / chapterIds.length) * 100);
+      } catch {
+        return 0;
+      }
+    }
+
     for (const channel of channels) {
       const packageType = (channel as unknown as { package: string | null }).package;
       const subject = (channel as unknown as { subject: string | null }).subject;
@@ -186,11 +203,20 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
           studentName,
         });
       } else {
+        // Build packages with progress for selection
+        const packagesWithProgress = await Promise.all(
+          validPackages.map(async (p) => ({
+            id: p.package.id,
+            name: p.package.name,
+            progressPercentage: await computePackageProgress(studentId, p.package.id),
+          }))
+        );
+
         choosePayload.push({
           studentId,
           name: studentName,
           avatar: buildAvatar(studentName),
-          packages: validPackages.map((p) => ({ id: p.package.id, name: p.package.name })),
+          packages: packagesWithProgress,
         });
       }
     }
@@ -204,17 +230,24 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
     if (choosePayload.length > 0 || immediate.length > 0) {
       const merged: StartFlowResultChoose["students"] = [
         ...choosePayload,
-        ...immediate.map((i) => ({
-          studentId: i.studentId,
-          name: i.studentName,
-          avatar: buildAvatar(i.studentName),
-          packages: [
-            {
-              id: (channels.find((c) => c.wdt_ID === i.studentId)?.activePackage as { id?: string } | null)?.id || "active",
-              name: i.packageName,
-            },
-          ],
-        })),
+        ...(await Promise.all(
+          immediate.map(async (i) => {
+            const activeId = (channels.find((c) => c.wdt_ID === i.studentId)?.activePackage as { id?: string } | null)?.id || "active";
+            const progress = activeId === "active" ? 0 : await computePackageProgress(i.studentId, activeId);
+            return {
+              studentId: i.studentId,
+              name: i.studentName,
+              avatar: buildAvatar(i.studentName),
+              packages: [
+                {
+                  id: activeId,
+                  name: i.packageName,
+                  progressPercentage: progress,
+                },
+              ],
+            };
+          })
+        )),
       ];
       return { success: true, data: { mode: "choose", students: merged } };
     }
