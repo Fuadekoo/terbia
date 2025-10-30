@@ -198,8 +198,9 @@ export default function Page() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 18 }}>
                 {chooseData.students[0].packages.map((pkg) => (
                   <div key={pkg.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 10px 24px rgba(2,132,199,0.08)' }}>
-                    <div style={{ height: 140, background: 'linear-gradient(135deg, #e0f2fe 0%, #bbf7d0 100%)', position: 'relative' }}>
-                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: '50%', background: '#fff', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ height: 140, position: 'relative' }}>
+                      <img src="/quranlogo.png" alt="Package thumbnail" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: '50%', background: '#ffffffd9', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #0284c7', marginLeft: 4 }} />
                       </div>
                     </div>
@@ -212,7 +213,7 @@ export default function Page() {
                         <div style={{ fontWeight: 800, color: '#0f172a', lineHeight: 1.35, fontSize: 18, flex: 1 }}>
                           {pkg.name}
                         </div>
-                        <div style={{ color: '#0284c7', fontWeight: 800, whiteSpace: 'nowrap' }}>200 ETB</div>
+                        <div style={{ color: '#0284c7', fontWeight: 800, whiteSpace: 'nowrap' }}>Available</div>
                       </div>
                       <div style={{ color: '#475569', fontSize: 13, marginTop: 8 }}>
                         Kickstart your learning with engaging lessons and hands-on practice.
@@ -224,10 +225,10 @@ export default function Page() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span>📚</span>
-                          <span>0 activities</span>
+                          <span> {chooseData.students[0].packages.length} courses</span>
                         </div>
                       </div>
-                      <button onClick={() => handleChoose(chooseData.students[0].studentId, pkg.id)} style={{ width: '100%', marginTop: 14, padding: '12px 14px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 800 }}>Enroll Now</button>
+                      <button onClick={() => handleChoose(chooseData.students[0].studentId, pkg.id)} style={{ width: '100%', marginTop: 14, padding: '12px 14px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 800 }}>continue Learning</button>
                     </div>
                   </div>
                 ))}
