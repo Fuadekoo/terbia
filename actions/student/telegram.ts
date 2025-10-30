@@ -195,12 +195,28 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
       }
     }
 
-    if (immediate.length > 0 && choosePayload.length === 0) {
+    // Return direct only when exactly one student and exactly one package
+    if (channels.length === 1 && immediate.length === 1 && choosePayload.length === 0) {
       return { success: true, data: immediate[0] };
     }
 
-    if (choosePayload.length > 0) {
-      return { success: true, data: { mode: "choose", students: choosePayload } };
+    // Otherwise build a chooser list.
+    if (choosePayload.length > 0 || immediate.length > 0) {
+      const merged: StartFlowResultChoose["students"] = [
+        ...choosePayload,
+        ...immediate.map((i) => ({
+          studentId: i.studentId,
+          name: i.studentName,
+          avatar: buildAvatar(i.studentName),
+          packages: [
+            {
+              id: (channels.find((c) => c.wdt_ID === i.studentId)?.activePackage as { id?: string } | null)?.id || "active",
+              name: i.packageName,
+            },
+          ],
+        })),
+      ];
+      return { success: true, data: { mode: "choose", students: merged } };
     }
 
     return { success: false, error: "No available packages for this account" };

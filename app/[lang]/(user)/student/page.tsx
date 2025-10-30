@@ -166,7 +166,7 @@ export default function Page() {
             </div>
           )}
 
-          {!loading && chooseData && (
+          {!loading && chooseData && chooseData.students.length > 1 && (
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 24, justifyItems: 'center' }}>
                 {chooseData.students.map((s) => (
@@ -188,6 +188,22 @@ export default function Page() {
                     />
                     <div style={{ marginTop: 10, color: '#0284c7', textAlign: 'center', fontWeight: 700 }}>{s.name || 'Student'}</div>
                   </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!loading && chooseData && chooseData.students.length === 1 && (
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+                {chooseData.students[0].packages.map((pkg) => (
+                  <div key={pkg.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 14, boxShadow: '0 6px 16px rgba(2,132,199,0.08)' }}>
+                    <div style={{ fontWeight: 700, color: '#075985', marginBottom: 8 }}>{pkg.name}</div>
+                    <div style={{ height: 8, background: '#e2e8f0', borderRadius: 9999, overflow: 'hidden', marginBottom: 10 }}>
+                      <div style={{ width: '0%', height: '100%', background: '#38bdf8' }} />
+                    </div>
+                    <button onClick={() => handleChoose(chooseData.students[0].studentId, pkg.id)} style={{ width: '100%', padding: '10px 12px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>Start</button>
+                  </div>
                 ))}
               </div>
             </div>
