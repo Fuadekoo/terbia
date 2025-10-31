@@ -20,7 +20,7 @@ interface TelegramThemeParams {
 interface TelegramThemeChangedEvent {
   theme_params?: TelegramThemeParams;
 }
-
+ 
 interface TelegramWebApp {
   initDataUnsafe?: TGInitData;
   themeParams?: TelegramThemeParams;
