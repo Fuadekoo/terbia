@@ -74,6 +74,9 @@ interface StartFlowResultChoose {
     name: string | null;
     avatar: { initials: string; color: string };
     packages: Array<{ id: string; name: string; progressPercentage?: number }>;
+    subject?: string | null;
+    teacherName?: string | null;
+    classFee?: string | null;
   }>;
 }
 
@@ -116,6 +119,11 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
         subject: true,
         package: true,
         isKid: true,
+        ustazdata: {
+          select: {
+            ustazname: true,
+          },
+        },
         activePackage: {
           where: { isPublished: true },
           select: {
@@ -217,6 +225,9 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
           name: studentName,
           avatar: buildAvatar(studentName),
           packages: packagesWithProgress,
+          subject: subject,
+          teacherName: (channel as unknown as { ustazdata?: { ustazname?: string | null } | null }).ustazdata?.ustazname || null,
+          classFee: "ETB 4000", // Default fee, can be made dynamic later
         });
       }
     }
@@ -232,7 +243,8 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
         ...choosePayload,
         ...(await Promise.all(
           immediate.map(async (i) => {
-            const activeId = (channels.find((c) => c.wdt_ID === i.studentId)?.activePackage as { id?: string } | null)?.id || "active";
+            const channel = channels.find((c) => c.wdt_ID === i.studentId);
+            const activeId = (channel?.activePackage as { id?: string } | null)?.id || "active";
             const progress = activeId === "active" ? 0 : await computePackageProgress(i.studentId, activeId);
             return {
               studentId: i.studentId,
@@ -245,6 +257,9 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
                   progressPercentage: progress,
                 },
               ],
+              subject: (channel as unknown as { subject?: string | null })?.subject || null,
+              teacherName: (channel as unknown as { ustazdata?: { ustazname?: string | null } | null })?.ustazdata?.ustazname || null,
+              classFee: "ETB 4000",
             };
           })
         )),

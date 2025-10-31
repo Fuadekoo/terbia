@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 type TGInitData = { chat?: { id?: number }; user?: { id?: number } };
 
 type StartSingle = { success: true; data: { mode: 'single'; url: string; packageName: string; studentId: number; studentName: string | null } };
-type StartChoose = { success: true; data: { mode: 'choose'; students: Array<{ studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string; progressPercentage?: number }> }> } };
+type StartChoose = { success: true; data: { mode: 'choose'; students: Array<{ studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string; progressPercentage?: number }>; subject?: string | null; teacherName?: string | null; classFee?: string | null }> } };
 type StartError = { success: false; error: string };
 
 type HasData = StartSingle | StartChoose;
@@ -102,7 +102,7 @@ export default function Page() {
   const singleData = hasData(startRes) && startRes.data.mode === 'single' ? startRes.data : null;
   const chooseData = hasData(startRes) && startRes.data.mode === 'choose' ? startRes.data : null;
   const BRAND_LOGO_URL = process.env.NEXT_PUBLIC_BRAND_LOGO_URL || 'https://dummyimage.com/64x64/0ea5e9/ffffff&text=DK';
-  const [selectedStudent, setSelectedStudent] = useState<null | { studentId: number; name: string | null; packages: Array<{ id: string; name: string; progressPercentage?: number }> }>(null);
+  const [selectedStudent, setSelectedStudent] = useState<null | { studentId: number; name: string | null; packages: Array<{ id: string; name: string; progressPercentage?: number }>; subject?: string | null; teacherName?: string | null; classFee?: string | null }>(null);
 
   // Auto-redirect when there is a single package path
   useEffect(() => {
@@ -186,7 +186,7 @@ export default function Page() {
                         if (s.packages.length === 1) {
                           handleChoose(s.studentId, s.packages[0].id);
                         } else {
-                          setSelectedStudent({ studentId: s.studentId, name: s.name, packages: s.packages });
+                          setSelectedStudent({ studentId: s.studentId, name: s.name, packages: s.packages, subject: s.subject, teacherName: s.teacherName, classFee: s.classFee });
                         }
                       }}
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center' }}
@@ -204,6 +204,39 @@ export default function Page() {
 
               {selectedStudent && (
                 <div style={{ marginTop: 16 }}>
+                  {/* Profile Header Card */}
+                  <div style={{ background: 'linear-gradient(135deg, #9333ea 0%, #3b82f6 100%)', borderRadius: 16, padding: 20, marginBottom: 20, color: '#fff', boxShadow: '0 10px 24px rgba(59,130,246,0.25)' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                      {/* Avatar */}
+                      <img
+                        src="/userProfileIcon.png"
+                        alt={selectedStudent.name || 'Student avatar'}
+                        style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.3)', flexShrink: 0 }}
+                      />
+                      {/* Student Info */}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>{selectedStudent.name || 'Student'}</div>
+                        <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 12 }}>
+                          <span>{selectedStudent.packages.length} {selectedStudent.packages.length === 1 ? 'package' : 'packages'}</span>
+                          <span style={{ margin: '0 8px' }}>•</span>
+                          <span>Available</span>
+                        </div>
+                        <div style={{ fontSize: 13, opacity: 0.85 }}>መዋር: {selectedStudent.teacherName || 'Not assigned'}</div>
+                        {/* Embedded Cards */}
+                        <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
+                          <div style={{ background: 'rgba(147,51,234,0.6)', borderRadius: 10, padding: '10px 14px', flex: 1 }}>
+                            <div style={{ fontSize: 11, opacity: 0.9, marginBottom: 4 }}>Subject</div>
+                            <div style={{ fontSize: 14, fontWeight: 700 }}>{selectedStudent.subject || 'Multiple Subjects'}</div>
+                          </div>
+                          <div style={{ background: 'rgba(91,33,182,0.6)', borderRadius: 10, padding: '10px 14px', flex: 1 }}>
+                            <div style={{ fontSize: 11, opacity: 0.9, marginBottom: 4 }}>Class Fee</div>
+                            <div style={{ fontSize: 14, fontWeight: 700 }}>{selectedStudent.classFee || 'ETB 4000'}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Package Cards Grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 18 }}>
                     {selectedStudent.packages.map((pkg) => (
                       <div key={`${selectedStudent.studentId}-${pkg.id}`} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 10px 24px rgba(2,132,199,0.08)' }}>
