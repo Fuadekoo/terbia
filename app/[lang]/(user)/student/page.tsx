@@ -106,7 +106,7 @@ export default function Page() {
   }, [singleData]);
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }} className='pt-30'>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }} className='pt-60'>
      
 
       {!chatId && (
@@ -192,9 +192,9 @@ export default function Page() {
               )}
 
               {selectedStudent && (
-                <div style={{ marginTop: 16 }}>
+                <div>
                   {/* Profile Header Card - Sticky */}
-                  <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#0ea5e9', borderRadius: 16, padding: 20, marginTop: 30, marginBottom: 20, color: '#fff', boxShadow: '0 10px 24px rgba(14,165,233,0.25)' }}>
+                  <div style={{ position: 'sticky', top: 30, zIndex: 10, background: '#0ea5e9', borderRadius: 16, padding: 20, marginTop: 30, marginBottom: 20, color: '#fff', boxShadow: '0 10px 24px rgba(14,165,233,0.25)' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
                       {/* Avatar */}
                       <img
