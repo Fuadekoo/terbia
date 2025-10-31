@@ -368,3 +368,181 @@ export async function validateStudentAccess(
     return { authorized: false };
   }
 }
+
+// Get flow data for a specific student by ID
+export async function getStudentFlowById(
+  chatId: string,
+  studentId: number
+): Promise<StartFlowResult> {
+  try {
+    if (!chatId || !String(chatId).trim()) {
+      return { success: false, error: "Missing chatId" };
+    }
+    if (!studentId) {
+      return { success: false, error: "Missing studentId" };
+    }
+
+    const BASE_URL = process.env.FORWARD_URL || process.env.AUTH_URL;
+    if (!BASE_URL) {
+      return { success: false, error: "Missing BASE_URL configuration" };
+    }
+
+    // Get the specific student record
+    const student = await prisma.wpos_wpdatatable_23.findFirst({
+      where: {
+        chat_id: String(chatId),
+        wdt_ID: studentId,
+        status: { in: ["Active", "Not yet", "On progress"] },
+      },
+      select: {
+        wdt_ID: true,
+        name: true,
+        subject: true,
+        package: true,
+        isKid: true,
+        ustazdata: {
+          select: {
+            ustazname: true,
+          },
+        },
+        activePackage: {
+          where: { isPublished: true },
+          select: {
+            id: true,
+            name: true,
+            courses: {
+              where: { order: 1 },
+              select: {
+                id: true,
+                chapters: { where: { position: 1 }, select: { id: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!student) {
+      return { success: false, error: "Student profile not found" };
+    }
+
+    const packageType = (student as unknown as { package: string | null }).package;
+    const subject = (student as unknown as { subject: string | null }).subject;
+    const isKid = (student as unknown as { isKid: boolean | null }).isKid;
+
+    if (!packageType || !subject || isKid === null) {
+      return { success: false, error: "Invalid student configuration" };
+    }
+
+    async function computePackageProgress(packageId: string): Promise<number> {
+      try {
+        const chapters = await prisma.chapter.findMany({
+          where: { course: { packageId } },
+          select: { id: true },
+        });
+        const chapterIds = chapters.map((ch) => ch.id);
+        if (chapterIds.length === 0) return 0;
+        const completedChapters = await prisma.studentProgress.count({
+          where: { studentId, chapterId: { in: chapterIds }, isCompleted: true },
+        });
+        return Math.round((completedChapters / chapterIds.length) * 100);
+      } catch {
+        return 0;
+      }
+    }
+
+    // Fetch available packages
+    type AvailablePackage = { id: string; subject: string | null; package: { id: string; name: string } };
+    const availablePackages: AvailablePackage[] = await getAvailablePacakges(packageType, subject, isKid);
+    const validPackages = (availablePackages || []).filter((pkg) => pkg.id);
+
+    if (validPackages.length === 0) {
+      return { success: false, error: "No available packages for this student" };
+    }
+
+    // If only one package, create single mode result
+    if (validPackages.length === 1) {
+      const packageId = validPackages[0].package.id;
+      
+      // Get first chapter of this package to initialize progress if needed
+      const firstPackageCourse = await prisma.coursePackage.findUnique({
+        where: { id: packageId },
+        select: {
+          courses: {
+            where: { order: 1 },
+            select: {
+              id: true,
+              chapters: {
+                where: { position: 1 },
+                select: { id: true }
+              }
+            }
+          }
+        }
+      });
+      
+      const firstChapterId = firstPackageCourse?.courses?.[0]?.chapters?.[0]?.id;
+      if (firstChapterId) {
+        const existingProgress = await prisma.studentProgress.findFirst({
+          where: { studentId, chapterId: firstChapterId },
+        });
+        if (!existingProgress) {
+          await prisma.studentProgress.create({
+            data: { studentId, chapterId: firstChapterId, isCompleted: false },
+          });
+        }
+      }
+
+      const progressPath = await updatePathProgressData(studentId);
+      if (!progressPath) {
+        return { success: false, error: "Failed to compute progress path" };
+      }
+      
+      const [courseId, chapterId] = progressPath;
+      const lang = "en";
+      const stud = "student";
+      const url = `${BASE_URL}/${lang}/${stud}/${studentId}/${courseId}/${chapterId}`;
+
+      return {
+        success: true,
+        data: {
+          mode: "single",
+          url,
+          packageName: validPackages[0].package.name,
+          studentId,
+          studentName: student.name,
+        },
+      };
+    }
+
+    // Multiple packages - create choose mode result
+    const packagesWithProgress = await Promise.all(
+      validPackages.map(async (p) => ({
+        id: p.package.id,
+        name: p.package.name,
+        progressPercentage: await computePackageProgress(p.package.id),
+      }))
+    );
+
+    return {
+      success: true,
+      data: {
+        mode: "choose",
+        students: [
+          {
+            studentId,
+            name: student.name,
+            avatar: buildAvatar(student.name),
+            packages: packagesWithProgress,
+            subject: subject,
+            teacherName: (student as unknown as { ustazdata?: { ustazname?: string | null } | null }).ustazdata?.ustazname || null,
+            classFee: "ETB 4000",
+          },
+        ],
+      },
+    };
+  } catch (error) {
+    console.error("Error in getStudentFlowById:", error);
+    return { success: false, error: "Failed to get student flow data" };
+  }
+}
