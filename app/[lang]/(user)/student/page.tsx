@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { startStudentFlow, chooseStudentPackage } from '@/actions/student/telegram';
 import { Loader2 } from 'lucide-react';
 import { retrieveRawInitData } from '@telegram-apps/sdk';
@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 
 type TGInitData = { chat?: { id?: number }; user?: { id?: number } };
 
-type TelegramTheme = {
+interface TelegramThemeParams {
   bg_color?: string;
   text_color?: string;
   hint_color?: string;
@@ -15,7 +15,30 @@ type TelegramTheme = {
   button_color?: string;
   button_text_color?: string;
   secondary_bg_color?: string;
-};
+}
+
+interface TelegramThemeChangedEvent {
+  theme_params?: TelegramThemeParams;
+}
+
+interface TelegramWebApp {
+  initDataUnsafe?: TGInitData;
+  themeParams?: TelegramThemeParams;
+  ready?: () => void;
+  expand?: () => void;
+  // Official Telegram Mini Apps API methods
+  requestTheme?: () => void;
+  setHeaderColor?: (color: string | { color_key: string }) => void;
+  setBackgroundColor?: (color: string | { color_key: string }) => void;
+  onEvent?: (event: string, handler: (event?: TelegramThemeChangedEvent) => void) => void;
+  offEvent?: (event: string, handler: (event?: TelegramThemeChangedEvent) => void) => void;
+}
+
+interface TelegramWindow {
+  Telegram?: {
+    WebApp?: TelegramWebApp;
+  };
+}
 
 type StartSingle = { success: true; data: { mode: 'single'; url: string; packageName: string; studentId: number; studentName: string | null } };
 type StartChoose = { success: true; data: { mode: 'choose'; students: Array<{ studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string; progressPercentage?: number }>; subject?: string | null; teacherName?: string | null; classFee?: string | null }> } };
@@ -26,51 +49,102 @@ const hasData = (res: StartSingle | StartChoose | StartError | null): res is Has
   return !!res && res.success === true;
 };
 
+// Professional Telegram theme hook using official API
+function useTelegramTheme() {
+  const [theme, setTheme] = useState<TelegramThemeParams>({});
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const w = window as unknown as TelegramWindow;
+    const webApp = w.Telegram?.WebApp;
+
+    if (!webApp) return;
+
+    // Initialize WebApp
+    if (webApp.ready) {
+      webApp.ready();
+    }
+    if (webApp.expand) {
+      webApp.expand();
+    }
+
+    // Get initial theme from themeParams
+    const initializeTheme = (themeParams?: TelegramThemeParams) => {
+      const currentTheme = themeParams || webApp.themeParams;
+      if (currentTheme) {
+        setTheme(currentTheme);
+        
+        // Set Mini App header and background colors using official API
+        if (webApp.setHeaderColor) {
+          // Use theme's button_color or bg_color for header
+          webApp.setHeaderColor(currentTheme.button_color || currentTheme.bg_color || '#ffffff');
+        }
+        
+        if (webApp.setBackgroundColor) {
+          // Use theme's bg_color for Mini App background
+          webApp.setBackgroundColor(currentTheme.bg_color || '#ffffff');
+        }
+      }
+    };
+
+    // Get theme immediately if available
+    if (webApp.themeParams) {
+      initializeTheme();
+    }
+
+    // Official method: web_app_request_theme
+    // This will trigger the theme_changed event
+    if (webApp.requestTheme) {
+      webApp.requestTheme();
+    }
+
+    // Official event: theme_changed (not themeChanged)
+    // The event payload contains theme_params
+    const handleThemeChange = (event?: TelegramThemeChangedEvent) => {
+      if (event?.theme_params) {
+        initializeTheme(event.theme_params);
+      } else if (webApp.themeParams) {
+        // Fallback to direct access if event doesn't have theme_params
+        initializeTheme();
+      }
+    };
+
+    // Register event listener
+    if (webApp.onEvent) {
+      webApp.onEvent('theme_changed', handleThemeChange);
+      // Also listen to the camelCase version for compatibility
+      webApp.onEvent('themeChanged', handleThemeChange);
+    }
+
+    // Cleanup event listeners
+    return () => {
+      if (webApp.offEvent) {
+        webApp.offEvent('theme_changed', handleThemeChange);
+        webApp.offEvent('themeChanged', handleThemeChange);
+      }
+    };
+  }, []);
+
+  return theme;
+}
+
 export default function Page() {
   const [chatId, setChatId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [startRes, setStartRes] = useState<StartSingle | StartChoose | StartError | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showPackagesFor, setShowPackagesFor] = useState<null | { studentId: number; name: string | null; avatar: { initials: string; color: string }; packages: Array<{ id: string; name: string }> }>(null);
-  const [theme, setTheme] = useState<TelegramTheme>({});
   
   const [pendingChoice, setPendingChoice] = useState<string | null>(null);
 
+  // Use professional Telegram theme hook
+  const theme = useTelegramTheme();
+
   useEffect(() => {
-    // Try to read chat id from Telegram WebApp initDataUnsafe and theme
+    // Try to read chat id from Telegram WebApp
     if (typeof window !== 'undefined') {
-      const w = window as unknown as { 
-        Telegram?: { 
-          WebApp?: { 
-            initDataUnsafe?: TGInitData;
-            themeParams?: TelegramTheme;
-            requestTheme?: () => void;
-            onEvent?: (event: string, handler: () => void) => void;
-            offEvent?: (event: string, handler: () => void) => void;
-          } 
-        } 
-      };
-
-      // Get theme
-      if (w.Telegram?.WebApp?.themeParams) {
-        setTheme(w.Telegram.WebApp.themeParams);
-      }
-
-      // Request theme update
-      if (w.Telegram?.WebApp?.requestTheme) {
-        w.Telegram.WebApp.requestTheme();
-      }
-
-      // Listen for theme changes
-      const handleThemeChange = () => {
-        if (w.Telegram?.WebApp?.themeParams) {
-          setTheme(w.Telegram.WebApp.themeParams);
-        }
-      };
-
-      if (w.Telegram?.WebApp?.onEvent) {
-        w.Telegram.WebApp.onEvent('themeChanged', handleThemeChange);
-      }
+      const w = window as unknown as TelegramWindow;
 
       // 1) Prefer initialDataRaw via SDK
       try {
@@ -92,12 +166,6 @@ export default function Page() {
       const unsafe = w.Telegram?.WebApp?.initDataUnsafe;
       const id = unsafe?.chat?.id ?? unsafe?.user?.id;
       if (id) setChatId(String(id));
-
-      return () => {
-        if (w.Telegram?.WebApp?.offEvent) {
-          w.Telegram.WebApp.offEvent('themeChanged', handleThemeChange);
-        }
-      };
     }
   }, []);
 
@@ -154,14 +222,45 @@ export default function Page() {
     window.location.href = singleData.url;
   }, [singleData]);
 
-  // Theme helper functions with fallbacks
-  const getBgColor = () => theme.bg_color || '#ffffff';
-  const getTextColor = () => theme.text_color || '#000000';
-  const getHintColor = () => theme.hint_color || '#999999';
-  const getLinkColor = () => theme.link_color || '#0ea5e9';
-  const getButtonColor = () => theme.button_color || '#0ea5e9';
-  const getButtonTextColor = () => theme.button_text_color || '#ffffff';
-  const getSecondaryBgColor = () => theme.secondary_bg_color || '#f0f0f0';
+  // Professional theme utilities with memoization for performance
+  const themeColors = useMemo(() => {
+    // Detect if theme is light or dark
+    let isLightTheme = true;
+    if (theme.bg_color) {
+      try {
+        const bgHex = theme.bg_color.replace('#', '');
+        const bgValue = parseInt(bgHex, 16);
+        // If RGB average is below 0x888888, it's dark
+        const r = (bgValue >> 16) & 0xff;
+        const g = (bgValue >> 8) & 0xff;
+        const b = bgValue & 0xff;
+        const avg = (r + g + b) / 3;
+        isLightTheme = avg > 128 || theme.bg_color.toLowerCase() === '#ffffff';
+      } catch {
+        // Default to light if parsing fails
+        isLightTheme = true;
+      }
+    }
+    
+    return {
+      bg: theme.bg_color || '#ffffff',
+      text: theme.text_color || (isLightTheme ? '#000000' : '#ffffff'),
+      hint: theme.hint_color || (isLightTheme ? '#999999' : '#aaaaaa'),
+      link: theme.link_color || '#0ea5e9',
+      button: theme.button_color || '#0ea5e9',
+      buttonText: theme.button_text_color || '#ffffff',
+      secondaryBg: theme.secondary_bg_color || (isLightTheme ? '#f0f0f0' : '#1a1a1a'),
+    };
+  }, [theme]);
+
+  // Helper functions for easy access
+  const getBgColor = () => themeColors.bg;
+  const getTextColor = () => themeColors.text;
+  const getHintColor = () => themeColors.hint;
+  const getLinkColor = () => themeColors.link;
+  const getButtonColor = () => themeColors.button;
+  const getButtonTextColor = () => themeColors.buttonText;
+  const getSecondaryBgColor = () => themeColors.secondaryBg;
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: 16, background: getBgColor(), color: getTextColor(), minHeight: '100vh' }} className='pt-60'>
