@@ -49,79 +49,109 @@ const hasData = (res: StartSingle | StartChoose | StartError | null): res is Has
   return !!res && res.success === true;
 };
 
-// Professional Telegram theme hook using official API
+// Professional Telegram theme hook using official Telegram Web App script
 function useTelegramTheme() {
   const [theme, setTheme] = useState<TelegramThemeParams>({});
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    let cleanup: (() => void) | undefined;
+    let retryTimeout: NodeJS.Timeout | undefined;
+    const maxRetries = 50; // Maximum 5 seconds of retries (50 * 100ms)
+    let retryCount = 0;
 
-    const w = window as unknown as TelegramWindow;
-    const webApp = w.Telegram?.WebApp;
+    // Wait for the Telegram script to load
+    const initializeTelegramWebApp = () => {
+      if (typeof window === 'undefined') return;
 
-    if (!webApp) return;
+      const w = window as unknown as TelegramWindow;
+      const webApp = w.Telegram?.WebApp;
 
-    // Initialize WebApp
-    if (webApp.ready) {
-      webApp.ready();
-    }
-    if (webApp.expand) {
-      webApp.expand();
-    }
-
-    // Get initial theme from themeParams
-    const initializeTheme = (themeParams?: TelegramThemeParams) => {
-      const currentTheme = themeParams || webApp.themeParams;
-      if (currentTheme) {
-        setTheme(currentTheme);
-        
-        // Set Mini App header and background colors using official API
-        if (webApp.setHeaderColor) {
-          // Use theme's button_color or bg_color for header
-          webApp.setHeaderColor(currentTheme.button_color || currentTheme.bg_color || '#ffffff');
+      if (!webApp) {
+        // Retry after a short delay if script hasn't loaded yet
+        if (retryCount < maxRetries) {
+          retryCount++;
+          retryTimeout = setTimeout(initializeTelegramWebApp, 100);
         }
-        
-        if (webApp.setBackgroundColor) {
-          // Use theme's bg_color for Mini App background
-          webApp.setBackgroundColor(currentTheme.bg_color || '#ffffff');
-        }
+        return;
       }
+
+      // Initialize WebApp using official API
+      if (webApp.ready) {
+        webApp.ready();
+      }
+      if (webApp.expand) {
+        webApp.expand();
+      }
+
+      // Function to update theme and set Mini App colors
+      const updateTheme = (themeParams?: TelegramThemeParams) => {
+        // Use theme from event or directly from webApp.themeParams
+        const currentTheme = themeParams || webApp.themeParams;
+        
+        if (currentTheme) {
+          setTheme(currentTheme);
+          
+          // Set Mini App header color using official API: web_app_set_header_color
+          if (webApp.setHeaderColor) {
+            webApp.setHeaderColor(currentTheme.button_color || currentTheme.bg_color || '#ffffff');
+          }
+          
+          // Set Mini App background color using official API: web_app_set_background_color
+          if (webApp.setBackgroundColor) {
+            webApp.setBackgroundColor(currentTheme.bg_color || '#ffffff');
+          }
+        }
+      };
+
+      // Get initial theme from themeParams (official API property)
+      if (webApp.themeParams) {
+        updateTheme(webApp.themeParams);
+      }
+
+      // Official method: web_app_request_theme
+      // This triggers the theme_changed event with updated theme_params
+      if (webApp.requestTheme) {
+        webApp.requestTheme();
+      }
+
+      // Official event: theme_changed
+      // Event payload contains theme_params property
+      const handleThemeChanged = (event?: TelegramThemeChangedEvent) => {
+        if (event?.theme_params) {
+          // Use theme_params from event payload
+          updateTheme(event.theme_params);
+        } else if (webApp.themeParams) {
+          // Fallback: use themeParams directly if event doesn't have it
+          updateTheme();
+        }
+      };
+
+      // Register event listener for theme_changed event
+      if (webApp.onEvent) {
+        webApp.onEvent('theme_changed', handleThemeChanged);
+        // Also support camelCase for compatibility
+        webApp.onEvent('themeChanged', handleThemeChanged);
+      }
+
+      // Setup cleanup function
+      cleanup = () => {
+        if (webApp.offEvent) {
+          webApp.offEvent('theme_changed', handleThemeChanged);
+          webApp.offEvent('themeChanged', handleThemeChanged);
+        }
+      };
     };
 
-    // Get theme immediately if available
-    if (webApp.themeParams) {
-      initializeTheme();
-    }
+    // Start initialization
+    initializeTelegramWebApp();
 
-    // Official method: web_app_request_theme
-    // This will trigger the theme_changed event
-    if (webApp.requestTheme) {
-      webApp.requestTheme();
-    }
-
-    // Official event: theme_changed (not themeChanged)
-    // The event payload contains theme_params
-    const handleThemeChange = (event?: TelegramThemeChangedEvent) => {
-      if (event?.theme_params) {
-        initializeTheme(event.theme_params);
-      } else if (webApp.themeParams) {
-        // Fallback to direct access if event doesn't have theme_params
-        initializeTheme();
-      }
-    };
-
-    // Register event listener
-    if (webApp.onEvent) {
-      webApp.onEvent('theme_changed', handleThemeChange);
-      // Also listen to the camelCase version for compatibility
-      webApp.onEvent('themeChanged', handleThemeChange);
-    }
-
-    // Cleanup event listeners
+    // Return cleanup function
     return () => {
-      if (webApp.offEvent) {
-        webApp.offEvent('theme_changed', handleThemeChange);
-        webApp.offEvent('themeChanged', handleThemeChange);
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+      if (cleanup) {
+        cleanup();
       }
     };
   }, []);
