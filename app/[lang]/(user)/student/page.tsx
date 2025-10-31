@@ -204,8 +204,8 @@ export default function Page() {
 
               {selectedStudent && (
                 <div style={{ marginTop: 16 }}>
-                  {/* Profile Header Card */}
-                  <div style={{ background: 'linear-gradient(135deg, #9333ea 0%, #3b82f6 100%)', borderRadius: 16, padding: 20, marginBottom: 20, color: '#fff', boxShadow: '0 10px 24px rgba(59,130,246,0.25)' }}>
+                  {/* Profile Header Card - Sticky */}
+                  <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'linear-gradient(135deg, #9333ea 0%, #3b82f6 100%)', borderRadius: 16, padding: 20, marginBottom: 20, color: '#fff', boxShadow: '0 10px 24px rgba(59,130,246,0.25)' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
                       {/* Avatar */}
                       <img
@@ -216,23 +216,12 @@ export default function Page() {
                       {/* Student Info */}
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>{selectedStudent.name || 'Student'}</div>
-                        <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 12 }}>
+                        <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 8 }}>
                           <span>{selectedStudent.packages.length} {selectedStudent.packages.length === 1 ? 'package' : 'packages'}</span>
                           <span style={{ margin: '0 8px' }}>•</span>
                           <span>Available</span>
                         </div>
-                        <div style={{ fontSize: 13, opacity: 0.85 }}>መዋር: {selectedStudent.teacherName || 'Not assigned'}</div>
-                        {/* Embedded Cards */}
-                        <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
-                          <div style={{ background: 'rgba(147,51,234,0.6)', borderRadius: 10, padding: '10px 14px', flex: 1 }}>
-                            <div style={{ fontSize: 11, opacity: 0.9, marginBottom: 4 }}>Subject</div>
-                            <div style={{ fontSize: 14, fontWeight: 700 }}>{selectedStudent.subject || 'Multiple Subjects'}</div>
-                          </div>
-                          <div style={{ background: 'rgba(91,33,182,0.6)', borderRadius: 10, padding: '10px 14px', flex: 1 }}>
-                            <div style={{ fontSize: 11, opacity: 0.9, marginBottom: 4 }}>Class Fee</div>
-                            <div style={{ fontSize: 14, fontWeight: 700 }}>{selectedStudent.classFee || 'ETB 4000'}</div>
-                          </div>
-                        </div>
+                        <div style={{ fontSize: 13, opacity: 0.85 }}>Teacher: {selectedStudent.teacherName || 'Not assigned'}</div>
                       </div>
                     </div>
                   </div>
