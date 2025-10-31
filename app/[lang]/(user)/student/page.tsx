@@ -241,7 +241,7 @@ export default function Page() {
                       <img
                         src="/userProfileIcon.png"
                         alt={s.name || 'Student avatar'}
-                        style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '4px solid #38bdf8', boxShadow: '0 10px 24px rgba(2,132,199,0.25)', display: 'block', margin: '0 auto', background: '#e0f2fe' }}
+                        style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: `4px solid ${getLinkColor()}`, boxShadow: `0 10px 24px ${getLinkColor()}40`, display: 'block', margin: '0 auto', background: getSecondaryBgColor() || '#e0f2fe' }}
                       />
                       <div style={{ marginTop: 10, color: getLinkColor(), textAlign: 'center', fontWeight: 700 }}>{s.name || 'Student'}</div>
                     </button>
@@ -260,7 +260,7 @@ export default function Page() {
                       <img
                         src="/userProfileIcon.png"
                         alt={selectedStudent.name || 'Student avatar'}
-                        style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.3)', flexShrink: 0 }}
+                        style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${getButtonTextColor()}4d`, flexShrink: 0 }}
                       />
                       {/* Student Info */}
                       <div style={{ flex: 1 }}>
@@ -280,14 +280,14 @@ export default function Page() {
                       <div key={`${selectedStudent.studentId}-${pkg.id}`} style={{ background: getSecondaryBgColor() || '#ffffff', border: `1px solid ${getSecondaryBgColor()}`, borderRadius: 14, overflow: 'hidden', boxShadow: '0 10px 24px rgba(0,0,0,0.08)' }}>
                         <div style={{ height: 140, position: 'relative' }}>
                           <img src="/quranlogo.png" alt="Package thumbnail" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: '50%', background: '#ffffffd9', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #0284c7', marginLeft: 4 }} />
+                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: '50%', background: `${getBgColor()}d9`, boxShadow: '0 8px 20px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: `16px solid ${getLinkColor()}`, marginLeft: 4 }} />
                           </div>
                         </div>
                         <div style={{ padding: 14 }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                            <span style={{ fontSize: 12, color: '#0369a1', background: '#e0f2fe', border: '1px solid #bae6fd', padding: '4px 10px', borderRadius: 9999 }}>beginner</span>
-                            <span style={{ fontSize: 12, color: '#111827' }}>⭐ 4.8</span>
+                            <span style={{ fontSize: 12, color: getLinkColor(), background: getSecondaryBgColor() || '#e0f2fe', border: `1px solid ${getSecondaryBgColor()}`, padding: '4px 10px', borderRadius: 9999 }}>beginner</span>
+                            <span style={{ fontSize: 12, color: getTextColor() }}>⭐ 4.8</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                             <div style={{ fontWeight: 800, color: getTextColor(), lineHeight: 1.35, fontSize: 18, flex: 1 }}>
@@ -323,14 +323,14 @@ export default function Page() {
                   <div key={pkg.id} style={{ background: getSecondaryBgColor() || '#ffffff', border: `1px solid ${getSecondaryBgColor()}`, borderRadius: 14, overflow: 'hidden', boxShadow: '0 10px 24px rgba(0,0,0,0.08)' }}>
                     <div style={{ height: 140, position: 'relative' }}>
                       <img src="/quranlogo.png" alt="Package thumbnail" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: '50%', background: '#ffffffd9', boxShadow: '0 8px 20px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #0284c7', marginLeft: 4 }} />
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: '50%', background: `${getBgColor()}d9`, boxShadow: '0 8px 20px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: `16px solid ${getLinkColor()}`, marginLeft: 4 }} />
                       </div>
                     </div>
                     <div style={{ padding: 14 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontSize: 12, color: '#0369a1', background: '#e0f2fe', border: '1px solid #bae6fd', padding: '4px 10px', borderRadius: 9999 }}>beginner</span>
-                        <span style={{ fontSize: 12, color: '#111827' }}>⭐ 4.8</span>
+                        <span style={{ fontSize: 12, color: getLinkColor(), background: getSecondaryBgColor() || '#e0f2fe', border: `1px solid ${getSecondaryBgColor()}`, padding: '4px 10px', borderRadius: 9999 }}>beginner</span>
+                        <span style={{ fontSize: 12, color: getTextColor() }}>⭐ 4.8</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                         <div style={{ fontWeight: 800, color: getTextColor(), lineHeight: 1.35, fontSize: 18, flex: 1 }}>
@@ -358,17 +358,17 @@ export default function Page() {
           )}
 
           {showPackagesFor && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,132,199,0.25)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-              <div style={{ background: 'linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%)', color: '#0c4a6e', width: 'min(640px, 94vw)', borderRadius: 18, padding: 22, boxShadow: '0 18px 48px rgba(2,132,199,0.35)', border: '1px solid #7dd3fc' }}>
+            <div style={{ position: 'fixed', inset: 0, background: `${getBgColor()}40`, backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+              <div style={{ background: getSecondaryBgColor() || getBgColor(), color: getTextColor(), width: 'min(640px, 94vw)', borderRadius: 18, padding: 22, boxShadow: `0 18px 48px ${getTextColor()}20`, border: `1px solid ${getSecondaryBgColor()}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <img src={BRAND_LOGO_URL} alt="Brand" style={{ width: 28, height: 28, borderRadius: 6 }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <img src="/userProfileIcon.png" alt={showPackagesFor.name || 'Student avatar'} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '3px solid #38bdf8' }} />
-                      <div style={{ fontWeight: 800, color: '#075985' }}>{showPackagesFor.name || 'Student'}</div>
+                      <img src="/userProfileIcon.png" alt={showPackagesFor.name || 'Student avatar'} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${getLinkColor()}` }} />
+                      <div style={{ fontWeight: 800, color: getTextColor() }}>{showPackagesFor.name || 'Student'}</div>
                     </div>
                   </div>
-                  <button onClick={() => setShowPackagesFor(null)} style={{ background: '#0284c7', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 14, borderRadius: 8, padding: '6px 10px' }}>Close</button>
+                  <button onClick={() => setShowPackagesFor(null)} style={{ background: getButtonColor(), border: 'none', color: getButtonTextColor(), cursor: 'pointer', fontSize: 14, borderRadius: 8, padding: '6px 10px' }}>Close</button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 18, justifyItems: 'center' }}>
                   {showPackagesFor.packages.map((pkg) => (
@@ -377,10 +377,10 @@ export default function Page() {
                       onClick={() => handleChoose(showPackagesFor.studentId, pkg.id)}
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
                     >
-                      <div style={{ width: 120, height: 120, borderRadius: '50%', border: '4px solid #0ea5e9', background: '#e0f2fe', color: '#075985', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 800 }}>
+                      <div style={{ width: 120, height: 120, borderRadius: '50%', border: `4px solid ${getLinkColor()}`, background: getSecondaryBgColor() || getBgColor(), color: getTextColor(), display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 800 }}>
                         {pkg.name.slice(0, 10)}
                       </div>
-                      <div style={{ textAlign: 'center', marginTop: 10, color: '#0c4a6e', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <div style={{ textAlign: 'center', marginTop: 10, color: getTextColor(), fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                         {pkg.name}
                         {pendingChoice === `${showPackagesFor.studentId}:${pkg.id}` && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
                       </div>
