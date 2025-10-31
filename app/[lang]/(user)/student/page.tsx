@@ -101,7 +101,6 @@ export default function Page() {
 
   const singleData = hasData(startRes) && startRes.data.mode === 'single' ? startRes.data : null;
   const chooseData = hasData(startRes) && startRes.data.mode === 'choose' ? startRes.data : null;
-  const AVATAR_URL = process.env.NEXT_PUBLIC_STUDENT_AVATAR_URL || 'https://dummyimage.com/220x220/bae6fd/0369a1&text=%20';
   const BRAND_LOGO_URL = process.env.NEXT_PUBLIC_BRAND_LOGO_URL || 'https://dummyimage.com/64x64/0ea5e9/ffffff&text=DK';
   const [selectedStudent, setSelectedStudent] = useState<null | { studentId: number; name: string | null; packages: Array<{ id: string; name: string; progressPercentage?: number }> }>(null);
 
@@ -193,7 +192,7 @@ export default function Page() {
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center' }}
                     >
                       <img
-                        src={AVATAR_URL}
+                        src="/userProfileIcon.png"
                         alt={s.name || 'Student avatar'}
                         style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '4px solid #38bdf8', boxShadow: '0 10px 24px rgba(2,132,199,0.25)', display: 'block', margin: '0 auto', background: '#e0f2fe' }}
                       />
@@ -294,7 +293,7 @@ export default function Page() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <img src={BRAND_LOGO_URL} alt="Brand" style={{ width: 28, height: 28, borderRadius: 6 }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <img src={AVATAR_URL} alt={showPackagesFor.name || 'Student avatar'} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '3px solid #38bdf8' }} />
+                      <img src="/userProfileIcon.png" alt={showPackagesFor.name || 'Student avatar'} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '3px solid #38bdf8' }} />
                       <div style={{ fontWeight: 800, color: '#075985' }}>{showPackagesFor.name || 'Student'}</div>
                     </div>
                   </div>
