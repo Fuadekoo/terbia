@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { startStudentFlow, chooseStudentPackage } from '@/actions/student/telegram';
 import { Loader2 } from 'lucide-react';
 import { retrieveRawInitData } from '@telegram-apps/sdk';
@@ -92,12 +92,7 @@ export default function Page() {
   };
 
 
-  const title = useMemo(() => {
-    if (!chatId) return 'Loading Telegram user...';
-    if (loading) return 'Preparing your learning path...';
-    if (hasData(startRes) && startRes.data.mode === 'single') return 'Continue Learning';
-    return "Who's learning?";
-  }, [chatId, loading, startRes]);
+
 
   const singleData = hasData(startRes) && startRes.data.mode === 'single' ? startRes.data : null;
   const chooseData = hasData(startRes) && startRes.data.mode === 'choose' ? startRes.data : null;
@@ -111,14 +106,8 @@ export default function Page() {
   }, [singleData]);
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }}>
-      <style jsx>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
-        <img src={BRAND_LOGO_URL} alt="Brand" style={{ width: 32, height: 32, borderRadius: 6 }} />
-        <h1 style={{ fontSize: 24, margin: 0, textAlign: 'center', color: '#0369a1' }}>{title}</h1>
-      </div>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }} className='pt-30'>
+     
 
       {!chatId && (
         <div style={{ padding: 16, border: '1px solid #eee', borderRadius: 12, background: '#fafafa', marginBottom: 12 }}>
@@ -205,7 +194,7 @@ export default function Page() {
               {selectedStudent && (
                 <div style={{ marginTop: 16 }}>
                   {/* Profile Header Card - Sticky */}
-                  <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'linear-gradient(135deg, #9333ea 0%, #3b82f6 100%)', borderRadius: 16, padding: 20, marginBottom: 20, color: '#fff', boxShadow: '0 10px 24px rgba(59,130,246,0.25)' }}>
+                  <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#0ea5e9', borderRadius: 16, padding: 20, marginTop: 30, marginBottom: 20, color: '#fff', boxShadow: '0 10px 24px rgba(14,165,233,0.25)' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
                       {/* Avatar */}
                       <img
