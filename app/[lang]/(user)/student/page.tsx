@@ -167,7 +167,7 @@ export default function Page() {
           {!loading && chooseData && chooseData.students.length > 1 && (
             <div>
               {!selectedStudent && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 24, justifyItems: 'center' }}>
+                <div style={{ display: 'grid',top: 60, gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 24, justifyItems: 'center' }}>
                   {chooseData.students.map((s) => (
                     <button
                       key={s.studentId}
@@ -193,8 +193,10 @@ export default function Page() {
 
               {selectedStudent && (
                 <div>
+                  {/* Blurred overlay above header - Sticky */}
+                  <div style={{ position: 'sticky', top: 0, zIndex: 10, height: 30, background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', marginBottom: 0, marginTop: 30 }} />
                   {/* Profile Header Card - Sticky */}
-                  <div style={{ position: 'sticky', top: 30, zIndex: 10, background: '#0ea5e9', borderRadius: 16, padding: 20, marginTop: 30, marginBottom: 20, color: '#fff', boxShadow: '0 10px 24px rgba(14,165,233,0.25)' }}>
+                  <div style={{ position: 'sticky', top: 30, zIndex: 9, background: '#0ea5e9', borderRadius: 16, padding: 20, marginTop: 0, marginBottom: 20, color: '#fff', boxShadow: '0 10px 24px rgba(14,165,233,0.25)' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
                       {/* Avatar */}
                       <img
