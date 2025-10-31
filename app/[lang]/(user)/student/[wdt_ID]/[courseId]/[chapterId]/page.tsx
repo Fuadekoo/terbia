@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 
 import { useParams, useRouter } from "next/navigation";
 import useAction from "@/hooks/useAction";
@@ -30,6 +30,122 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { validateStudentAccess } from "@/actions/student/telegram";
 import { retrieveRawInitData } from "@telegram-apps/sdk";
 
+// Telegram Theme Types
+interface TelegramThemeParams {
+  bg_color?: string;
+  text_color?: string;
+  hint_color?: string;
+  link_color?: string;
+  button_color?: string;
+  button_text_color?: string;
+  secondary_bg_color?: string;
+}
+
+interface TelegramThemeChangedEvent {
+  theme_params?: TelegramThemeParams;
+}
+
+interface TelegramWebApp {
+  initDataUnsafe?: { chat?: { id?: number }; user?: { id?: number } };
+  themeParams?: TelegramThemeParams;
+  ready?: () => void;
+  expand?: () => void;
+  requestTheme?: () => void;
+  setHeaderColor?: (color: string | { color_key: string }) => void;
+  setBackgroundColor?: (color: string | { color_key: string }) => void;
+  onEvent?: (event: string, handler: (event?: TelegramThemeChangedEvent) => void) => void;
+  offEvent?: (event: string, handler: (event?: TelegramThemeChangedEvent) => void) => void;
+}
+
+interface TelegramWindow {
+  Telegram?: {
+    WebApp?: TelegramWebApp;
+  };
+}
+
+// Professional Telegram theme hook using official Telegram Web App script
+function useTelegramTheme() {
+  const [theme, setTheme] = useState<TelegramThemeParams>({});
+
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    let retryTimeout: NodeJS.Timeout | undefined;
+    const maxRetries = 50;
+    let retryCount = 0;
+
+    const initializeTelegramWebApp = () => {
+      if (typeof window === 'undefined') return;
+
+      const w = window as unknown as TelegramWindow;
+      const webApp = w.Telegram?.WebApp;
+
+      if (!webApp) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          retryTimeout = setTimeout(initializeTelegramWebApp, 100);
+        }
+        return;
+      }
+
+      if (webApp.ready) webApp.ready();
+      if (webApp.expand) webApp.expand();
+
+      const updateTheme = (themeParams?: TelegramThemeParams) => {
+        const currentTheme = themeParams || webApp.themeParams;
+        
+        if (currentTheme) {
+          setTheme(currentTheme);
+          
+          if (webApp.setHeaderColor) {
+            webApp.setHeaderColor(currentTheme.button_color || currentTheme.bg_color || '#ffffff');
+          }
+          
+          if (webApp.setBackgroundColor) {
+            webApp.setBackgroundColor(currentTheme.bg_color || '#ffffff');
+          }
+        }
+      };
+
+      if (webApp.themeParams) {
+        updateTheme(webApp.themeParams);
+      }
+
+      if (webApp.requestTheme) {
+        webApp.requestTheme();
+      }
+
+      const handleThemeChanged = (event?: TelegramThemeChangedEvent) => {
+        if (event?.theme_params) {
+          updateTheme(event.theme_params);
+        } else if (webApp.themeParams) {
+          updateTheme();
+        }
+      };
+
+      if (webApp.onEvent) {
+        webApp.onEvent('theme_changed', handleThemeChanged);
+        webApp.onEvent('themeChanged', handleThemeChanged);
+      }
+
+      cleanup = () => {
+        if (webApp.offEvent) {
+          webApp.offEvent('theme_changed', handleThemeChanged);
+          webApp.offEvent('themeChanged', handleThemeChanged);
+        }
+      };
+    };
+
+    initializeTelegramWebApp();
+
+    return () => {
+      if (retryTimeout) clearTimeout(retryTimeout);
+      if (cleanup) cleanup();
+    };
+  }, []);
+
+  return theme;
+}
+
 const itemVariants = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
@@ -42,6 +158,37 @@ function Page() {
   const chapterId = String(params?.chapterId ?? "");
   const [authorized, setAuthorized] = React.useState<boolean | null>(null);
   const [chatId, setChatId] = React.useState<string | null>(null);
+  
+  // Use Telegram theme hook
+  const theme = useTelegramTheme();
+
+  // Professional theme utilities with memoization
+  const themeColors = useMemo(() => {
+    let isLightTheme = true;
+    if (theme.bg_color) {
+      try {
+        const bgHex = theme.bg_color.replace('#', '');
+        const bgValue = parseInt(bgHex, 16);
+        const r = (bgValue >> 16) & 0xff;
+        const g = (bgValue >> 8) & 0xff;
+        const b = bgValue & 0xff;
+        const avg = (r + g + b) / 3;
+        isLightTheme = avg > 128 || theme.bg_color.toLowerCase() === '#ffffff';
+      } catch {
+        isLightTheme = true;
+      }
+    }
+    
+    return {
+      bg: theme.bg_color || '#ffffff',
+      text: theme.text_color || (isLightTheme ? '#000000' : '#ffffff'),
+      hint: theme.hint_color || (isLightTheme ? '#999999' : '#aaaaaa'),
+      link: theme.link_color || '#0ea5e9',
+      button: theme.button_color || '#0ea5e9',
+      buttonText: theme.button_text_color || '#ffffff',
+      secondaryBg: theme.secondary_bg_color || (isLightTheme ? '#f0f0f0' : '#1a1a1a'),
+    };
+  }, [theme]);
   const [packageData] = useAction(
     getPackageData,
     [true, (response) => console.log(response)],
@@ -64,6 +211,9 @@ function Page() {
   // Gate by Telegram chat id like the student landing page
   useEffect(() => {
     if (typeof window === "undefined") return;
+    
+    let extractedId: string | null = null;
+    
     try {
       const raw = retrieveRawInitData();
       if (raw) {
@@ -71,17 +221,22 @@ function Page() {
         const json = p.get("chat") || p.get("user");
         if (json) {
           const obj = JSON.parse(json) as { id?: number };
-          if (obj?.id) setChatId(String(obj.id));
+          if (obj?.id) extractedId = String(obj.id);
         }
       }
     } catch {}
-    if (!chatId) {
+    
+    if (!extractedId) {
       const w = window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { chat?: { id?: number }; user?: { id?: number } } } } };
       const unsafe = w.Telegram?.WebApp?.initDataUnsafe;
       const id = unsafe?.chat?.id ?? unsafe?.user?.id;
-      if (id) setChatId(String(id));
+      if (id) extractedId = String(id);
     }
-  }, []);
+    
+    if (extractedId && !chatId) {
+      setChatId(extractedId);
+    }
+  }, [chatId]);
 
   useEffect(() => {
     (async () => {
@@ -184,8 +339,23 @@ function Page() {
 
   if (authorized === null) {
     return (
-      <motion.div className="flex items-center justify-center min-h-[60vh]" variants={containerVariants} initial="hidden" animate="visible">
-        <div className="text-center p-6 border rounded-xl">Verifying access…</div>
+      <motion.div 
+        className="flex items-center justify-center min-h-[60vh]" 
+        style={{ background: themeColors.bg, color: themeColors.text }}
+        variants={containerVariants} 
+        initial="hidden" 
+        animate="visible"
+      >
+        <div 
+          className="text-center p-6 border rounded-xl"
+          style={{ 
+            borderColor: themeColors.secondaryBg,
+            background: themeColors.secondaryBg,
+            color: themeColors.text 
+          }}
+        >
+          Verifying access…
+        </div>
       </motion.div>
     );
   }
@@ -196,13 +366,15 @@ function Page() {
   if (progressData === true) {
     return (
       <motion.div
-        className="flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-b from-sky-100 to-sky-100 dark:from-sky-900 dark:to-sky-950"
+        className="flex flex-col items-center justify-center min-h-[60vh]"
+        style={{ background: themeColors.bg }}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <svg
-          className="w-16 h-16 text-blue-500 mb-4"
+          className="w-16 h-16 mb-4"
+          style={{ color: themeColors.link }}
           fill="none"
           stroke="currentColor"
           strokeWidth={2.5}
@@ -215,10 +387,16 @@ function Page() {
             d="M13 16h-1v-4h-1m1-4h.01M12 20c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z"
           />
         </svg>
-        <span className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-2">
+        <span 
+          className="text-2xl font-bold mb-2"
+          style={{ color: themeColors.text }}
+        >
           Package Not Started
         </span>
-        <span className="text-lg text-gray-600 dark:text-gray-300 mb-6 text-center max-w-md">
+        <span 
+          className="text-lg mb-6 text-center max-w-md"
+          style={{ color: themeColors.hint }}
+        >
           Please start your package using our Telegram bot to access the
           content.
         </span>
@@ -226,7 +404,11 @@ function Page() {
           href="https://t.me/MubareksBot"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+          className="inline-block px-6 py-3 rounded-lg shadow-md transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2"
+          style={{ 
+            background: themeColors.button,
+            color: themeColors.buttonText 
+          }}
           aria-label="Open Telegram bot to start package"
         >
           Go to Telegram
@@ -239,7 +421,8 @@ function Page() {
     <motion.div
       className="bg-white min-h-screen overflow-hidden"
       style={{
-        background: "#f8f9fa",
+        background: themeColors.bg,
+        color: themeColors.text,
       }}
       variants={containerVariants}
       initial="hidden"
@@ -252,27 +435,42 @@ function Page() {
           {isLoading ? (
             //to show loading skeleton
             <motion.div
-              className="flex items-center justify-center min-h-[50vh] bg-gradient-to-r from-gray-100 to-gray-100 dark:from-yellow-900 dark:to-yellow-800 rounded-xl"
+              className="flex items-center justify-center min-h-[50vh] rounded-xl"
+              style={{ background: themeColors.secondaryBg }}
               variants={itemVariants}
               initial="hidden"
               animate="visible"
             >
-              <div className="animate-pulse w-4/5 h-96 rounded-lg bg-gray-300/50 dark:bg-gray-700/50" />
+              <div 
+                className="animate-pulse w-4/5 h-96 rounded-lg"
+                style={{ background: `${themeColors.secondaryBg}80` }}
+              />
             </motion.div>
           ) : error ? (
             <motion.div
-              className="flex flex-col items-center justify-center min-h-[50vh] bg-red-100 dark:bg-red-900 rounded-xl"
+              className="flex flex-col items-center justify-center min-h-[50vh] rounded-xl"
+              style={{ background: themeColors.secondaryBg }}
               variants={itemVariants}
               initial="hidden"
               animate="visible"
             >
-              <AlertCircle className="w-12 h-12 text-red-600 dark:text-red-400 mb-4" />
-              <span className="text-xl font-semibold text-red-700 dark:text-red-300 mb-4">
+              <AlertCircle 
+                className="w-12 h-12 mb-4" 
+                style={{ color: themeColors.link }}
+              />
+              <span 
+                className="text-xl font-semibold mb-4"
+                style={{ color: themeColors.text }}
+              >
                 {error}
               </span>
               <Button
                 onClick={() => refetch()}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white"
+                className="flex items-center gap-2 text-white"
+                style={{ 
+                  background: themeColors.button,
+                  color: themeColors.buttonText 
+                }}
                 aria-label="Retry loading chapter data"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -284,7 +482,10 @@ function Page() {
           ) : (
             <>
               {/* Main Layout Container */}
-              <div className="flex h-screen bg-white">
+              <div 
+                className="flex h-screen"
+                style={{ background: themeColors.bg }}
+              >
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
                   {/* Video Player Section */}

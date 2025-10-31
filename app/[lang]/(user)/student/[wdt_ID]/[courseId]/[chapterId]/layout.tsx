@@ -49,5 +49,5 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     isClicked,
   ]);
 
-  return <div className="overflow-auto grid bg-white">{children}</div>;
+  return <div className="overflow-auto grid">{children}</div>;
 }
