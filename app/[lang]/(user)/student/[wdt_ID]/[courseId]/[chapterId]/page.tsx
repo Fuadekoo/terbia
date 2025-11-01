@@ -739,7 +739,10 @@ function Page() {
                                   style={{ background: themeColors.bg, color: themeColors.text }}
                                 >
                                   {/* packageId={data?.packageId || ""}  */}
-                                  <ChatComponent packageId={data?.packageId || ""} />
+                                  <ChatComponent 
+                                    packageId={data?.packageId || ""} 
+                                    themeColors={themeColors}
+                                  />
                                 </TabsContent>
                               </div>
                             </div>

@@ -32,14 +32,49 @@ export async function startBot() {
 
   bot.command("start", async (ctx) => {
     const chatId = ctx.chat?.id;
+    
+    if (!chatId) {
+      return ctx.reply("Unable to retrieve chat ID.");
+    }
+
+    // Extract start parameter (e.g., "webapp_123" from "/start webapp_123")
+    const startParam = ctx.match;
+    
+    // Handle webapp deep link parameter
+    if (startParam && typeof startParam === 'string' && startParam.startsWith('webapp_')) {
+      const studentId = parseInt(startParam.replace('webapp_', ''));
+      
+      if (!isNaN(studentId)) {
+        const lang = "en";
+        const stud = "student";
+        const url = `${BASE_URL}/${lang}/${stud}/${studentId}`;
+        
+        const student = await prisma.wpos_wpdatatable_23.findFirst({
+          where: { 
+            wdt_ID: studentId,
+            status: { in: ["Active", "Not yet", "On progress"] }
+          },
+          select: { name: true }
+        });
+        
+        const studentName = student?.name || "Student";
+        
+        const keyboard = new InlineKeyboard().webApp(
+          `📚 Open ${studentName}'s Learning Portal`,
+          url
+        );
+        
+        return ctx.reply(
+          `✅ Welcome to Darul Kubra!\n\nClick the button below to open your learning portal:`,
+          { reply_markup: keyboard }
+        );
+      }
+    }
+    
     // Check if user is admin
     const admin = await prisma.admin.findFirst({
       where: { chat_id: chatId.toString() },
     });
-
-    if (!chatId) {
-      return ctx.reply("Unable to retrieve chat ID.");
-    }
 
     if (admin) {
       // Admin help message (Amharic & English)
