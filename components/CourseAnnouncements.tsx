@@ -14,10 +14,27 @@ interface Announcement {
 export default function CourseAnnouncements({
   courseId,
   lang,
+  themeColors,
 }: {
   courseId: string;
   lang: string;
+  themeColors?: {
+    bg: string;
+    text: string;
+    hint: string;
+    link: string;
+    button: string;
+    buttonText: string;
+    secondaryBg: string;
+  };
 }) {
+  // Use Telegram theme colors or defaults
+  const bgColor = themeColors?.bg || "#ffffff";
+  const textColor = themeColors?.text || "#000000";
+  const hintColor = themeColors?.hint || "#6b7280";
+  const linkColor = themeColors?.link || "#0ea5e9";
+  const secondaryBg = themeColors?.secondaryBg || "#f3f4f6";
+
   const [announcements, , loading] = useAction(
     getAnnouncements,
     [true, () => {}],
@@ -30,20 +47,35 @@ export default function CourseAnnouncements({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div 
+        className="flex items-center justify-center h-64"
+        style={{ background: bgColor }}
+      >
+        <div 
+          className="animate-spin rounded-full h-8 w-8 border-b-2"
+          style={{ borderColor: linkColor }}
+        ></div>
       </div>
     );
   }
 
   if (!announcements || announcements.length === 0) {
     return (
-      <div className="text-center py-12">
-        <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-        <h3 className="text-xl font-medium mb-2">
+      <div 
+        className="text-center py-12"
+        style={{ background: bgColor }}
+      >
+        <MessageCircle 
+          className="w-16 h-16 mx-auto mb-4"
+          style={{ color: hintColor }}
+        />
+        <h3 
+          className="text-xl font-medium mb-2"
+          style={{ color: textColor }}
+        >
           {lang === "en" ? "No Announcements Yet" : "አንድም ማሳወቂያ የለም"}
         </h3>
-        <p className="text-gray-500">
+        <p style={{ color: hintColor }}>
           {lang === "en"
             ? "Check back later for updates from your instructor"
             : "ከአስተማሪዎ ዝመናዎችን ለማግኘት በኋላ በድጋሚ ይመለሱ"}
@@ -53,26 +85,45 @@ export default function CourseAnnouncements({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4" style={{ background: bgColor }}>
       {announcements.map((announcement: Announcement) => (
         <div
           key={announcement.id}
-          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow"
+          className="rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow"
+          style={{
+            background: secondaryBg,
+            borderColor: `${hintColor}30`,
+          }}
         >
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-1">
-              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ background: `${linkColor}20` }}
+              >
+                <MessageCircle 
+                  className="w-5 h-5"
+                  style={{ color: linkColor }}
+                />
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <User className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <User className="w-4 h-4" style={{ color: hintColor }} />
+                <span 
+                  className="text-sm font-medium"
+                  style={{ color: textColor }}
+                >
                   {lang === "en" ? "Instructor" : "አስተማሪ"}
                 </span>
-                <div className="w-1 h-1 rounded-full bg-gray-300"></div>
-                <div className="flex items-center gap-1 text-sm text-gray-500">
+                <div 
+                  className="w-1 h-1 rounded-full"
+                  style={{ background: hintColor }}
+                ></div>
+                <div 
+                  className="flex items-center gap-1 text-sm"
+                  style={{ color: hintColor }}
+                >
                   <Calendar className="w-4 h-4" />
                   <span>
                     {new Date(announcement.createdAt).toLocaleDateString(
@@ -86,7 +137,10 @@ export default function CourseAnnouncements({
                   </span>
                 </div>
               </div>
-              <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+              <p 
+                className="whitespace-pre-wrap text-sm leading-relaxed"
+                style={{ color: textColor }}
+              >
                 {announcement.anouncementDescription}
               </p>
             </div>

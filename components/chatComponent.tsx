@@ -51,7 +51,7 @@ export default function ChatComponent({ packageId }: { packageId: string }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Send className="h-5 w-5" />
-          Ask the PDF
+          Ask Darelkubra AI
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -60,7 +60,7 @@ export default function ChatComponent({ packageId }: { packageId: string }) {
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask a question about the PDF content..."
+            placeholder="Ask a question about the course content..."
             disabled={loading}
             className="flex-1"
             aria-label="Question input"

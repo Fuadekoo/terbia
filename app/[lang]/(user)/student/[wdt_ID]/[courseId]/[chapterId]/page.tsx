@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertCircle, RefreshCw, ArrowLeft, Bell, Home, BookOpen, MessageCircle, MessageSquare, FileText, Newspaper, Bot } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, Home, BookOpen, MessageCircle, MessageSquare, Newspaper, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCoursesPackageId } from "@/actions/admin/package";
 import CourseTopOverview from "@/components/courseTopOverview";
@@ -326,6 +326,8 @@ function Page() {
       }
     }
   }
+  
+  const [activeTab, setActiveTab] = React.useState(defaultTab);
 
   // Restrict access when not authorized
   if (authorized === false) {
@@ -650,7 +652,8 @@ function Page() {
                         style={{ background: themeColors.bg }}
                       >
                         <Tabs
-                          defaultValue={defaultTab}
+                          value={activeTab}
+                          onValueChange={setActiveTab}
                           className="h-full flex flex-col lg:h-auto "
                         >
                           {/* Content Area - Scrollable */}
@@ -727,6 +730,7 @@ function Page() {
                                   <CourseAnnouncements
                                     courseId={data.packageId}
                                     lang={lang}
+                                    themeColors={themeColors}
                                   />
                                 </TabsContent>
                                 <TabsContent
@@ -806,122 +810,99 @@ function Page() {
                               </div>
                             </div>
 
-                            {/* Right - Notification */}
-                            <button
-                              className="p-1 rounded-full transition-all duration-200 hover:opacity-80 relative flex-shrink-0"
-                              style={{
-                                background: "transparent",
-                                border: `1px solid ${themeColors.hint}40`,
-                              }}
-                              aria-label="Notifications"
-                            >
-                              <Bell
-                                className="w-4 h-4"
-                                style={{ color: themeColors.text }}
-                              />
-                              {/* Notification Dot */}
-                              <span
-                                className="absolute top-0 right-0 w-2 h-2 rounded-full"
+                            {/* Right - News & AI Icons */}
+                            <div className="flex items-center gap-2">
+                              {/* News Icon */}
+                              <button
+                                onClick={() => setActiveTab('announcements')}
+                                className="p-1.5 rounded-full transition-all duration-200 hover:opacity-80"
                                 style={{
-                                  background: "#ef4444",
-                                  boxShadow: `0 0 0 2px ${themeColors.secondaryBg}`,
+                                  background: `${themeColors.link}15`,
+                                  border: `1px solid ${themeColors.link}30`,
                                 }}
-                              />
-                            </button>
+                                aria-label="News"
+                              >
+                                <Newspaper
+                                  className="w-4 h-4"
+                                  style={{ color: themeColors.link }}
+                                />
+                              </button>
+
+                              {/* AI/Chat Icon */}
+                              <button
+                                onClick={() => setActiveTab('ai')}
+                                className="p-1.5 rounded-full transition-all duration-200 hover:opacity-80"
+                                style={{
+                                  background: `${themeColors.link}15`,
+                                  border: `1px solid ${themeColors.link}30`,
+                                }}
+                                aria-label="AI Assistant"
+                              >
+                                <Bot
+                                  className="w-4 h-4"
+                                  style={{ color: themeColors.link }}
+                                />
+                              </button>
+                            </div>
                           </div>
 
-                           {/* Navigation Tabs */}
+                           {/* Navigation Tabs - NO HORIZONTAL SCROLL */}
                             <div 
-                              className="px-2 py-1"
+                              className="px-1 py-1"
                               style={{ 
                                 background: themeColors.bg
                               }}
                             >
-                                <div className="overflow-x-auto scrollbar-hide scroll-smooth">
                                  <TabsList 
-                                   className="flex gap-1 bg-transparent p-0 min-w-max h-auto py-2"
+                                   className="grid grid-cols-4 bg-transparent p-0 w-full h-auto py-2 gap-1"
                                    style={{ background: 'transparent' }}
                                  >
                                  <TabsTrigger
                                    value="mainmenu"
-                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold lg:hidden transition-all duration-200 min-w-[70px]"
+                                   className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
                                    style={{
                                      color: themeColors.hint,
                                      background: 'transparent',
                                    }}
                                  >
-                                   <Home className="w-5 h-5" />
+                                   <Home className="w-4 h-4" />
                                    <span className="text-xs">Menu</span>
                                  </TabsTrigger>
                                  <TabsTrigger
                                    value="quiz"
-                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
+                                   className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
                                    style={{
                                      color: themeColors.hint,
                                      background: 'transparent',
                                    }}
                                  >
-                                   <BookOpen className="w-5 h-5" />
+                                   <BookOpen className="w-4 h-4" />
                                    <span className="text-xs">Quiz</span>
                                  </TabsTrigger>
                                  <TabsTrigger
                                    value="qna"
-                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
+                                   className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
                                    style={{
                                      color: themeColors.hint,
                                      background: 'transparent',
                                    }}
                                  >
-                                   <MessageCircle className="w-5 h-5" />
+                                   <MessageCircle className="w-4 h-4" />
                                    <span className="text-xs">Q&A</span>
                                  </TabsTrigger>
                                  <TabsTrigger
                                    value="feedback"
-                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
+                                   className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
                                    style={{
                                      color: themeColors.hint,
                                      background: 'transparent',
                                    }}
                                  >
-                                   <MessageSquare className="w-5 h-5" />
+                                   <MessageSquare className="w-4 h-4" />
                                    <span className="text-xs">Feedback</span>
                                  </TabsTrigger>
-                                 <TabsTrigger
-                                   value="materials"
-                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   <FileText className="w-5 h-5" />
-                                   <span className="text-xs">Materials</span>
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="announcements"
-                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   <Newspaper className="w-5 h-5" />
-                                   <span className="text-xs">News</span>
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="ai"
-                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold lg:hidden transition-all duration-200 min-w-[70px]"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   <Bot className="w-5 h-5" />
-                                   <span className="text-xs">AI</span>
-                                 </TabsTrigger>
                                </TabsList>
-                             </div>
-                           </div>
+                            </div>
                           </div>
                         </Tabs>
                       </div>

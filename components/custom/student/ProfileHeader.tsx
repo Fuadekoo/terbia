@@ -1,14 +1,15 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import { ArrowLeft, Bell } from "lucide-react";
+import { ArrowLeft, Newspaper, Bot } from "lucide-react";
 
 interface ProfileHeaderProps {
   name: string;
   role?: string;
-  hasNotification?: boolean;
   showBackButton?: boolean;
   backUrl?: string;
+  onNewsClick?: () => void;
+  onAIClick?: () => void;
   themeColors?: {
     bg: string;
     text: string;
@@ -23,9 +24,10 @@ interface ProfileHeaderProps {
 export default function ProfileHeader({
   name,
   role = "Student",
-  hasNotification = false,
   showBackButton = true,
   backUrl = "https://darelkubra.com",
+  onNewsClick,
+  onAIClick,
   themeColors,
 }: ProfileHeaderProps) {
   // Use Telegram theme colors or defaults
@@ -98,33 +100,43 @@ export default function ProfileHeader({
         </div>
       </div>
 
-      {/* Right Side - Icons */}
-      <div className="flex items-center gap-3">
-
-        {/* Notification Bell */}
-        <button
-          className="p-2 rounded-full transition-all duration-200 hover:opacity-80 relative"
-          style={{
-            background: "transparent",
-            border: `1px solid ${hintColor}40`,
-          }}
-          aria-label="Notifications"
-        >
-          <Bell
-            className="w-5 h-5"
-            style={{ color: textColor }}
-          />
-          {/* Notification Dot */}
-          {hasNotification && (
-            <span
-              className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full"
-              style={{
-                background: "#ef4444",
-                boxShadow: "0 0 0 2px " + bgColor,
-              }}
+      {/* Right Side - News & AI Icons */}
+      <div className="flex items-center gap-2">
+        {/* News Icon */}
+        {onNewsClick && (
+          <button
+            onClick={onNewsClick}
+            className="p-2 rounded-full transition-all duration-200 hover:opacity-80"
+            style={{
+              background: `${linkColor}15`,
+              border: `1px solid ${linkColor}30`,
+            }}
+            aria-label="News"
+          >
+            <Newspaper
+              className="w-4 h-4"
+              style={{ color: linkColor }}
             />
-          )}
-        </button>
+          </button>
+        )}
+
+        {/* AI/Chat Icon */}
+        {onAIClick && (
+          <button
+            onClick={onAIClick}
+            className="p-2 rounded-full transition-all duration-200 hover:opacity-80"
+            style={{
+              background: `${linkColor}15`,
+              border: `1px solid ${linkColor}30`,
+            }}
+            aria-label="AI Assistant"
+          >
+            <Bot
+              className="w-4 h-4"
+              style={{ color: linkColor }}
+            />
+          </button>
+        )}
       </div>
     </div>
   );
