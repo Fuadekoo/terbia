@@ -300,6 +300,17 @@ export default function Page() {
 
   return (
     <div style={{ background: getBgColor(), color: getTextColor(), minHeight: '100vh' }}>
+      {/* Global styles for fullscreen */}
+      <style jsx global>{`
+        /* Hide header in fullscreen mode */
+        :fullscreen .profile-header,
+        :-webkit-full-screen .profile-header,
+        :-moz-full-screen .profile-header,
+        :-ms-fullscreen .profile-header {
+          display: none !important;
+        }
+      `}</style>
+
       {/* Profile Header */}
       {chatId && chooseData && chooseData.students.length === 1 && (
         <ProfileHeader

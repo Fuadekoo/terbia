@@ -452,6 +452,14 @@ function Page() {
     >
       {/* Injected styles for tabs active state and component theming */}
       <style jsx global>{`
+        /* Hide header in fullscreen mode */
+        :fullscreen .profile-header,
+        :-webkit-full-screen .profile-header,
+        :-moz-full-screen .profile-header,
+        :-ms-fullscreen .profile-header {
+          display: none !important;
+        }
+        
         /* Tab active states */
         [data-state="active"] {
           color: ${themeColors.text} !important;

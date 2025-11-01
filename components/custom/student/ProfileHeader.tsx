@@ -41,7 +41,7 @@ export default function ProfileHeader({
 
   return (
     <div
-      className="w-full px-4 py-3 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md"
+      className="w-full px-4 pb-3 pt-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md profile-header"
       style={{
         background: `${bgColor}f0`,
         borderBottom: `1px solid ${themeColors?.secondaryBg || "#374151"}40`,
