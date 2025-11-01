@@ -110,7 +110,7 @@ export default function ChatComponent({ packageId }: { packageId: string }) {
         {answer && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-2">
-              Answer {currentAiProvider && `(${currentAiProvider})`}:
+              Answer {currentAiProvider && `(MelaverseAI)`}:
             </h3>
             <p className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
               {answer}

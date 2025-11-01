@@ -31,7 +31,6 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@radix-ui/react-visually-hidden": "^1.2.0",
     "@telegram-apps/sdk": "^3.11.8",
-    "@telegram-apps/sdk-react": "^3.3.9",
     "@types/canvas-confetti": "^1.9.0",
     "@types/formidable": "^3.4.5",
     "@uploadthing/react": "^7.3.0",
@@ -98,5 +97,8 @@
     "tailwindcss": "^4.1.5",
     "tw-animate-css": "^1.2.8",
     "typescript": "^5.8.3"
+  },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "^1.0.0"
   }
 }

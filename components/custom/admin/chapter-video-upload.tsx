@@ -52,7 +52,7 @@ export function ChapterVideoUpload({
     const timestamp = Date.now();
     const ext = file.name.split(".").pop() || "mp4";
     setUploadedVideoUrl(
-      `/api/videos/${timestamp}-${Math.floor(Math.random() * 100000)}.${ext}`
+      `${timestamp}-${Math.floor(Math.random() * 100000)}.${ext}`
     );
   };
 
@@ -60,7 +60,7 @@ export function ChapterVideoUpload({
     setIsUploadComplete(true);
     setIsUploading(false);
     if (filename) {
-      setUploadedVideoUrl(`/api/videos/${filename}`);
+      setUploadedVideoUrl(filename);
     }
   };
 
@@ -157,6 +157,11 @@ export function ChapterVideoUpload({
     } else {
       const videoUrl = initialData.customVideo;
       if (!videoUrl) return null;
+      // If it's already a filename (no path), use it directly
+      if (!videoUrl.includes('/')) {
+        return `/api/videos/${videoUrl}`;
+      }
+      // If it's a full path, extract the filename
       const filename = videoUrl.replace(/^\/?(api\/videos\/)?/, "");
       return `/api/videos/${filename}`;
     }

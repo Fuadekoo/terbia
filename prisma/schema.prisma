@@ -271,6 +271,7 @@ model tarbiaAttendance {
   student        wpos_wpdatatable_23 @relation(fields: [studId], references: [wdt_ID], onDelete: Cascade)
   packageId      String
   coursesPackage coursePackage       @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  messageId      Int?
   status         Boolean             @default(false)
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt

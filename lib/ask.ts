@@ -32,7 +32,7 @@ export async function askLLM(question: string, context: string[], aiProvider: AI
       return completion.choices[0]?.message?.content || 'No response generated'
     } else {
       // Default to Gemini
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
       const result = await model.generateContent({
         contents: [
@@ -146,7 +146,7 @@ export async function askLLMWithPDFs(question: string, pdfFiles: PDFFile[], aiPr
       }
     } else {
       // Gemini PDF processing
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
       // Prepare the parts array with PDF data first, then the question
       const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = []
