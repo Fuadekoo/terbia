@@ -13,6 +13,7 @@ import { updatePathProgressData } from "./actions/student/progress";
 import { InlineKeyboard } from "grammy";
 import { getAvailablePacakges } from "./actions/student/package";
 import { hasMatchingSubject } from "./lib/subject-matching";
+import { retrieveRawInitData } from "@telegram-apps/sdk";
 
 dotenv.config();
 const BASE_URL = process.env.FORWARD_URL || process.env.AUTH_URL;
@@ -59,218 +60,79 @@ export async function startBot() {
       );
     }
 
-    // 1. Fetch channels
-    let channels = await prisma.wpos_wpdatatable_23.findMany({
-      where: {
-        chat_id: chatId.toString(),
-        status: { in: ["Active", "Not yet","On progress"] },
-      },
-      select: {
-        wdt_ID: true,
-        name: true,
-        subject: true,
-        package: true,
-        isKid: true,
-        activePackage: {
-          where: { isPublished: true },
-          select: {
-            id: true,
-            name: true,
-            courses: {
-              where: { order: 1 },
-              select: {
-                id: true,
-                title: true,
-                chapters: {
-                  where: { position: 1 },
-                  select: {
-                    id: true,
-                    title: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    // For students, use Telegram Mini App approach
+    try {
+      // Get the raw init data from Telegram
+      const initDataRaw = retrieveRawInitData();
 
-    // 2. Update youtubeSubject for all channels
-    for (const channel of channels) {
-      const subject = channel.subject;
-      const packageType = channel.package;
-      const kidPackage = channel.isKid;
-      if (!packageType || !subject || kidPackage === null) continue;
+      console.log("Raw init data:", initDataRaw);
 
-      // Fetch all packages for the package type and kid package
-      const allSubjectPackages = await prisma.subjectPackage.findMany({
+      // Find student by chat_id
+      const student = await prisma.wpos_wpdatatable_23.findFirst({
         where: {
-          packageType: packageType,
-          kidpackage: kidPackage,
+          chat_id: chatId.toString(),
+          status: { in: ["Active", "Not yet", "On progress"] },
         },
-        orderBy: { createdAt: "desc" },
-        select: { packageId: true, subject: true },
-      });
-      
-      // Filter packages using subject matching logic for comma-separated subjects
-      const subjectPackage = allSubjectPackages.filter((pkg) => 
-        pkg.subject && hasMatchingSubject(subject, pkg.subject)
-      );
-      
-      if (!subjectPackage || subjectPackage.length === 0) continue;
-      const lastPackageId = subjectPackage[0].packageId;
-      // Check if the active package is already set
-      const activePackageAvailabilty =
-        subjectPackage.filter(
-          (pkg) => pkg.packageId === channel.activePackage?.id
-        ).length > 0;
-      // If no active package, set youtubeSubject to the latest subjectPackage
-      if (
-        channel.activePackage === null ||
-        channel.activePackage === undefined ||
-        !activePackageAvailabilty
-      ) {
-        await prisma.wpos_wpdatatable_23.update({
-          where: { wdt_ID: channel.wdt_ID },
-          data: { youtubeSubject: lastPackageId },
-        });
-      }
-    }
-
-    // 3. Fetch channels again to get updated youtubeSubject
-    channels = await prisma.wpos_wpdatatable_23.findMany({
-      where: {
-        chat_id: chatId.toString(),
-        status: { in: ["Active", "Not yet","On progress"] },
-      },
-      select: {
-        wdt_ID: true,
-        name: true,
-        subject: true,
-        package: true,
-        isKid: true,
-        activePackage: {
-          where: { isPublished: true },
-          select: {
-            id: true,
-            name: true,
-            courses: {
-              where: { order: 1 },
-              select: {
-                id: true,
-                title: true,
-                chapters: {
-                  where: { position: 1 },
-                  select: {
-                    id: true,
-                    title: true,
+        select: {
+          wdt_ID: true,
+          name: true,
+          subject: true,
+          package: true,
+          isKid: true,
+          activePackage: {
+            where: { isPublished: true },
+            select: {
+              id: true,
+              name: true,
+              courses: {
+                where: { order: 1 },
+                select: {
+                  id: true,
+                  title: true,
+                  chapters: {
+                    where: { position: 1 },
+                    select: {
+                      id: true,
+                      title: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    const lang = "en";
-    const stud = "student";
-
-    if (!channels || channels.length === 0) {
-      return ctx.reply("🚫 የኮርሱን ፕላትፎርም ለማግኘት አልተፈቀደለዎትም! አድሚኑን ያነጋግሩ፡፡");
-    }
-
-    let hasSentReply = false;
-
-    for (const channel of channels) {
-      const allChapterIds =
-        channel?.activePackage?.courses
-          ?.map((c) => c.chapters.map((ch) => ch.id))
-          ?.reduce((acc, cc) => [...acc, ...cc], []) ?? [];
-      const chapter1Id = allChapterIds[0];
-
-      const activePackageName = channel.activePackage?.name;
-
-      const {
-        package: packageType,
-        subject,
-        isKid,
-        wdt_ID: studentId,
-        name: channelName,
-      } = channel;
-
-      // Validate essential channel data
-      if (!packageType || !subject || isKid === null) continue;
-
-      const availablePackages = await getAvailablePacakges(
-        packageType,
-        subject,
-        isKid
-      );
-      if (!availablePackages || availablePackages.length === 0) continue;
-
-      const validPackages = availablePackages.filter((pkg) => pkg.id);
-      const isSinglePackage = validPackages.length === 1;
-
-      if (isSinglePackage) {
-        // Check if student progress exists
-        // Ensure student progress is initialized
-        const existingProgress = await prisma.studentProgress.findFirst({
-          where: { studentId, chapterId: chapter1Id },
-        });
-
-        if (!existingProgress) {
-          await prisma.studentProgress.create({
-            data: {
-              studentId,
-              chapterId: chapter1Id,
-              isCompleted: false,
-            },
-          });
-        }
-
-        // Update path progress and construct URL
-        const progressPath = await updatePathProgressData(studentId);
-        if (!progressPath) return;
-
-        const [courseId, chapterId] = progressPath;
-        const url = `${BASE_URL}/${lang}/${stud}/${studentId}/${courseId}/${chapterId}`;
-
-        const packageName = activePackageName || "የተማሪ ፓኬጅ";
-        const keyboard = new InlineKeyboard().webApp(
-          `📚 የ${channelName || "ዳሩል-ኩብራ"}ን የ${packageName}ትምህርት ገጽ ይክፈቱ`,
-          url
-        );
-
-        await ctx.reply(
-          "✅  እንኳን ወደ ዳሩል-ኩብራ የቁርአን ማእከል በደህና መጡ! ኮርሱን ለመከታተል ከታች ያለውን ማስፈንጠሪያ ይጫኑ፡፡",
-          { reply_markup: keyboard }
-        );
-
-        hasSentReply = true;
-      } else {
-        // Show available packages for selection
-        const keyboard = new InlineKeyboard();
-        for (const pkg of availablePackages) {
-          keyboard
-            .text(
-              pkg.package.name,
-              `choose_package_${pkg.package.id}@${studentId}`
-            )
-            .row();
-        }
-
-        await ctx.reply(
-          `ለተማሪ ${channelName} እባክዎ ፓኬጅ ይምረጡ፡፡\nPlease choose your package:`,
-          { reply_markup: keyboard }
-        );
-
-        hasSentReply = true;
+      if (!student) {
+        return ctx.reply("🚫 የኮርሱን ፕላትፎርም ለማግኘት አልተፈቀደለዎትም! አድሚኑን ያነጋግሩ፡፡");
       }
-    }
 
-    if (!hasSentReply) {
-      return ctx.reply("🚫 የኮርሱን ፕላትፎርም ለማግኘት አልተፈቀደለዎትም!");
+      // Create the student page URL with init data
+      const studentPageUrl = `${BASE_URL}/en/student/${
+        student.wdt_ID
+      }?initData=${encodeURIComponent(initDataRaw)}`;
+
+      // Create web app button
+      const keyboard = {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: `📚 የ${student.name || "ዳሩል-ኩብራ"}ን የትምህርት ገጽ ይክፈቱ`,
+                web_app: { url: studentPageUrl },
+              },
+            ],
+          ],
+        },
+      };
+
+      await ctx.reply(
+        "✅ እንኳን ወደ ዳሩል-ኩብራ የቁርአን ማእከል በደህና መጡ! ኮርሱን ለመከታተል ከታች ያለውን ማስፈንጠሪያ ይጫኑ፡፡",
+        keyboard
+      );
+    } catch (error) {
+      console.error("Error in start command:", error);
+      await ctx.reply("❌ አንድ ስህተት ተከስቷል። እባክዎ እንደገና ይሞክሩ።");
     }
   });
   // 4. Handle package selection
@@ -290,7 +152,7 @@ export async function startBot() {
       where: {
         chat_id: chatId?.toString(),
         wdt_ID: wdt_ID,
-        status: { in: ["Active", "Not yet","On progress"] },
+        status: { in: ["Active", "Not yet", "On progress"] },
       },
       data: {
         youtubeSubject: packageId,
@@ -439,7 +301,7 @@ export async function startBot() {
 
   // Store time restrictions for zoom link sending
   const zoomTimeRestrictions: Record<
-    number, // teacherId  
+    number, // teacherId
     {
       packageId: string;
       lastSentTime: Date;
@@ -453,18 +315,19 @@ export async function startBot() {
   setInterval(() => {
     const now = new Date();
     const timeRestrictionMs = 5 * 60 * 1000; // 5 minutes restriction
-    
+
     for (const teacherId in zoomTimeRestrictions) {
       zoomTimeRestrictions[teacherId] = zoomTimeRestrictions[teacherId].filter(
-        (restriction) => now.getTime() - restriction.lastSentTime.getTime() < timeRestrictionMs
+        (restriction) =>
+          now.getTime() - restriction.lastSentTime.getTime() < timeRestrictionMs
       );
-      
+
       // Remove empty teacher entries
       if (zoomTimeRestrictions[teacherId].length === 0) {
         delete zoomTimeRestrictions[teacherId];
       }
     }
-    
+
     // Clean up old zoom links (clean up all for now)
     for (const key in zoomLinks) {
       // For now, we'll clean up all zoom links since we don't store timestamps
@@ -676,7 +539,9 @@ export async function startBot() {
         const studentName = studentsName.shift() ?? "ተማሪ";
         const studentId = studentsId.shift() ?? "";
 
-        console.log(`Attempting to send message to chatId: ${chatId}, student: ${studentName}`);
+        console.log(
+          `Attempting to send message to chatId: ${chatId}, student: ${studentName}`
+        );
 
         // Check if student exists and is active before sending
         const studentExists = await prisma.wpos_wpdatatable_23.findFirst({
@@ -684,16 +549,20 @@ export async function startBot() {
             chat_id: String(chatId),
             status: { in: ["Active", "Not yet", "On progress"] },
           },
-          select: { wdt_ID: true, name: true, status: true }
+          select: { wdt_ID: true, name: true, status: true },
         });
 
         if (!studentExists) {
-          console.log(`Student with chatId ${chatId} not found or inactive, skipping`);
+          console.log(
+            `Student with chatId ${chatId} not found or inactive, skipping`
+          );
           failed.push(chatId);
           continue;
         }
 
-        console.log(`Student found: ${studentExists.name} (ID: ${studentExists.wdt_ID}, Status: ${studentExists.status})`);
+        console.log(
+          `Student found: ${studentExists.name} (ID: ${studentExists.wdt_ID}, Status: ${studentExists.status})`
+        );
 
         if (!isAdmin && ctx.message.text) {
           // Check time restriction for sending zoom links
@@ -703,10 +572,12 @@ export async function startBot() {
           // Telegram callback data has a 64-byte limit and doesn't allow special characters
           // Remove student name to avoid issues with special characters and length
           const callbackData = `join_zoom~${pending.packageId}~${studentId}`;
-          
+
           // Validate callback data length (Telegram limit is 64 bytes)
           if (callbackData.length > 64) {
-            console.error(`Callback data too long: ${callbackData.length} bytes`);
+            console.error(
+              `Callback data too long: ${callbackData.length} bytes`
+            );
             // Fallback: send without button
             await ctx.api.sendMessage(
               chatId,
@@ -715,7 +586,7 @@ export async function startBot() {
             sent.push(chatId);
             continue;
           }
-          
+
           // Store zoom link temporarily for callback handling
           const linkKey = `${pending.packageId}~${studentId}`;
           zoomLinks[linkKey] = ctx.message.text;
@@ -728,7 +599,9 @@ export async function startBot() {
             },
           };
 
-          console.log(`Sending zoom link message to ${chatId} for student ${studentName}`);
+          console.log(
+            `Sending zoom link message to ${chatId} for student ${studentName}`
+          );
           await ctx.api.sendMessage(
             chatId,
             `📚የ ${studentName} የትምህርት ሊንክ፦\n\nእባክዎን ከታች ያለውን ቁልፍ በመጫን ተገኝተው ያረጋግጡ።`,
@@ -767,7 +640,7 @@ export async function startBot() {
             package: s.packageType,
             isKid: s.kidpackage,
             chat_id: { in: sent.map(String) },
-            status: { in: ["Active", "Not yet","On progress"] },
+            status: { in: ["Active", "Not yet", "On progress"] },
           },
           select: {
             wdt_ID: true,
@@ -777,16 +650,23 @@ export async function startBot() {
         });
 
         // Filter students using subject matching logic for comma-separated subjects
-        const students = allStudents.filter((student) => 
-          student.subject && s.subject && hasMatchingSubject(student.subject, s.subject)
+        const students = allStudents.filter(
+          (student) =>
+            student.subject &&
+            s.subject &&
+            hasMatchingSubject(student.subject, s.subject)
         );
 
-        console.log(`Creating attendance records for ${students.length} students for package ${pending.packageId}`);
-        
+        console.log(
+          `Creating attendance records for ${students.length} students for package ${pending.packageId}`
+        );
+
         await Promise.all(
           students.map(async (student) => {
-            console.log(`Processing student ${student.wdt_ID} (${student.name})`);
-            
+            console.log(
+              `Processing student ${student.wdt_ID} (${student.name})`
+            );
+
             const lastAttendance = await prisma.tarbiaAttendance.findFirst({
               where: {
                 studId: student.wdt_ID,
@@ -802,7 +682,10 @@ export async function startBot() {
               },
             });
 
-            console.log(`Last attendance for student ${student.wdt_ID}:`, lastAttendance);
+            console.log(
+              `Last attendance for student ${student.wdt_ID}:`,
+              lastAttendance
+            );
 
             const now = new Date();
             const oneHourMs = 60 * 60 * 1000;
@@ -810,10 +693,15 @@ export async function startBot() {
               lastAttendance?.createdAt &&
               now.getTime() - lastAttendance.createdAt.getTime() <= oneHourMs;
 
-            console.log(`Is within one hour for student ${student.wdt_ID}:`, isWithinOneHour);
+            console.log(
+              `Is within one hour for student ${student.wdt_ID}:`,
+              isWithinOneHour
+            );
 
             if (isWithinOneHour && lastAttendance?.id) {
-              console.log(`Updating existing attendance record for student ${student.wdt_ID}`);
+              console.log(
+                `Updating existing attendance record for student ${student.wdt_ID}`
+              );
               await prisma.tarbiaAttendance.update({
                 where: { id: lastAttendance.id },
                 data: {
@@ -822,7 +710,9 @@ export async function startBot() {
                 },
               });
             } else {
-              console.log(`Creating new attendance record for student ${student.wdt_ID}`);
+              console.log(
+                `Creating new attendance record for student ${student.wdt_ID}`
+              );
               await prisma.tarbiaAttendance.create({
                 data: {
                   studId: student.wdt_ID,
@@ -833,30 +723,35 @@ export async function startBot() {
             }
           })
         );
-        
+
         console.log("Attendance records creation completed");
       }
     }
-    
-    console.log(`Final results - Sent: ${sent.length}, Failed: ${failed.length}`);
+
+    console.log(
+      `Final results - Sent: ${sent.length}, Failed: ${failed.length}`
+    );
     console.log(`Sent chatIds:`, sent);
     console.log(`Failed chatIds:`, failed);
-    
+
     // Only notify admin about failed deliveries if there are actually failed ones
     if (failed.length > 0) {
       const failedIds = await prisma.wpos_wpdatatable_23.findMany({
         where: {
           chat_id: { in: failed.map(String) },
-          status: { in: ["Active", "Not yet","On progress"] },
+          status: { in: ["Active", "Not yet", "On progress"] },
         },
         select: {
           name: true,
           wdt_ID: true,
         },
       });
-      
+
       if (failedIds.length > 0) {
-        await ctx.api.sendMessage(notifyAdminId, `ሊንክ ያልደረሳቸው ተማሪዎች (${failedIds.length}):`);
+        await ctx.api.sendMessage(
+          notifyAdminId,
+          `ሊንክ ያልደረሳቸው ተማሪዎች (${failedIds.length}):`
+        );
         for (const f of failedIds) {
           await ctx.api.sendMessage(
             notifyAdminId,
@@ -884,7 +779,9 @@ export async function startBot() {
     // }
     await ctx.reply(
       `✅ ለ${sent.length} ተማሪ${sent.length > 1 ? "ዎች" : ""} ተልኳል።${
-        failed.length > 0 ? ` ❌ ለ${failed.length} ተማሪ${failed.length > 1 ? "ዎች" : ""} አልተላከም` : "ያልተላከለት ተማሪ የለም"
+        failed.length > 0
+          ? ` ❌ ለ${failed.length} ተማሪ${failed.length > 1 ? "ዎች" : ""} አልተላከም`
+          : "ያልተላከለት ተማሪ የለም"
       }`
     );
   });
@@ -1130,28 +1027,33 @@ export async function startBot() {
     await ctx.answerCallbackQuery();
     const packageId = ctx.match[1];
     console.log("Selected package ID:", packageId);
-    
+
     // Get ustaz ID first
     const ustazChatId = ctx.from?.id;
     const ustzId = await prisma.ustaz.findFirst({
       where: { chat_id: ustazChatId + "" },
     });
-    
+
     if (!ustzId?.ustazid) return;
-    
+
     if (ctx.chat?.id) {
       // pendingAdminMessages[ctx.chat.id] = { packageId, status: "" };
     }
 
     // Get student counts for both options
-    const allStudentsCount = await getStudentsByPackage(packageId).then(students => students.length);
+    const allStudentsCount = await getStudentsByPackage(packageId).then(
+      (students) => students.length
+    );
     // const myStudentsCount = await getStudentsByPackageAndTeacher(packageId, ustzId.ustazid + "").then(students => students.length);
 
     const keyboard = new InlineKeyboard()
       .row()
-      .text(`✅ ፓኬጁን ለሚወስዱት በሙሉ (${allStudentsCount} ተማሪዎች)`, `ustaz_status_${packageId}_all`)
-      // .row()
-      // .text(`✅ ፓኬጁን ለሚወስዱት የኔ ተማሪዎች ብቻ (${myStudentsCount} ተማሪዎች)`, `ustaz_status_${packageId}_my`);
+      .text(
+        `✅ ፓኬጁን ለሚወስዱት በሙሉ (${allStudentsCount} ተማሪዎች)`,
+        `ustaz_status_${packageId}_all`
+      );
+    // .row()
+    // .text(`✅ ፓኬጁን ለሚወስዱት የኔ ተማሪዎች ብቻ (${myStudentsCount} ተማሪዎች)`, `ustaz_status_${packageId}_my`);
 
     await ctx.reply("የተማሪዎችን ሁኔታ ይምረጡ:", { reply_markup: keyboard });
   });
@@ -1216,32 +1118,32 @@ export async function startBot() {
   bot.on("callback_query:data", async (ctx) => {
     const data = ctx.callbackQuery.data;
     const chatId = ctx.chat?.id;
-    
+
     console.log("Callback query received:", data, "from chat:", chatId);
-    
+
     if (!data.startsWith("join_zoom~")) return;
 
     const [, packageId, wdt_ID] = data.split("~");
-    
+
     console.log("Parsed callback data:", { packageId, wdt_ID });
 
     // Get the stored zoom link
     const linkKey = `${packageId}~${wdt_ID}`;
     const zoomLink = zoomLinks[linkKey];
-    
+
     if (!zoomLink) {
       console.log(`Zoom link not found for key: ${linkKey}`);
       // await ctx.reply("❌ የዙም ሊንክ አልተገኘም። አድሚኑን ያነጋግሩ።");
       return;
     }
-    
+
     console.log("Retrieved zoom link:", zoomLink);
 
     // Step 1: Get student info
     const student = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
         chat_id: String(chatId),
-        status: { in: ["Active", "Not yet","On progress"] },
+        status: { in: ["Active", "Not yet", "On progress"] },
         wdt_ID: Number(wdt_ID),
       },
       select: {
@@ -1281,17 +1183,20 @@ export async function startBot() {
     const sentTime = lastCreatedAttendance?.createdAt;
     const oneHourMs = 60 * 60 * 1000;
 
-    console.log("Time check:", { 
-      now: now.toISOString(), 
-      sentTime: sentTime?.toISOString(), 
+    console.log("Time check:", {
+      now: now.toISOString(),
+      sentTime: sentTime?.toISOString(),
       timeDiff: sentTime ? now.getTime() - sentTime.getTime() : null,
-      oneHourMs 
+      oneHourMs,
     });
 
     if (sentTime && now.getTime() - sentTime.getTime() <= oneHourMs) {
       // ✅ Within 1 hour — mark attendance and send Zoom link
-      console.log("Updating attendance to present for student:", student.wdt_ID);
-      
+      console.log(
+        "Updating attendance to present for student:",
+        student.wdt_ID
+      );
+
       await prisma.tarbiaAttendance.update({
         where: {
           id: lastCreatedAttendance?.id,
@@ -1301,22 +1206,23 @@ export async function startBot() {
         },
       });
 
-        console.log("Attendance updated successfully");
-        
-        // Create a direct Zoom Workspace button that opens the app
-        const zoomButtonMarkup = {
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "🔗 Join Meeting", url: zoomLink }],
-            ],
-          },
-        };
-        
-        // Clean up the zoom link from memory after successful access
-        delete zoomLinks[linkKey];
-        console.log(`Cleaned up zoom link for key: ${linkKey}`);
-        
-        await ctx.reply(`✅ እንኳን ደህና መጡ ${student.name}። ትምህርቱን በደህና ይከታተሉ።`, zoomButtonMarkup);
+      console.log("Attendance updated successfully");
+
+      // Create a direct Zoom Workspace button that opens the app
+      const zoomButtonMarkup = {
+        reply_markup: {
+          inline_keyboard: [[{ text: "🔗 Join Meeting", url: zoomLink }]],
+        },
+      };
+
+      // Clean up the zoom link from memory after successful access
+      delete zoomLinks[linkKey];
+      console.log(`Cleaned up zoom link for key: ${linkKey}`);
+
+      await ctx.reply(
+        `✅ እንኳን ደህና መጡ ${student.name}። ትምህርቱን በደህና ይከታተሉ።`,
+        zoomButtonMarkup
+      );
     } else {
       // ❌ Expired — send fallback message
       const update = await updatePathProgressData(student.wdt_ID);
