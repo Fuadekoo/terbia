@@ -599,9 +599,8 @@ function Page() {
                     ) : data?.chapter?.customVideo ? (
                       <div className="w-full h-full lg:w-3xl lg:h-auto">
                         <CourseTopOverview
-                          {...{
-                            video: data?.chapter?.customVideo,
-                          }}
+                          video={data?.chapter?.customVideo}
+                          themeColors={themeColors}
                         />
                       </div>
                     ) : (
@@ -749,6 +748,7 @@ function Page() {
                                     wdt_ID={wdt_ID}
                                     courseId={courseId}
                                     chapterId={data.chapter.id}
+                                    themeColors={themeColors}
                                   />
                                 </TabsContent>
                                 <TabsContent

@@ -7,6 +7,11 @@ interface ControlsProps {
   onSkip: (seconds: number) => void;
   onSpeedChange: () => void;
   speed: number;
+  themeColors?: {
+    button: string;
+    buttonText: string;
+    link: string;
+  };
 }
 
 export default function Controls({
@@ -15,7 +20,11 @@ export default function Controls({
   onSkip,
   onSpeedChange,
   speed,
+  themeColors,
 }: ControlsProps) {
+  const buttonColor = themeColors?.link || "#0ea5e9";
+  const textColor = themeColors?.buttonText || "#fff";
+  
   return (
     <div
       className="controls"
@@ -27,13 +36,15 @@ export default function Controls({
           onSkip(-10);
         }}
         title="Skip Back 10s"
+        className="hover:opacity-80 transition-opacity"
         style={{
-          background: "none",
+          background: "rgba(0, 0, 0, 0.5)",
           border: "none",
-          color: "#fff",
+          color: textColor,
           fontSize: 20,
           cursor: "pointer",
           padding: 6,
+          borderRadius: 4,
         }}
       >
         <ChevronLeft />
@@ -44,13 +55,20 @@ export default function Controls({
           onPlayPause();
         }}
         title={playing ? "Pause" : "Play"}
+        className="hover:opacity-90 transition-opacity"
         style={{
-          background: "none",
+          background: buttonColor,
           border: "none",
-          color: "#fff",
+          color: textColor,
           fontSize: 24,
           cursor: "pointer",
-          padding: 6,
+          padding: 8,
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 48,
+          height: 48,
         }}
       >
         {playing ? <Pause /> : <Play />}
@@ -61,13 +79,15 @@ export default function Controls({
           onSkip(10);
         }}
         title="Skip Forward 10s"
+        className="hover:opacity-80 transition-opacity"
         style={{
-          background: "none",
+          background: "rgba(0, 0, 0, 0.5)",
           border: "none",
-          color: "#fff",
+          color: textColor,
           fontSize: 20,
           cursor: "pointer",
           padding: 6,
+          borderRadius: 4,
         }}
       >
         <ChevronRight />
@@ -78,13 +98,15 @@ export default function Controls({
           onSpeedChange();
         }}
         title="Change Speed"
+        className="hover:opacity-80 transition-opacity"
         style={{
-          background: "none",
+          background: "rgba(0, 0, 0, 0.5)",
           border: "none",
-          color: "#fff",
+          color: textColor,
           fontSize: 16,
           cursor: "pointer",
           padding: "4px 8px",
+          borderRadius: 4,
         }}
       >
         {speed}x
