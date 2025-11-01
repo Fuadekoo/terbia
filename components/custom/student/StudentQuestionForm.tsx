@@ -17,7 +17,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 // SVG Icons
@@ -87,10 +86,7 @@ const StudentQuestionForm = ({
   // Use Telegram theme colors or defaults
   const bgColor = themeColors?.bg || "#ffffff";
   const textColor = themeColors?.text || "#000000";
-  const hintColor = themeColors?.hint || "#6b7280";
   const linkColor = themeColors?.link || "#0ea5e9";
-  const buttonColor = themeColors?.button || "#0ea5e9";
-  const buttonTextColor = themeColors?.buttonText || "#ffffff";
   const secondaryBg = themeColors?.secondaryBg || "#f3f4f6";
 
   const [selectedAnswers, setSelectedAnswers] = useState<

@@ -38,7 +38,6 @@ function Player({
 PlayerProps) {
   // Use Telegram theme colors or defaults
   const buttonColor = themeColors?.button || "#0ea5e9";
-  const linkColor = themeColors?.link || "#0ea5e9";
   const textColor = themeColors?.buttonText || "#fff";
   const secondaryBg = themeColors?.secondaryBg || "rgba(0, 0, 0, 0.5)";
 
