@@ -184,6 +184,60 @@ function Page() {
         className="min-h-screen flex items-center justify-center pt-[5px]"
         style={{ background: themeColors.bg }}
       >
+        {/* Injected styles for component theming */}
+        <style jsx global>{`
+          /* Button theming */
+          button:not([style*="background"]):not(.no-theme) {
+            background: ${themeColors.button} !important;
+            color: ${themeColors.buttonText} !important;
+          }
+          
+          /* Card and component borders */
+          .border:not([style*="border-color"]) {
+            border-color: ${themeColors.secondaryBg} !important;
+          }
+          
+          /* Input and form elements */
+          input, textarea, select {
+            background: ${themeColors.secondaryBg} !important;
+            color: ${themeColors.text} !important;
+            border-color: ${themeColors.hint} !important;
+          }
+          
+          input::placeholder, textarea::placeholder {
+            color: ${themeColors.hint} !important;
+          }
+          
+          /* Hover states */
+          button:hover:not(:disabled) {
+            opacity: 0.9;
+          }
+          
+          /* Links */
+          a:not([style*="color"]) {
+            color: ${themeColors.link} !important;
+          }
+          
+          /* Scrollbar theming */
+          ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+          
+          ::-webkit-scrollbar-track {
+            background: ${themeColors.secondaryBg};
+          }
+          
+          ::-webkit-scrollbar-thumb {
+            background: ${themeColors.hint};
+            border-radius: 4px;
+          }
+          
+          ::-webkit-scrollbar-thumb:hover {
+            background: ${themeColors.link};
+          }
+        `}</style>
+        
         <p className="text-xl" style={{ color: themeColors.text }}>
           የፈተና ጥያቄዎችን በማቅረብ ላይ ነው...
         </p>

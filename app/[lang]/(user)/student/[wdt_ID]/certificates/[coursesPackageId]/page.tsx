@@ -232,6 +232,60 @@ export default function CertificatePage() {
       className="md:ml-35 overflow-y-auto min-h-screen pt-[5px]"
       style={{ background: themeColors.bg, color: themeColors.text }}
     >
+      {/* Injected styles for component theming */}
+      <style jsx global>{`
+        /* Button theming */
+        button:not([style*="background"]):not(.no-theme) {
+          background: ${themeColors.button} !important;
+          color: ${themeColors.buttonText} !important;
+        }
+        
+        /* Card and component borders */
+        .border:not([style*="border-color"]) {
+          border-color: ${themeColors.secondaryBg} !important;
+        }
+        
+        /* Input and form elements */
+        input, textarea, select {
+          background: ${themeColors.secondaryBg} !important;
+          color: ${themeColors.text} !important;
+          border-color: ${themeColors.hint} !important;
+        }
+        
+        input::placeholder, textarea::placeholder {
+          color: ${themeColors.hint} !important;
+        }
+        
+        /* Hover states */
+        button:hover:not(:disabled) {
+          opacity: 0.9;
+        }
+        
+        /* Links */
+        a:not([style*="color"]) {
+          color: ${themeColors.link} !important;
+        }
+        
+        /* Scrollbar theming */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: ${themeColors.secondaryBg};
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: ${themeColors.hint};
+          border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: ${themeColors.link};
+        }
+      `}</style>
+      
       <Link
         href={`/en/student/${studentId}/profile`}
         className="flex items-center text-sm hover:opacity-75 transition mb-6 mt-4 ml-4"

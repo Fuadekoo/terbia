@@ -449,11 +449,63 @@ function Page() {
       initial="hidden"
       animate="visible"
     >
-      {/* Injected styles for tabs active state */}
-      <style jsx>{`
+      {/* Injected styles for tabs active state and component theming */}
+      <style jsx global>{`
+        /* Tab active states */
         [data-state="active"] {
           color: ${themeColors.text} !important;
           border-bottom: 2px solid ${themeColors.link} !important;
+        }
+        
+        /* Button theming */
+        button:not([style*="background"]):not(.no-theme) {
+          background: ${themeColors.button} !important;
+          color: ${themeColors.buttonText} !important;
+        }
+        
+        /* Card and component borders */
+        .border:not([style*="border-color"]) {
+          border-color: ${themeColors.secondaryBg} !important;
+        }
+        
+        /* Input and form elements */
+        input, textarea, select {
+          background: ${themeColors.secondaryBg} !important;
+          color: ${themeColors.text} !important;
+          border-color: ${themeColors.hint} !important;
+        }
+        
+        input::placeholder, textarea::placeholder {
+          color: ${themeColors.hint} !important;
+        }
+        
+        /* Hover states */
+        button:hover:not(:disabled) {
+          opacity: 0.9;
+        }
+        
+        /* Links */
+        a:not([style*="color"]) {
+          color: ${themeColors.link} !important;
+        }
+        
+        /* Scrollbar theming */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: ${themeColors.secondaryBg};
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: ${themeColors.hint};
+          border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: ${themeColors.link};
         }
       `}</style>
       
@@ -795,10 +847,10 @@ function Page() {
                       <div className="flex">
                         <button
                           onClick={() => setSidebarActiveTab("mainmenu")}
-                          className="flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200"
+                          className="flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 no-theme"
                           style={{
                             color: sidebarActiveTab === "mainmenu" ? themeColors.text : themeColors.hint,
-                            background: themeColors.bg,
+                            background: sidebarActiveTab === "mainmenu" ? `${themeColors.secondaryBg}` : themeColors.bg,
                             borderBottom: sidebarActiveTab === "mainmenu" ? `2px solid ${themeColors.link}` : 'none',
                             fontWeight: sidebarActiveTab === "mainmenu" ? '600' : '500',
                           }}
@@ -807,10 +859,10 @@ function Page() {
                         </button>
                         <button
                           onClick={() => setSidebarActiveTab("ai")}
-                          className="flex-1 px-4 py-2 text-sm font-medium transition-colors duration-200"
+                          className="flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 no-theme"
                           style={{
                             color: sidebarActiveTab === "ai" ? themeColors.text : themeColors.hint,
-                            background: themeColors.bg,
+                            background: sidebarActiveTab === "ai" ? `${themeColors.secondaryBg}` : themeColors.bg,
                             borderBottom: sidebarActiveTab === "ai" ? `2px solid ${themeColors.link}` : 'none',
                             fontWeight: sidebarActiveTab === "ai" ? '600' : '500',
                           }}
