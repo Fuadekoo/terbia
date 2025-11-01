@@ -656,13 +656,88 @@ function Page() {
                           onValueChange={setActiveTab}
                           className="h-full flex flex-col lg:h-auto "
                         >
+                          {/* Desktop Tabs - Horizontal Navigation */}
+                          <div 
+                            className="hidden lg:block border-b"
+                            style={{ 
+                              background: themeColors.bg,
+                              borderColor: themeColors.secondaryBg 
+                            }}
+                          >
+                            <TabsList 
+                              className="flex justify-start gap-2 bg-transparent p-2 w-full h-auto"
+                              style={{ background: 'transparent' }}
+                            >
+                              <TabsTrigger
+                                value="quiz"
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                style={{
+                                  color: themeColors.hint,
+                                  background: 'transparent',
+                                  borderColor: themeColors.secondaryBg,
+                                }}
+                              >
+                                <BookOpen className="w-4 h-4" />
+                                <span>Quiz</span>
+                              </TabsTrigger>
+                              <TabsTrigger
+                                value="qna"
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                style={{
+                                  color: themeColors.hint,
+                                  background: 'transparent',
+                                  borderColor: themeColors.secondaryBg,
+                                }}
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                <span>Q&A</span>
+                              </TabsTrigger>
+                              <TabsTrigger
+                                value="feedback"
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                style={{
+                                  color: themeColors.hint,
+                                  background: 'transparent',
+                                  borderColor: themeColors.secondaryBg,
+                                }}
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                                <span>Feedback</span>
+                              </TabsTrigger>
+                              <TabsTrigger
+                                value="materials"
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                style={{
+                                  color: themeColors.hint,
+                                  background: 'transparent',
+                                  borderColor: themeColors.secondaryBg,
+                                }}
+                              >
+                                <BookOpen className="w-4 h-4" />
+                                <span>Materials</span>
+                              </TabsTrigger>
+                              <TabsTrigger
+                                value="announcements"
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                style={{
+                                  color: themeColors.hint,
+                                  background: 'transparent',
+                                  borderColor: themeColors.secondaryBg,
+                                }}
+                              >
+                                <Newspaper className="w-4 h-4" />
+                                <span>Announcements</span>
+                              </TabsTrigger>
+                            </TabsList>
+                          </div>
+
                           {/* Content Area - Scrollable */}
                           <div 
-                            className="flex-1 overflow-y-auto lg:overflow-visible pb-32"
+                            className="flex-1 overflow-y-auto lg:overflow-visible pb-32 lg:pb-4"
                             style={{ background: themeColors.bg }}
                           >
                             <div 
-                              className="px-2 py-2"
+                              className="px-2 py-2 lg:px-4 lg:py-4"
                               style={{ background: themeColors.bg }}
                             >
                               <div className="lg:overflow-visible">
