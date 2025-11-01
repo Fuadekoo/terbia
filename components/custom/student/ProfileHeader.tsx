@@ -1,12 +1,14 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import { Search, Bell } from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
 
 interface ProfileHeaderProps {
   name: string;
   role?: string;
   hasNotification?: boolean;
+  showBackButton?: boolean;
+  backUrl?: string;
   themeColors?: {
     bg: string;
     text: string;
@@ -22,6 +24,8 @@ export default function ProfileHeader({
   name,
   role = "Student",
   hasNotification = false,
+  showBackButton = true,
+  backUrl = "https://darelkubra.com",
   themeColors,
 }: ProfileHeaderProps) {
   // Use Telegram theme colors or defaults
@@ -29,6 +33,11 @@ export default function ProfileHeader({
   const textColor = themeColors?.text || "#ffffff";
   const hintColor = themeColors?.hint || "#9ca3af";
   const linkColor = themeColors?.link || "#0ea5e9";
+
+  const handleBack = () => {
+    // Redirect without opening new tab or closing mini app
+    window.location.href = backUrl;
+  };
 
   return (
     <div
@@ -38,8 +47,26 @@ export default function ProfileHeader({
         borderBottom: `1px solid ${themeColors?.secondaryBg || "#374151"}40`,
       }}
     >
-      {/* Left Side - Profile */}
+      {/* Left Side - Back Button + Profile */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* Back Button */}
+        {showBackButton && (
+          <button
+            onClick={handleBack}
+            className="p-2 rounded-full transition-all duration-200 hover:opacity-80 flex-shrink-0"
+            style={{
+              background: `${linkColor}20`,
+              border: `1px solid ${linkColor}40`,
+            }}
+            aria-label="Back to Darelkubra"
+          >
+            <ArrowLeft
+              className="w-5 h-5"
+              style={{ color: linkColor }}
+            />
+          </button>
+        )}
+
         {/* Profile Picture */}
         <div className="relative flex-shrink-0">
           <Image
@@ -73,20 +100,6 @@ export default function ProfileHeader({
 
       {/* Right Side - Icons */}
       <div className="flex items-center gap-3">
-        {/* Search Icon */}
-        <button
-          className="p-2 rounded-full transition-all duration-200 hover:opacity-80"
-          style={{
-            background: "transparent",
-            border: `1px solid ${hintColor}40`,
-          }}
-          aria-label="Search"
-        >
-          <Search
-            className="w-5 h-5"
-            style={{ color: textColor }}
-          />
-        </button>
 
         {/* Notification Bell */}
         <button

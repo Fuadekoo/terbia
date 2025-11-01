@@ -406,31 +406,6 @@ export default function Page() {
 
           {!loading && chooseData && chooseData.students.length === 1 && (
             <div>
-              {/* Blurred overlay above header - Sticky */}
-              <div style={{ position: 'sticky', top: 0, zIndex: 10, height: 30, background: `${getBgColor()}dd`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', marginBottom: 0}} />
-              {/* Profile Header Card - Sticky */}
-              <div style={{ position: 'sticky', top: 30, zIndex: 9, background: getButtonColor(), borderRadius: 16, padding: 20, marginTop: 0, marginBottom: 20, color: getButtonTextColor(), boxShadow: '0 10px 24px rgba(0,0,0,0.1)' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                  {/* Avatar */}
-                  <Image
-                    src="/userProfileIcon.png"
-                    alt={chooseData.students[0].name || 'Student avatar'}
-                    width={80}
-                    height={80}
-                    style={{ borderRadius: '50%', objectFit: 'cover', border: `3px solid ${getButtonTextColor()}4d`, flexShrink: 0 }}
-                  />
-                  {/* Student Info */}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>{chooseData.students[0].name || 'Student'}</div>
-                    <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 8 }}>
-                      <span>{chooseData.students[0].packages.length} {chooseData.students[0].packages.length === 1 ? 'package' : 'packages'}</span>
-                      <span style={{ margin: '0 8px' }}>•</span>
-                      <span>Available</span>
-                    </div>
-                    <div style={{ fontSize: 13, opacity: 0.85 }}>Teacher: {chooseData.students[0].teacherName || 'Not assigned'}</div>
-                  </div>
-                </div>
-              </div>
               {/* Package Cards Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 18 }}>
                 {chooseData.students[0].packages.map((pkg) => (
