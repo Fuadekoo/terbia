@@ -29,6 +29,7 @@ import TraditionalQA from "@/components/traditionalQA";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { validateStudentAccess } from "@/actions/student/telegram";
 import { retrieveRawInitData } from "@telegram-apps/sdk";
+import ProfileHeader from "@/components/custom/student/ProfileHeader";
 
 // Telegram Theme Types
 interface TelegramThemeParams {
@@ -577,16 +578,25 @@ function Page() {
             <>
               {/* Main Layout Container */}
               <div 
-                className="flex h-screen"
+                className="flex h-screen flex-col"
                 style={{ background: themeColors.bg }}
               >
-                {/* Main Content Area */}
-                <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
-                  {/* Video Player Section */}
-                  <div 
-                    className="flex-shrink-0 flex justify-center"
-                    style={{ background: '#000000' }}
-                  >
+                {/* Profile Header */}
+                <ProfileHeader
+                  name={packageData?.name || "Student"}
+                  role="Student"
+                  hasNotification={true}
+                  themeColors={themeColors}
+                />
+
+                <div className="flex h-full overflow-hidden">
+                  {/* Main Content Area */}
+                  <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
+                    {/* Video Player Section */}
+                    <div 
+                      className="flex-shrink-0 flex justify-center"
+                      style={{ background: '#000000' }}
+                    >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
                      <iframe
                      className="aspect-video lg:w-3xl"
@@ -818,32 +828,32 @@ function Page() {
                     )}
                 </div>
 
-                {/* Sticky Right Sidebar - Desktop Only */}
-                <div 
-                  className="hidden lg:block w-80 border-l sticky top-0 h-screen overflow-hidden"
-                  style={{ 
-                    background: themeColors.bg,
-                    borderColor: themeColors.secondaryBg 
-                  }}
-                >
-                  <div className="h-full flex flex-col">
-                    {/* Sidebar Header */}
-                    <div 
-                      className="px-4 py-3 border-b flex-shrink-0"
-                      style={{ 
-                        background: themeColors.secondaryBg,
-                        borderColor: themeColors.secondaryBg 
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <h3 
-                          className="text-sm font-semibold"
-                          style={{ color: themeColors.text }}
-                        >
-                          Course content
-                        </h3>
+                  {/* Sticky Right Sidebar - Desktop Only */}
+                  <div 
+                    className="hidden lg:block w-80 border-l sticky top-0 h-screen overflow-hidden"
+                    style={{ 
+                      background: themeColors.bg,
+                      borderColor: themeColors.secondaryBg 
+                    }}
+                  >
+                    <div className="h-full flex flex-col">
+                      {/* Sidebar Header */}
+                      <div 
+                        className="px-4 py-3 border-b flex-shrink-0"
+                        style={{ 
+                          background: themeColors.secondaryBg,
+                          borderColor: themeColors.secondaryBg 
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h3 
+                            className="text-sm font-semibold"
+                            style={{ color: themeColors.text }}
+                          >
+                            Course content
+                          </h3>
+                        </div>
                       </div>
-                    </div>
 
                     {/* Sidebar Tabs */}
                     <div 
@@ -893,6 +903,7 @@ function Page() {
                         <ChatComponent packageId={data?.packageId || ""} />
                       )}
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import { chooseStudentPackage, getStudentFlowById } from '@/actions/student/tele
 import { Loader2 } from 'lucide-react';
 import { retrieveRawInitData } from '@telegram-apps/sdk';
 import { Progress } from '@/components/ui/progress';
+import ProfileHeader from '@/components/custom/student/ProfileHeader';
 
 type TGInitData = { chat?: { id?: number }; user?: { id?: number } };
 
@@ -298,10 +299,27 @@ export default function Page() {
   const getSecondaryBgColor = () => themeColors.secondaryBg;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: 16, background: getBgColor(), color: getTextColor(), minHeight: '100vh' }} className='pt-60'>
-     
+    <div style={{ background: getBgColor(), color: getTextColor(), minHeight: '100vh' }}>
+      {/* Profile Header */}
+      {chatId && chooseData && chooseData.students.length === 1 && (
+        <ProfileHeader
+          name={chooseData.students[0].name || "Student"}
+          role="Student"
+          hasNotification={true}
+          themeColors={{
+            bg: getBgColor(),
+            text: getTextColor(),
+            hint: getHintColor(),
+            link: getLinkColor(),
+            button: getButtonColor(),
+            buttonText: getButtonTextColor(),
+            secondaryBg: getSecondaryBgColor(),
+          }}
+        />
+      )}
 
-      {!chatId && (
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }}>
+        {!chatId && (
         <div style={{ padding: 16, border: `1px solid ${getSecondaryBgColor()}`, borderRadius: 12, background: getSecondaryBgColor(), marginBottom: 12 }}>
           <div style={{ fontWeight: 700, marginBottom: 6, color: getTextColor() }}>Open in Telegram</div>
           <div style={{ color: getHintColor(), marginBottom: 12 }}>
@@ -455,6 +473,7 @@ export default function Page() {
 
         </div>
       )}
+      </div>
     </div>
   );
 }
