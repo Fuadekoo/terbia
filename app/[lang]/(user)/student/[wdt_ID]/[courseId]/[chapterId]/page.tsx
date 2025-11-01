@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, Bell, Home, BookOpen, MessageCircle, MessageSquare, FileText, Newspaper, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCoursesPackageId } from "@/actions/admin/package";
 import CourseTopOverview from "@/components/courseTopOverview";
@@ -29,7 +29,7 @@ import TraditionalQA from "@/components/traditionalQA";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { validateStudentAccess } from "@/actions/student/telegram";
 import { retrieveRawInitData } from "@telegram-apps/sdk";
-import ProfileHeader from "@/components/custom/student/ProfileHeader";
+import Image from "next/image";
 
 // Telegram Theme Types
 interface TelegramThemeParams {
@@ -463,14 +463,20 @@ function Page() {
         /* Tab active states */
         [data-state="active"] {
           color: ${themeColors.text} !important;
-          background: ${themeColors.secondaryBg} !important;
-          border-bottom: 3px solid ${themeColors.link} !important;
+          background: ${themeColors.link}20 !important;
+          border: 1px solid ${themeColors.link}40 !important;
+          border-radius: 12px !important;
           font-weight: 600 !important;
+        }
+        
+        [data-state="active"] svg {
+          color: ${themeColors.link} !important;
         }
         
         /* Tab hover states */
         [role="tab"]:hover:not([data-state="active"]) {
           background: ${themeColors.secondaryBg}40 !important;
+          border-radius: 12px !important;
         }
         
         /* Button theming */
@@ -586,25 +592,16 @@ function Page() {
             <>
               {/* Main Layout Container */}
               <div 
-                className="flex h-screen flex-col"
+                className="flex h-screen"
                 style={{ background: themeColors.bg }}
               >
-                {/* Profile Header */}
-                <ProfileHeader
-                  name={packageData?.name || "Student"}
-                  role="Student"
-                  hasNotification={true}
-                  themeColors={themeColors}
-                />
-
-                <div className="flex h-full overflow-hidden">
-                  {/* Main Content Area */}
-                  <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
-                    {/* Video Player Section */}
-                    <div 
-                      className="flex-shrink-0 flex justify-center"
-                      style={{ background: '#000000' }}
-                    >
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
+                  {/* Video Player Section */}
+                  <div 
+                    className="flex-shrink-0 flex justify-center"
+                    style={{ background: '#000000' }}
+                  >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
                      <iframe
                      className="aspect-video lg:w-3xl"
@@ -649,104 +646,16 @@ function Page() {
                     data.chapter &&
                     Array.isArray(data.chapter.questions) && (
                       <div 
-                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible"
+                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative"
                         style={{ background: themeColors.bg }}
                       >
                         <Tabs
                           defaultValue={defaultTab}
                           className="h-full flex flex-col lg:h-auto "
                         >
-                           {/* Content Tabs Below Player */}
-                            <div 
-                              className="flex-shrink-0 border-b"
-                              style={{ 
-                                background: themeColors.bg,
-                                borderColor: themeColors.secondaryBg 
-                              }}
-                            >
-                                <div className="overflow-x-auto scrollbar-hide scroll-smooth px-4 py-0">
-                                 <TabsList 
-                                   className="flex space-x-4 bg-transparent p-0 min-w-max h-12"
-                                   style={{ background: 'transparent' }}
-                                 >
-                                 <TabsTrigger
-                                   value="mainmenu"
-                                   className="text-sm font-medium px-4 py-3 bg-transparent border-none rounded-none data-[state=active]:font-semibold lg:hidden transition-all duration-200 whitespace-nowrap h-full flex items-center"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   Main Menu
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="quiz"
-                                   className="text-sm font-medium px-4 py-3 bg-transparent border-none rounded-none data-[state=active]:font-semibold transition-all duration-200 whitespace-nowrap h-full flex items-center"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   Quiz
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="qna"
-                                   className="text-sm font-medium px-4 py-3 bg-transparent border-none rounded-none data-[state=active]:font-semibold transition-all duration-200 whitespace-nowrap h-full flex items-center"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   Q&A
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="feedback"
-                                   className="text-sm font-medium px-4 py-3 bg-transparent border-none rounded-none data-[state=active]:font-semibold transition-all duration-200 whitespace-nowrap h-full flex items-center"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   Feedback
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="materials"
-                                   className="text-sm font-medium px-4 py-3 bg-transparent border-none rounded-none data-[state=active]:font-semibold transition-all duration-200 whitespace-nowrap h-full flex items-center"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   Materials
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="announcements"
-                                   className="text-sm font-medium px-4 py-3 bg-transparent border-none rounded-none data-[state=active]:font-semibold transition-all duration-200 whitespace-nowrap h-full flex items-center"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   Announcements
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="ai"
-                                   className="text-sm font-medium px-4 py-3 bg-transparent border-none rounded-none data-[state=active]:font-semibold lg:hidden transition-all duration-200 whitespace-nowrap h-full flex items-center"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   AI Assistance
-                                 </TabsTrigger>
-                               </TabsList>
-                               
-                             </div>
-                           </div>
-
-                          {/* Content Area */}
+                          {/* Content Area - Scrollable */}
                           <div 
-                            className="flex-1 overflow-y-auto lg:overflow-visible"
+                            className="flex-1 overflow-y-auto lg:overflow-visible pb-32"
                             style={{ background: themeColors.bg }}
                           >
                             <div 
@@ -831,6 +740,189 @@ function Page() {
                               </div>
                             </div>
                           </div>
+
+                          {/* BOTTOM NAVIGATION - Profile Bar + Tabs */}
+                          <div 
+                            className="fixed bottom-0 left-0 right-0 lg:hidden z-50"
+                            style={{ 
+                              background: themeColors.bg,
+                              boxShadow: `0 -2px 10px ${themeColors.secondaryBg}40`
+                            }}
+                          >
+                            {/* Profile Bar */}
+                            <div 
+                              className="px-4 py-2 flex items-center justify-between border-b"
+                              style={{ 
+                                background: themeColors.secondaryBg,
+                                borderColor: `${themeColors.hint}30`
+                              }}
+                            >
+                            {/* Left - Back + Profile */}
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              {/* Back Button */}
+                              <button
+                                onClick={() => window.location.href = 'https://darelkubra.com'}
+                                className="p-1 rounded-full transition-all duration-200 hover:opacity-80 flex-shrink-0"
+                                style={{
+                                  background: `${themeColors.link}20`,
+                                  border: `1px solid ${themeColors.link}40`,
+                                }}
+                                aria-label="Back"
+                              >
+                                <ArrowLeft
+                                  className="w-4 h-4"
+                                  style={{ color: themeColors.link }}
+                                />
+                              </button>
+
+                              {/* Profile Picture */}
+                              <div className="relative flex-shrink-0">
+                                <Image
+                                  src="/userProfileIcon.png"
+                                  alt={packageData?.name || "Student"}
+                                  width={32}
+                                  height={32}
+                                  className="rounded-full object-cover"
+                                  style={{
+                                    border: `2px solid ${themeColors.link}40`,
+                                  }}
+                                />
+                              </div>
+
+                              {/* Name and Role */}
+                              <div className="flex-1 min-w-0">
+                                <h2
+                                  className="text-xs font-bold truncate"
+                                  style={{ color: themeColors.text }}
+                                >
+                                  {packageData?.name || "Student"}
+                                </h2>
+                                <p
+                                  className="text-xs truncate"
+                                  style={{ color: themeColors.hint }}
+                                >
+                                  Student
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Right - Notification */}
+                            <button
+                              className="p-1 rounded-full transition-all duration-200 hover:opacity-80 relative flex-shrink-0"
+                              style={{
+                                background: "transparent",
+                                border: `1px solid ${themeColors.hint}40`,
+                              }}
+                              aria-label="Notifications"
+                            >
+                              <Bell
+                                className="w-4 h-4"
+                                style={{ color: themeColors.text }}
+                              />
+                              {/* Notification Dot */}
+                              <span
+                                className="absolute top-0 right-0 w-2 h-2 rounded-full"
+                                style={{
+                                  background: "#ef4444",
+                                  boxShadow: `0 0 0 2px ${themeColors.secondaryBg}`,
+                                }}
+                              />
+                            </button>
+                          </div>
+
+                           {/* Navigation Tabs */}
+                            <div 
+                              className="px-2 py-1"
+                              style={{ 
+                                background: themeColors.bg
+                              }}
+                            >
+                                <div className="overflow-x-auto scrollbar-hide scroll-smooth">
+                                 <TabsList 
+                                   className="flex gap-1 bg-transparent p-0 min-w-max h-auto py-2"
+                                   style={{ background: 'transparent' }}
+                                 >
+                                 <TabsTrigger
+                                   value="mainmenu"
+                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold lg:hidden transition-all duration-200 min-w-[70px]"
+                                   style={{
+                                     color: themeColors.hint,
+                                     background: 'transparent',
+                                   }}
+                                 >
+                                   <Home className="w-5 h-5" />
+                                   <span className="text-xs">Menu</span>
+                                 </TabsTrigger>
+                                 <TabsTrigger
+                                   value="quiz"
+                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
+                                   style={{
+                                     color: themeColors.hint,
+                                     background: 'transparent',
+                                   }}
+                                 >
+                                   <BookOpen className="w-5 h-5" />
+                                   <span className="text-xs">Quiz</span>
+                                 </TabsTrigger>
+                                 <TabsTrigger
+                                   value="qna"
+                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
+                                   style={{
+                                     color: themeColors.hint,
+                                     background: 'transparent',
+                                   }}
+                                 >
+                                   <MessageCircle className="w-5 h-5" />
+                                   <span className="text-xs">Q&A</span>
+                                 </TabsTrigger>
+                                 <TabsTrigger
+                                   value="feedback"
+                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
+                                   style={{
+                                     color: themeColors.hint,
+                                     background: 'transparent',
+                                   }}
+                                 >
+                                   <MessageSquare className="w-5 h-5" />
+                                   <span className="text-xs">Feedback</span>
+                                 </TabsTrigger>
+                                 <TabsTrigger
+                                   value="materials"
+                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
+                                   style={{
+                                     color: themeColors.hint,
+                                     background: 'transparent',
+                                   }}
+                                 >
+                                   <FileText className="w-5 h-5" />
+                                   <span className="text-xs">Materials</span>
+                                 </TabsTrigger>
+                                 <TabsTrigger
+                                   value="announcements"
+                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200 min-w-[70px]"
+                                   style={{
+                                     color: themeColors.hint,
+                                     background: 'transparent',
+                                   }}
+                                 >
+                                   <Newspaper className="w-5 h-5" />
+                                   <span className="text-xs">News</span>
+                                 </TabsTrigger>
+                                 <TabsTrigger
+                                   value="ai"
+                                   className="flex flex-col items-center gap-1 px-3 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold lg:hidden transition-all duration-200 min-w-[70px]"
+                                   style={{
+                                     color: themeColors.hint,
+                                     background: 'transparent',
+                                   }}
+                                 >
+                                   <Bot className="w-5 h-5" />
+                                   <span className="text-xs">AI</span>
+                                 </TabsTrigger>
+                               </TabsList>
+                             </div>
+                           </div>
+                          </div>
                         </Tabs>
                       </div>
                     )}
@@ -911,7 +1003,6 @@ function Page() {
                         <ChatComponent packageId={data?.packageId || ""} />
                       )}
                     </div>
-                  </div>
                   </div>
                 </div>
               </div>
