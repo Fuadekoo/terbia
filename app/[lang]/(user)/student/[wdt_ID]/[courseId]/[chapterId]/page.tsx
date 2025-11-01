@@ -454,7 +454,14 @@ function Page() {
         /* Tab active states */
         [data-state="active"] {
           color: ${themeColors.text} !important;
-          border-bottom: 2px solid ${themeColors.link} !important;
+          background: ${themeColors.secondaryBg} !important;
+          border-bottom: 3px solid ${themeColors.link} !important;
+          font-weight: 600 !important;
+        }
+        
+        /* Tab hover states */
+        [role="tab"]:hover:not([data-state="active"]) {
+          background: ${themeColors.secondaryBg}40 !important;
         }
         
         /* Button theming */
@@ -734,7 +741,7 @@ function Page() {
                                   className="lg:hidden"
                                   style={{ background: themeColors.bg, color: themeColors.text }}
                                 >
-                                  <MainMenu data={packageData} />
+                                  <MainMenu data={packageData} themeColors={themeColors} />
                                 </TabsContent>
                                 <TabsContent
                                   value="quiz"
@@ -760,6 +767,7 @@ function Page() {
                                     packageId={data.packageId}
                                     lang={lang}
                                     studentId={wdt_ID}
+                                    themeColors={themeColors}
                                   />
                                 </TabsContent>
                                 <TabsContent
@@ -771,6 +779,7 @@ function Page() {
                                     studentId={wdt_ID}
                                     courseId={data.packageId}
                                     lang={lang}
+                                    themeColors={themeColors}
                                   />
                                 </TabsContent>
                                 <TabsContent
@@ -878,7 +887,7 @@ function Page() {
                       style={{ background: themeColors.bg }}
                     >
                       {sidebarActiveTab === "mainmenu" ? (
-                        <MainMenu data={packageData} />
+                        <MainMenu data={packageData} themeColors={themeColors} />
                       ) : (
                         // packageId={data?.packageId || ""} 
                         <ChatComponent packageId={data?.packageId || ""} />

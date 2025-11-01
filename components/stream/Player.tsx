@@ -473,34 +473,36 @@ PlayerProps) {
               }}
               style={{
                 pointerEvents: "auto",
-                background: "rgba(59, 130, 246, 0.6)", // More transparent blue
+                background: `${buttonColor}99`,
                 border: "none",
-                color: "#fff",
+                color: textColor,
                 fontSize: 24,
                 borderRadius: "50%",
-                width: 60,
-                height: 60,
+                width: 70,
+                height: 70,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+                boxShadow: `0 4px 20px ${buttonColor}aa, 0 0 40px ${buttonColor}66`,
                 transition: "all 0.3s ease",
                 WebkitTapHighlightColor: "transparent",
                 touchAction: "manipulation",
-                backdropFilter: "blur(5px)",
+                backdropFilter: "blur(8px)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.background = "rgba(59, 130, 246, 0.7)";
+                e.currentTarget.style.transform = "scale(1.1)";
+                e.currentTarget.style.background = `${buttonColor}cc`;
+                e.currentTarget.style.boxShadow = `0 6px 30px ${buttonColor}dd, 0 0 60px ${buttonColor}99`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.background = "rgba(59, 130, 246, 0.6)";
+                e.currentTarget.style.background = `${buttonColor}99`;
+                e.currentTarget.style.boxShadow = `0 4px 20px ${buttonColor}aa, 0 0 40px ${buttonColor}66`;
               }}
               aria-label="Play"
             >
-              <Play size={24} />
+              <Play size={28} style={{ marginLeft: 2 }} />
             </button>
           </div>
         )}

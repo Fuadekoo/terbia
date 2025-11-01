@@ -52,9 +52,25 @@ interface MainMenuProps {
     | null
     | undefined;
   className?: string;
+  themeColors?: {
+    bg: string;
+    text: string;
+    hint: string;
+    link: string;
+    button: string;
+    buttonText: string;
+    secondaryBg: string;
+  };
 }
 
-export default function MainMenu({ data, className }: MainMenuProps) {
+export default function MainMenu({ data, className, themeColors }: MainMenuProps) {
+  // Use Telegram theme colors or defaults
+  const bgColor = themeColors?.bg || "#ffffff";
+  const textColor = themeColors?.text || "#000000";
+  const hintColor = themeColors?.hint || "#6b7280";
+  const linkColor = themeColors?.link || "#0ea5e9";
+  const secondaryBg = themeColors?.secondaryBg || "#f3f4f6";
+
   const params = useParams();
   const wdt_ID = Number(params?.wdt_ID ?? 0);
 
@@ -142,27 +158,28 @@ export default function MainMenu({ data, className }: MainMenuProps) {
   return (
     <div
       className={cn(
-        "w-full bg-white overflow-y-auto",
+        "w-full overflow-y-auto",
         className
       )}
+      style={{ background: bgColor }}
     >
         {isLoading ? (
         <div className="w-full p-4 space-y-4">
           {/* Course Content Skeleton */}
           <div className="space-y-3">
             {/* Section 1 Skeleton */}
-            <div className="border-b border-gray-200">
-              <div className="bg-gray-50 py-2 pl-3 pr-3">
+            <div className="border-b" style={{ borderColor: `${hintColor}30` }}>
+              <div className="py-2 pl-3 pr-3" style={{ background: secondaryBg }}>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="h-4 bg-gray-300 rounded w-3/4 mb-2 animate-pulse"></div>
+                    <div className="h-4 rounded w-3/4 mb-2 animate-pulse" style={{ background: `${hintColor}40` }}></div>
                     <div className="flex items-center gap-2">
-                      <div className="h-3 bg-gray-300 rounded w-16 animate-pulse"></div>
-                      <div className="h-3 bg-gray-300 rounded w-1 animate-pulse"></div>
-                      <div className="h-3 bg-gray-300 rounded w-20 animate-pulse"></div>
+                      <div className="h-3 rounded w-16 animate-pulse" style={{ background: `${hintColor}30` }}></div>
+                      <div className="h-3 rounded w-1 animate-pulse" style={{ background: `${hintColor}30` }}></div>
+                      <div className="h-3 rounded w-20 animate-pulse" style={{ background: `${hintColor}30` }}></div>
                     </div>
                   </div>
-                  <div className="h-4 w-4 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="h-4 w-4 rounded animate-pulse" style={{ background: `${hintColor}40` }}></div>
                 </div>
               </div>
               
@@ -288,23 +305,14 @@ export default function MainMenu({ data, className }: MainMenuProps) {
           </div>
           </div>
         ) : !data || !data.activePackage ? (
-        <div className="text-center py-8 text-gray-500 text-sm">
+        <div 
+          className="text-center py-8 text-sm"
+          style={{ color: hintColor }}
+        >
             No active package found.
           </div>
         ) : (
         <div className="w-full">
-          {/* Course Title */}
-          {/* <motion.div
-            className="px-4 py-3 border-b border-gray-200 bg-gray-50"
-              variants={itemVariants}
-              initial="hidden"
-              animate="visible"
-            >
-            <h2 className="text-lg font-semibold text-black">
-              {data.activePackage.name}
-            </h2>
-          </motion.div> */}
-
           {/* Course Content with Accordion */}
           <Accordion 
             type="multiple" 
@@ -325,27 +333,40 @@ export default function MainMenu({ data, className }: MainMenuProps) {
               const progressPercentage = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
               
               return (
-                <AccordionItem key={course.id} value={course.id} className="border-b border-gray-200">
-                  <AccordionTrigger className={cn(
-                    "hover:no-underline py-2 pl-3 pr-3 transition-colors duration-200 bg-gray-50"
-                  )}>
+                <AccordionItem 
+                  key={course.id} 
+                  value={course.id} 
+                  className="border-b"
+                  style={{ borderColor: `${hintColor}30` }}
+                >
+                  <AccordionTrigger 
+                    className="hover:no-underline py-2 pl-3 pr-3 transition-colors duration-200"
+                    style={{ background: secondaryBg }}
+                  >
                     <div className="flex items-center gap-3 text-left">
                       {/* Course Info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className={cn(
-                          "text-sm font-semibold truncate",
-                          hasInProgressChapters ? "text-gray-800" : "text-gray-800"
-                        )}>
+                        <h3 
+                          className="text-sm font-semibold truncate"
+                          style={{ color: textColor }}
+                        >
                           Section {courseIndex + 1} - {course.title}
                         </h3>
-                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                        <div 
+                          className="flex items-center gap-2 text-xs mt-1"
+                          style={{ color: hintColor }}
+                        >
                           <span>{course.chapters.length} lessons</span>
                           <span>•</span>
-                          <span className="text-gray-600 font-medium">{progressPercentage}% complete</span>
+                          <span className="font-medium" style={{ color: textColor }}>
+                            {progressPercentage}% complete
+                          </span>
                           {hasInProgressChapters && (
                             <>
                               <span>•</span>
-                              <span className="text-blue-600 font-medium">In Progress</span>
+                              <span className="font-medium" style={{ color: linkColor }}>
+                                In Progress
+                              </span>
                             </>
                           )}
                         </div>
@@ -379,16 +400,22 @@ export default function MainMenu({ data, className }: MainMenuProps) {
                                   handleLockedLessonClick(chapter.title);
                                 }
                               }}
-                              className={cn(
-                                "w-full pl-4 pr-3 py-2 text-left hover:bg-gray-50 transition-colors duration-200 block",
-                                isCompleted === false && "bg-gray-100",
-                                isCompleted === null && "opacity-50"
-                              )}
+                              className="w-full pl-4 pr-3 py-2 text-left transition-colors duration-200 block"
+                              style={{
+                                background: isCompleted === false ? `${secondaryBg}dd` : bgColor,
+                                opacity: isCompleted === null ? 0.5 : 1,
+                              }}
                             >
                               <div className="flex items-start gap-3">
                                 {/* Lesson Number */}
-                                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center mt-0.5">
-                                  <span className="text-xs font-medium text-gray-600">
+                                <div 
+                                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
+                                  style={{ background: `${hintColor}30` }}
+                                >
+                                  <span 
+                                    className="text-xs font-medium"
+                                    style={{ color: textColor }}
+                                  >
                                     {chapterIndex + 1}
                                   </span>
                                 </div>
@@ -396,24 +423,30 @@ export default function MainMenu({ data, className }: MainMenuProps) {
                                 {/* Lesson Content */}
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <h4 className={cn(
-                                      "text-sm font-medium text-gray-900 truncate",
-                                      isActive && "font-semibold"
-                                    )}>
+                                    <h4 
+                                      className="text-sm font-medium truncate"
+                                      style={{ 
+                                        color: textColor,
+                                        fontWeight: isActive ? 600 : 500
+                                      }}
+                                    >
                                       {chapter.title}
                                     </h4>
                                     {isCompleted === true && (
-                                      <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
+                                      <CheckCircle className="w-3 h-3 flex-shrink-0" style={{ color: "#22c55e" }} />
                                     )}
                                     {isCompleted === false && (
-                                      <PlayCircle className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                                      <PlayCircle className="w-3 h-3 flex-shrink-0" style={{ color: linkColor }} />
                                     )}
                                     {isCompleted === null && (
-                                      <Lock className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                                      <Lock className="w-3 h-3 flex-shrink-0" style={{ color: hintColor }} />
                                     )}
                                   </div>
                                   
-                                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                                  <div 
+                                    className="flex items-center gap-2 text-xs"
+                                    style={{ color: hintColor }}
+                                  >
                                     <span>Video</span>
                                     <span>•</span>
                                     <span>
@@ -443,47 +476,65 @@ export default function MainMenu({ data, className }: MainMenuProps) {
                     exit="hidden"
               className="w-full mt-4"
                   >
-              <div className="border-b border-gray-200">
+              <div className="border-b" style={{ borderColor: `${hintColor}30` }}>
                 {!allCoursesCompleted ? (
                   <div
-                      className={cn(
-                      "w-full px-4 py-3 text-left transition-colors duration-200 flex items-center gap-3",
-                      "opacity-50 cursor-not-allowed"
-                    )}
+                      className="w-full px-4 py-3 text-left transition-colors duration-200 flex items-center gap-3 opacity-50 cursor-not-allowed"
                   >
                     {/* Final Exam Icon */}
-                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center">
-                      <Trophy className="w-4 h-4 text-yellow-600" />
+                    <div 
+                      className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: "#fef3c7" }}
+                    >
+                      <Trophy className="w-4 h-4" style={{ color: "#ca8a04" }} />
                     </div>
                     
                     {/* Final Exam Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-800">
+                      <h3 
+                        className="text-sm font-semibold"
+                        style={{ color: textColor }}
+                      >
                         Final Assessment
                       </h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                      <div 
+                        className="flex items-center gap-2 text-xs mt-1"
+                        style={{ color: hintColor }}
+                      >
                         <span>Exam</span>
                         <span>•</span>
-                        <span className="text-orange-600 font-medium">Complete all lessons to unlock</span>
+                        <span className="font-medium" style={{ color: "#ea580c" }}>
+                          Complete all lessons to unlock
+                        </span>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <Link
                     href={`/en/student/${data?.wdt_ID}/finalexam/${data?.activePackage?.id}`}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-200 flex items-center gap-3"
+                    className="w-full px-4 py-3 text-left transition-colors duration-200 flex items-center gap-3"
+                    style={{ background: bgColor }}
                   >
                     {/* Final Exam Icon */}
-                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center">
-                      <Trophy className="w-4 h-4 text-yellow-600" />
+                    <div 
+                      className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: "#fef3c7" }}
+                    >
+                      <Trophy className="w-4 h-4" style={{ color: "#ca8a04" }} />
                     </div>
                     
                     {/* Final Exam Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-800">
+                      <h3 
+                        className="text-sm font-semibold"
+                        style={{ color: textColor }}
+                      >
                         Final Assessment
                       </h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                      <div 
+                        className="flex items-center gap-2 text-xs mt-1"
+                        style={{ color: hintColor }}
+                      >
                         <span>Exam</span>
                       </div>
                     </div>
