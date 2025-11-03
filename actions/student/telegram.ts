@@ -297,11 +297,33 @@ export async function chooseStudentPackage(
       return { success: false, error: "Invalid package" };
     }
 
+    // Find the student first (supports both Telegram and browser access)
+    const student = await prisma.wpos_wpdatatable_23.findFirst({
+      where: {
+        OR: [
+          {
+            // Telegram access: match both chat_id and wdt_ID
+            chat_id: String(chatId),
+            wdt_ID: studentId,
+          },
+          {
+            // Browser access: match wdt_ID only
+            wdt_ID: studentId,
+            chat_id: { not: null },
+          },
+        ],
+        status: { in: ["Active", "Not yet", "On progress"] },
+      },
+    });
+
+    if (!student) {
+      return { success: false, error: "Student not found" };
+    }
+
+    // Update using the found student's wdt_ID
     await prisma.wpos_wpdatatable_23.update({
       where: {
-        chat_id: String(chatId),
-        wdt_ID: studentId,
-        status: { in: ["Active", "Not yet", "On progress"] },
+        wdt_ID: student.wdt_ID,
       },
       data: { youtubeSubject: packageId },
     });
@@ -347,6 +369,7 @@ export async function chooseStudentPackage(
 }
 
 // Validate that a given chatId is authorized to access a specific student (wdt_ID)
+// Supports both Telegram and browser access
 export async function validateStudentAccess(
   chatId: string,
   studentId: number
@@ -357,8 +380,18 @@ export async function validateStudentAccess(
     }
     const exists = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
-        chat_id: String(chatId),
-        wdt_ID: Number(studentId),
+        OR: [
+          {
+            // Telegram access: match both chat_id and wdt_ID
+            chat_id: String(chatId),
+            wdt_ID: Number(studentId),
+          },
+          {
+            // Browser access: match wdt_ID only
+            wdt_ID: Number(studentId),
+            chat_id: { not: null },
+          },
+        ],
         status: { in: ["Active", "Not yet", "On progress"] },
       },
       select: { wdt_ID: true },
@@ -388,10 +421,21 @@ export async function getStudentFlowById(
     }
 
     // Get the specific student record
+    // Support both Telegram (chat_id match) and browser access (wdt_ID only)
     const student = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
-        chat_id: String(chatId),
-        wdt_ID: studentId,
+        OR: [
+          {
+            // Telegram access: match both chat_id and wdt_ID
+            chat_id: String(chatId),
+            wdt_ID: studentId,
+          },
+          {
+            // Browser access: match wdt_ID only (when chatId is the wdt_ID)
+            wdt_ID: studentId,
+            chat_id: { not: null }, // Ensure student has been registered
+          },
+        ],
         status: { in: ["Active", "Not yet", "On progress"] },
       },
       select: {
