@@ -1,25 +1,80 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { retrieveLaunchParams } from "@telegram-apps/sdk";
 
 function Page() {
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>("");
 
   useEffect(() => {
     try {
-      // Get the start parameter from Telegram
-      const launchParams = retrieveLaunchParams();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const startParam = (launchParams as any)?.startParam;
+      let wdtId: string | null = null;
+      const debugMessages: string[] = [];
 
-      console.log("📱 Start parameter from Telegram:", startParam);
+      // Method 1: Check URL hash parameter
+      if (typeof window !== "undefined") {
+        const hash = window.location.hash;
+        debugMessages.push(`Hash: ${hash}`);
 
-      if (startParam) {
+        if (hash.includes("tgWebAppStartParam=")) {
+          const match = hash.match(/tgWebAppStartParam=([^&]+)/);
+          if (match && match[1]) {
+            wdtId = decodeURIComponent(match[1]);
+            debugMessages.push(`✅ Found in hash: ${wdtId}`);
+          }
+        }
+      }
+
+      // Method 2: Check Telegram WebApp
+      if (!wdtId && typeof window !== "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tg = (window as any)?.Telegram?.WebApp;
+        debugMessages.push(`Telegram WebApp available: ${!!tg}`);
+
+        if (tg) {
+          // Try initDataUnsafe.start_param
+          const startParam = tg.initDataUnsafe?.start_param;
+          debugMessages.push(`start_param: ${startParam}`);
+
+          if (startParam) {
+            wdtId = startParam;
+            debugMessages.push(
+              `✅ Found in initDataUnsafe.start_param: ${wdtId}`
+            );
+          }
+        }
+      }
+
+      // Method 3: Parse initData string
+      if (!wdtId && typeof window !== "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tg = (window as any)?.Telegram?.WebApp;
+
+        if (tg?.initData) {
+          debugMessages.push(`initData: ${tg.initData}`);
+          const params = new URLSearchParams(tg.initData);
+          const startParamFromInit = params.get("start_param");
+
+          if (startParamFromInit) {
+            wdtId = startParamFromInit;
+            debugMessages.push(`✅ Found in initData: ${wdtId}`);
+          }
+        }
+      }
+
+      console.log("🔍 Debug Info:", debugMessages.join(" | "));
+      setDebugInfo(debugMessages.join("\n"));
+
+      if (wdtId) {
         // Redirect to Terbia with the wdt_Id
-        const redirectUrl = `https://terbia.darelkubra.com/en/student/${startParam}`;
+        const redirectUrl = `https://terbia.darelkubra.com/en/student/${wdtId}`;
         console.log("🚀 Redirecting to:", redirectUrl);
-        window.location.href = redirectUrl;
+
+        // Small delay to show loading state
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 500);
       } else {
+        console.warn("⚠️ No wdt_ID found");
         setError("No wdt_ID found in start parameter");
       }
     } catch (err) {
@@ -51,9 +106,24 @@ function Page() {
             Error
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Please open this from Telegram using the correct link.
+          <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+            Please open this from Telegram using the correct link format:
           </p>
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 mb-4">
+            <code className="text-xs text-gray-700 dark:text-gray-300 break-all">
+              https://t.me/MubareksBot?startapp=wdt_Id
+            </code>
+          </div>
+          {debugInfo && (
+            <details className="mt-4 text-left">
+              <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+                Debug Info (Click to expand)
+              </summary>
+              <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded overflow-auto text-gray-700 dark:text-gray-300">
+                {debugInfo}
+              </pre>
+            </details>
+          )}
         </div>
       </div>
     );
