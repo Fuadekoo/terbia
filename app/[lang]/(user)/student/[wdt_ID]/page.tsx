@@ -219,11 +219,11 @@ export default function Page() {
   const theme = useTelegramTheme();
 
   useEffect(() => {
-    // Try to read chat id from Telegram WebApp (optional - falls back to wdt_ID)
+    // Get chatId from Telegram - prioritize Telegram chat ID for database access
     if (typeof window !== "undefined") {
       const w = window as unknown as TelegramWindow;
 
-      // 1) Prefer initialDataRaw via SDK
+      // 1) Try to get from Telegram SDK (most reliable)
       try {
         const raw = retrieveRawInitData();
         if (raw) {
@@ -232,20 +232,26 @@ export default function Page() {
           if (chatJson) {
             const parsed = JSON.parse(chatJson) as { id?: number };
             if (parsed?.id) {
-              setChatId(String(parsed.id));
+              const telegramChatId = String(parsed.id);
+              console.log("✅ Using Telegram chatId from SDK:", telegramChatId);
+              setChatId(telegramChatId);
               return;
             }
           }
         }
-      } catch {}
+      } catch (err) {
+        console.log("⚠️ Could not retrieve from SDK:", err);
+      }
 
-      // 2) Fallback: initDataUnsafe
+      // 2) Try Telegram WebApp initDataUnsafe
       const unsafe = w.Telegram?.WebApp?.initDataUnsafe;
-      const id = unsafe?.chat?.id ?? unsafe?.user?.id;
-      if (id) {
-        setChatId(String(id));
+      const telegramId = unsafe?.chat?.id ?? unsafe?.user?.id;
+      if (telegramId) {
+        console.log("✅ Using Telegram chatId from WebApp:", telegramId);
+        setChatId(String(telegramId));
       } else {
-        // 3) Not in Telegram - use wdt_ID as identifier (works in regular browsers)
+        // 3) Not in Telegram - use wdt_ID as fallback (for browser access)
+        console.log("ℹ️ Not in Telegram, using wdt_ID as identifier:", wdt_ID);
         setChatId(String(wdt_ID));
       }
     }
@@ -255,14 +261,23 @@ export default function Page() {
     const run = async () => {
       if (!chatId) return;
 
+      console.log(
+        "🔄 Fetching student data using chatId:",
+        chatId,
+        "for wdt_ID:",
+        wdt_ID
+      );
       setLoading(true);
       setError(null);
 
       try {
-        // wdt_ID is always present in this route since it's a URL parameter
+        // Use chatId (from Telegram or wdt_ID fallback) to access database
+        // The backend supports both Telegram chatId and browser wdt_ID access
         const res = await getStudentFlowById(chatId, wdt_ID!);
+        console.log("✅ Data fetched successfully:", res.success);
         setStartRes(res as StartSingle | StartChoose | StartError);
-      } catch {
+      } catch (err) {
+        console.error("❌ Error fetching data:", err);
         setError("Failed to start flow");
       } finally {
         setLoading(false);
@@ -274,20 +289,31 @@ export default function Page() {
   // Removed extra profile pre-list rendering to keep UI minimal/professional
 
   const handleChoose = async (studentId: number, packageId: string) => {
+    // Use chatId (from Telegram) for database operations
     const identifier = chatId || String(wdt_ID);
     if (!identifier) return;
 
+    console.log(
+      "📝 Choosing package using chatId:",
+      identifier,
+      "for student:",
+      studentId
+    );
     setLoading(true);
     setError(null);
     setPendingChoice(`${studentId}:${packageId}`);
     try {
+      // Call backend with chatId - backend handles both Telegram and browser access
       const r = await chooseStudentPackage(identifier, studentId, packageId);
       if (r.success) {
+        console.log("✅ Package chosen successfully, redirecting to:", r.url);
         window.location.href = r.url;
       } else {
+        console.error("❌ Failed to choose package:", r.error);
         setError(r.error);
       }
-    } catch {
+    } catch (err) {
+      console.error("❌ Error choosing package:", err);
       setError("Failed to set package");
     } finally {
       setLoading(false);
