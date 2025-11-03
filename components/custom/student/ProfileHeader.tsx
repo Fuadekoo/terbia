@@ -1,14 +1,13 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { ArrowLeft, Newspaper, Bot } from "lucide-react";
-import { retrieveLaunchParams } from "@telegram-apps/sdk";
 
 interface ProfileHeaderProps {
   name: string;
   role?: string;
   showBackButton?: boolean;
-  backUrl?: string;
+  chatId?: string | null;
   onNewsClick?: () => void;
   onAIClick?: () => void;
   themeColors?: {
@@ -26,32 +25,15 @@ export default function ProfileHeader({
   name,
   role = "Student",
   showBackButton = true,
-  backUrl = "https://exam.darelkubra.com/student/mini-app/{chatId}",
+  chatId,
   onNewsClick,
   onAIClick,
   themeColors,
 }: ProfileHeaderProps) {
-  const [actualBackUrl, setActualBackUrl] = useState(backUrl);
-
-  // Get chatId from Telegram
-  useEffect(() => {
-    try {
-      const launchParams = retrieveLaunchParams();
-      // Access the user ID from Telegram's launch params
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const initData = launchParams?.initData as any;
-      const userId = initData?.user?.id;
-
-      if (userId) {
-        // Replace {chatId} placeholder with actual user ID
-        const urlWithChatId = backUrl.replace("{chatId}", userId.toString());
-        setActualBackUrl(urlWithChatId);
-      }
-    } catch (error) {
-      console.error("Failed to retrieve Telegram user ID:", error);
-      // Keep the original backUrl if we can't get the userId
-    }
-  }, [backUrl]);
+  // Build the back URL with the chatId
+  const backUrl = chatId
+    ? `https://exam.darelkubra.com/student/mini-app/${chatId}`
+    : "https://exam.darelkubra.com/student/mini-app";
 
   // Use Telegram theme colors or defaults
   const bgColor = themeColors?.bg || "#1a1a1a";
@@ -60,8 +42,10 @@ export default function ProfileHeader({
   const linkColor = themeColors?.link || "#0ea5e9";
 
   const handleBack = () => {
+    console.log("🔙 Redirecting to:", backUrl);
+    console.log("📱 ChatId:", chatId);
     // Redirect without opening new tab or closing mini app
-    window.location.href = actualBackUrl;
+    window.location.href = backUrl;
   };
 
   return (

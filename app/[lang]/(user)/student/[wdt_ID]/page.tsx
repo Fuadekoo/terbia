@@ -364,6 +364,7 @@ export default function Page() {
         <ProfileHeader
           name={chooseData.students[0].name || "Student"}
           role="Student"
+          chatId={chatId}
           themeColors={{
             bg: getBgColor(),
             text: getTextColor(),
