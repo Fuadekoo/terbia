@@ -7,6 +7,7 @@ import {
   getStudentFlowById,
 } from "@/actions/student/telegram";
 import { Loader2 } from "lucide-react";
+import { retrieveRawInitData } from "@telegram-apps/sdk";
 import { Progress } from "@/components/ui/progress";
 import ProfileHeader from "@/components/custom/student/ProfileHeader";
 
@@ -218,21 +219,43 @@ export default function Page() {
   const theme = useTelegramTheme();
 
   useEffect(() => {
-    // Removed Telegram chat ID requirement - direct access allowed
-    // Set a placeholder chat ID to bypass the check
-    setChatId("direct_access");
+    // Try to read chat id from Telegram WebApp
+    if (typeof window !== "undefined") {
+      const w = window as unknown as TelegramWindow;
+
+      // 1) Prefer initialDataRaw via SDK
+      try {
+        const raw = retrieveRawInitData();
+        if (raw) {
+          const params = new URLSearchParams(raw);
+          const chatJson = params.get("chat") || params.get("user");
+          if (chatJson) {
+            const parsed = JSON.parse(chatJson) as { id?: number };
+            if (parsed?.id) {
+              setChatId(String(parsed.id));
+              return;
+            }
+          }
+        }
+      } catch {}
+
+      // 2) Fallback: initDataUnsafe
+      const unsafe = w.Telegram?.WebApp?.initDataUnsafe;
+      const id = unsafe?.chat?.id ?? unsafe?.user?.id;
+      if (id) setChatId(String(id));
+    }
   }, []);
 
   useEffect(() => {
     const run = async () => {
-      if (!chatId || !wdt_ID) return;
+      if (!chatId) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        // Direct access - bypass Telegram validation
-        const res = await getStudentFlowById(chatId, wdt_ID);
+        // wdt_ID is always present in this route since it's a URL parameter
+        const res = await getStudentFlowById(chatId, wdt_ID!);
         setStartRes(res as StartSingle | StartChoose | StartError);
       } catch {
         setError("Failed to start flow");
@@ -354,6 +377,66 @@ export default function Page() {
       )}
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
+        {!chatId && (
+          <div
+            style={{
+              padding: 16,
+              border: `1px solid ${getSecondaryBgColor()}`,
+              borderRadius: 12,
+              background: getSecondaryBgColor(),
+              marginBottom: 12,
+            }}
+          >
+            <div
+              style={{
+                fontWeight: 700,
+                marginBottom: 6,
+                color: getTextColor(),
+              }}
+            >
+              Open in Telegram
+            </div>
+            <div style={{ color: getHintColor(), marginBottom: 12 }}>
+              We couldn&apos;t detect your Telegram chat. Please open this page
+              from the Telegram Mini App.
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ? (
+                <button
+                  onClick={() => {
+                    const username = process.env
+                      .NEXT_PUBLIC_TELEGRAM_BOT_USERNAME as string;
+                    const url = `https://t.me/${username}?start=webapp`;
+                    const w = window as unknown as {
+                      Telegram?: {
+                        WebApp?: { openTelegramLink?: (u: string) => void };
+                      };
+                    };
+                    if (w.Telegram?.WebApp?.openTelegramLink) {
+                      w.Telegram.WebApp.openTelegramLink(url);
+                    } else {
+                      window.open(url, "_blank");
+                    }
+                  }}
+                  style={{
+                    padding: "10px 14px",
+                    background: getButtonColor(),
+                    color: getButtonTextColor(),
+                    border: "none",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                  }}
+                >
+                  Open Telegram
+                </button>
+              ) : null}
+              <span style={{ fontSize: 12, color: getHintColor() }}>
+                Tip: Find our bot in Telegram and tap &quot;Open&quot;.
+              </span>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div
             style={{

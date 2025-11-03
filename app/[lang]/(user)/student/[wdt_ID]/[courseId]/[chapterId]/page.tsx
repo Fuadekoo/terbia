@@ -15,7 +15,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertCircle, RefreshCw, ArrowLeft, Home, BookOpen, MessageCircle, MessageSquare, Newspaper, Bot } from "lucide-react";
+import {
+  AlertCircle,
+  RefreshCw,
+  ArrowLeft,
+  Home,
+  BookOpen,
+  MessageCircle,
+  MessageSquare,
+  Newspaper,
+  Bot,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCoursesPackageId } from "@/actions/admin/package";
 import CourseTopOverview from "@/components/courseTopOverview";
@@ -27,6 +37,8 @@ import { getPackageData } from "@/actions/student/package";
 import MainMenu from "@/components/custom/student/bestMenu";
 import TraditionalQA from "@/components/traditionalQA";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { validateStudentAccess } from "@/actions/student/telegram";
+import { retrieveRawInitData } from "@telegram-apps/sdk";
 import Image from "next/image";
 
 // Telegram Theme Types
@@ -52,8 +64,14 @@ interface TelegramWebApp {
   requestTheme?: () => void;
   setHeaderColor?: (color: string | { color_key: string }) => void;
   setBackgroundColor?: (color: string | { color_key: string }) => void;
-  onEvent?: (event: string, handler: (event?: TelegramThemeChangedEvent) => void) => void;
-  offEvent?: (event: string, handler: (event?: TelegramThemeChangedEvent) => void) => void;
+  onEvent?: (
+    event: string,
+    handler: (event?: TelegramThemeChangedEvent) => void
+  ) => void;
+  offEvent?: (
+    event: string,
+    handler: (event?: TelegramThemeChangedEvent) => void
+  ) => void;
 }
 
 interface TelegramWindow {
@@ -73,7 +91,7 @@ function useTelegramTheme() {
     let retryCount = 0;
 
     const initializeTelegramWebApp = () => {
-      if (typeof window === 'undefined') return;
+      if (typeof window === "undefined") return;
 
       const w = window as unknown as TelegramWindow;
       const webApp = w.Telegram?.WebApp;
@@ -91,16 +109,18 @@ function useTelegramTheme() {
 
       const updateTheme = (themeParams?: TelegramThemeParams) => {
         const currentTheme = themeParams || webApp.themeParams;
-        
+
         if (currentTheme) {
           setTheme(currentTheme);
-          
+
           if (webApp.setHeaderColor) {
-            webApp.setHeaderColor(currentTheme.button_color || currentTheme.bg_color || '#ffffff');
+            webApp.setHeaderColor(
+              currentTheme.button_color || currentTheme.bg_color || "#ffffff"
+            );
           }
-          
+
           if (webApp.setBackgroundColor) {
-            webApp.setBackgroundColor(currentTheme.bg_color || '#ffffff');
+            webApp.setBackgroundColor(currentTheme.bg_color || "#ffffff");
           }
         }
       };
@@ -122,14 +142,14 @@ function useTelegramTheme() {
       };
 
       if (webApp.onEvent) {
-        webApp.onEvent('theme_changed', handleThemeChanged);
-        webApp.onEvent('themeChanged', handleThemeChanged);
+        webApp.onEvent("theme_changed", handleThemeChanged);
+        webApp.onEvent("themeChanged", handleThemeChanged);
       }
 
       cleanup = () => {
         if (webApp.offEvent) {
-          webApp.offEvent('theme_changed', handleThemeChanged);
-          webApp.offEvent('themeChanged', handleThemeChanged);
+          webApp.offEvent("theme_changed", handleThemeChanged);
+          webApp.offEvent("themeChanged", handleThemeChanged);
         }
       };
     };
@@ -155,8 +175,9 @@ function Page() {
   const wdt_ID = Number(params?.wdt_ID ?? 0);
   const courseId = String(params?.courseId ?? "");
   const chapterId = String(params?.chapterId ?? "");
-  // const [authorized, setAuthorized] = React.useState<boolean | null>(true);
-  
+  const [authorized, setAuthorized] = React.useState<boolean | null>(null);
+  const [chatId, setChatId] = React.useState<string | null>(null);
+
   // Use Telegram theme hook
   const theme = useTelegramTheme();
 
@@ -165,26 +186,27 @@ function Page() {
     let isLightTheme = true;
     if (theme.bg_color) {
       try {
-        const bgHex = theme.bg_color.replace('#', '');
+        const bgHex = theme.bg_color.replace("#", "");
         const bgValue = parseInt(bgHex, 16);
         const r = (bgValue >> 16) & 0xff;
         const g = (bgValue >> 8) & 0xff;
         const b = bgValue & 0xff;
         const avg = (r + g + b) / 3;
-        isLightTheme = avg > 128 || theme.bg_color.toLowerCase() === '#ffffff';
+        isLightTheme = avg > 128 || theme.bg_color.toLowerCase() === "#ffffff";
       } catch {
         isLightTheme = true;
       }
     }
-    
+
     return {
-      bg: theme.bg_color || '#ffffff',
-      text: theme.text_color || (isLightTheme ? '#000000' : '#ffffff'),
-      hint: theme.hint_color || (isLightTheme ? '#999999' : '#aaaaaa'),
-      link: theme.link_color || '#0ea5e9',
-      button: theme.button_color || '#0ea5e9',
-      buttonText: theme.button_text_color || '#ffffff',
-      secondaryBg: theme.secondary_bg_color || (isLightTheme ? '#f0f0f0' : '#1a1a1a'),
+      bg: theme.bg_color || "#ffffff",
+      text: theme.text_color || (isLightTheme ? "#000000" : "#ffffff"),
+      hint: theme.hint_color || (isLightTheme ? "#999999" : "#aaaaaa"),
+      link: theme.link_color || "#0ea5e9",
+      button: theme.button_color || "#0ea5e9",
+      buttonText: theme.button_text_color || "#ffffff",
+      secondaryBg:
+        theme.secondary_bg_color || (isLightTheme ? "#f0f0f0" : "#1a1a1a"),
     };
   }, [theme]);
   const [packageData] = useAction(
@@ -206,12 +228,49 @@ function Page() {
     courseId
   );
   const [error, setError] = React.useState<string | null>(null);
-  
-  // Removed Telegram chat ID restriction - direct access is now allowed
+  // Gate by Telegram chat id like the student landing page
   useEffect(() => {
-    // Always authorize access without Telegram check
-    setAuthorized(true);
-  }, [wdt_ID]);
+    if (typeof window === "undefined") return;
+
+    let extractedId: string | null = null;
+
+    try {
+      const raw = retrieveRawInitData();
+      if (raw) {
+        const p = new URLSearchParams(raw);
+        const json = p.get("chat") || p.get("user");
+        if (json) {
+          const obj = JSON.parse(json) as { id?: number };
+          if (obj?.id) extractedId = String(obj.id);
+        }
+      }
+    } catch {}
+
+    if (!extractedId) {
+      const w = window as unknown as {
+        Telegram?: {
+          WebApp?: {
+            initDataUnsafe?: { chat?: { id?: number }; user?: { id?: number } };
+          };
+        };
+      };
+      const unsafe = w.Telegram?.WebApp?.initDataUnsafe;
+      const id = unsafe?.chat?.id ?? unsafe?.user?.id;
+      if (id) extractedId = String(id);
+    }
+
+    if (extractedId && !chatId) {
+      setChatId(extractedId);
+    }
+  }, [chatId]);
+
+  useEffect(() => {
+    (async () => {
+      if (!chatId || !wdt_ID) return;
+      const res = await validateStudentAccess(chatId, wdt_ID);
+      setAuthorized(res.authorized);
+    })();
+  }, [chatId, wdt_ID]);
   const [sidebarActiveTab, setSidebarActiveTab] = React.useState<
     "mainmenu" | "ai"
   >("mainmenu");
@@ -292,10 +351,56 @@ function Page() {
       }
     }
   }
-  
+
   const [activeTab, setActiveTab] = React.useState(defaultTab);
 
-  // Access restrictions removed - direct access allowed
+  // Restrict access when not authorized
+  if (authorized === false) {
+    return (
+      <motion.div
+        className="flex items-center justify-center min-h-[60vh] pt-[5px]"
+        style={{ background: themeColors.bg }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <div
+          className="text-center p-6 border rounded-xl"
+          style={{
+            background: themeColors.secondaryBg,
+            color: themeColors.text,
+            borderColor: themeColors.hint,
+          }}
+        >
+          Access denied. Please open from Telegram using your registered
+          account.
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (authorized === null) {
+    return (
+      <motion.div
+        className="flex items-center justify-center min-h-[60vh] pt-[5px]"
+        style={{ background: themeColors.bg, color: themeColors.text }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <div
+          className="text-center p-6 border rounded-xl"
+          style={{
+            borderColor: themeColors.hint,
+            background: themeColors.secondaryBg,
+            color: themeColors.text,
+          }}
+        >
+          Verifying access…
+        </div>
+      </motion.div>
+    );
+  }
 
   // return <div className="">there is no content available</div>;
 
@@ -324,13 +429,13 @@ function Page() {
             d="M13 16h-1v-4h-1m1-4h.01M12 20c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z"
           />
         </svg>
-        <span 
+        <span
           className="text-2xl font-bold mb-2"
           style={{ color: themeColors.text }}
         >
           Package Not Started
         </span>
-        <span 
+        <span
           className="text-lg mb-6 text-center max-w-md"
           style={{ color: themeColors.hint }}
         >
@@ -342,9 +447,9 @@ function Page() {
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block px-6 py-3 rounded-lg shadow-md transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2"
-          style={{ 
+          style={{
             background: themeColors.button,
-            color: themeColors.buttonText 
+            color: themeColors.buttonText,
           }}
           aria-label="Open Telegram bot to start package"
         >
@@ -357,18 +462,20 @@ function Page() {
   return (
     <motion.div
       className="bg-white min-h-screen overflow-hidden pt-[5px]"
-      style={{
-        background: themeColors.bg,
-        color: themeColors.text,
-        // CSS custom properties for dynamic theming
-        ['--theme-bg' as string]: themeColors.bg,
-        ['--theme-text' as string]: themeColors.text,
-        ['--theme-hint' as string]: themeColors.hint,
-        ['--theme-link' as string]: themeColors.link,
-        ['--theme-button' as string]: themeColors.button,
-        ['--theme-button-text' as string]: themeColors.buttonText,
-        ['--theme-secondary-bg' as string]: themeColors.secondaryBg,
-      } as React.CSSProperties}
+      style={
+        {
+          background: themeColors.bg,
+          color: themeColors.text,
+          // CSS custom properties for dynamic theming
+          ["--theme-bg" as string]: themeColors.bg,
+          ["--theme-text" as string]: themeColors.text,
+          ["--theme-hint" as string]: themeColors.hint,
+          ["--theme-link" as string]: themeColors.link,
+          ["--theme-button" as string]: themeColors.button,
+          ["--theme-button-text" as string]: themeColors.buttonText,
+          ["--theme-secondary-bg" as string]: themeColors.secondaryBg,
+        } as React.CSSProperties
+      }
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -382,7 +489,7 @@ function Page() {
         :-ms-fullscreen .profile-header {
           display: none !important;
         }
-        
+
         /* Tab active states */
         [data-state="active"] {
           color: ${themeColors.text} !important;
@@ -391,71 +498,74 @@ function Page() {
           border-radius: 12px !important;
           font-weight: 600 !important;
         }
-        
+
         [data-state="active"] svg {
           color: ${themeColors.link} !important;
         }
-        
+
         /* Tab hover states */
         [role="tab"]:hover:not([data-state="active"]) {
           background: ${themeColors.secondaryBg}40 !important;
           border-radius: 12px !important;
         }
-        
+
         /* Button theming */
         button:not([style*="background"]):not(.no-theme) {
           background: ${themeColors.button} !important;
           color: ${themeColors.buttonText} !important;
         }
-        
+
         /* Card and component borders */
         .border:not([style*="border-color"]) {
           border-color: ${themeColors.secondaryBg} !important;
         }
-        
+
         /* Input and form elements */
-        input, textarea, select {
+        input,
+        textarea,
+        select {
           background: ${themeColors.secondaryBg} !important;
           color: ${themeColors.text} !important;
           border-color: ${themeColors.hint} !important;
         }
-        
-        input::placeholder, textarea::placeholder {
+
+        input::placeholder,
+        textarea::placeholder {
           color: ${themeColors.hint} !important;
         }
-        
+
         /* Hover states */
         button:hover:not(:disabled) {
           opacity: 0.9;
         }
-        
+
         /* Links */
         a:not([style*="color"]) {
           color: ${themeColors.link} !important;
         }
-        
+
         /* Scrollbar theming */
         ::-webkit-scrollbar {
           width: 8px;
           height: 8px;
         }
-        
+
         ::-webkit-scrollbar-track {
           background: ${themeColors.secondaryBg};
         }
-        
+
         ::-webkit-scrollbar-thumb {
           background: ${themeColors.hint};
           border-radius: 4px;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
           background: ${themeColors.link};
         }
       `}</style>
-      
+
       {/* <ProgressPage /> */}
-      <div 
+      <div
         className="flex flex-col h-screen overflow-hidden"
         style={{
           background: themeColors.bg,
@@ -473,7 +583,7 @@ function Page() {
               initial="hidden"
               animate="visible"
             >
-              <div 
+              <div
                 className="animate-pulse w-4/5 h-96 rounded-lg"
                 style={{ background: themeColors.secondaryBg }}
               />
@@ -486,11 +596,11 @@ function Page() {
               initial="hidden"
               animate="visible"
             >
-              <AlertCircle 
-                className="w-12 h-12 mb-4" 
+              <AlertCircle
+                className="w-12 h-12 mb-4"
                 style={{ color: themeColors.link }}
               />
-              <span 
+              <span
                 className="text-xl font-semibold mb-4"
                 style={{ color: themeColors.text }}
               >
@@ -499,9 +609,9 @@ function Page() {
               <Button
                 onClick={() => refetch()}
                 className="flex items-center gap-2"
-                style={{ 
+                style={{
                   background: themeColors.button,
-                  color: themeColors.buttonText 
+                  color: themeColors.buttonText,
                 }}
                 aria-label="Retry loading chapter data"
               >
@@ -514,33 +624,33 @@ function Page() {
           ) : (
             <>
               {/* Main Layout Container */}
-              <div 
+              <div
                 className="flex h-screen"
                 style={{ background: themeColors.bg }}
               >
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
                   {/* Video Player Section */}
-                  <div 
+                  <div
                     className="flex-shrink-0 flex justify-center"
-                    style={{ background: '#000000' }}
+                    style={{ background: "#000000" }}
                   >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
-                     <iframe
-                     className="aspect-video lg:w-3xl"
-                     src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
-                     title="Darulkubra video player"
-                     frameBorder="0"
-                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                     referrerPolicy="strict-origin-when-cross-origin"
-                     allowFullScreen
-                     aria-label="Chapter video player" 
-                     style={{
-                       // width: "100%",
-                       // height: "100%",
-                       display: "block",
-                     }}
-                   />
+                      <iframe
+                        className="aspect-video lg:w-3xl"
+                        src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
+                        title="Darulkubra video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                        aria-label="Chapter video player"
+                        style={{
+                          // width: "100%",
+                          // height: "100%",
+                          display: "block",
+                        }}
+                      />
                     ) : data?.chapter?.customVideo ? (
                       <div className="w-full h-full lg:w-3xl lg:h-auto">
                         <CourseTopOverview
@@ -549,11 +659,11 @@ function Page() {
                         />
                       </div>
                     ) : (
-                      <div 
+                      <div
                         className="w-full h-full flex items-center justify-center"
-                        style={{ background: '#111827' }}
+                        style={{ background: "#111827" }}
                       >
-                        <span 
+                        <span
                           className="text-xl font-semibold"
                           style={{ color: themeColors.hint }}
                         >
@@ -568,7 +678,7 @@ function Page() {
                     "chapter" in data &&
                     data.chapter &&
                     Array.isArray(data.chapter.questions) && (
-                      <div 
+                      <div
                         className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative"
                         style={{ background: themeColors.bg }}
                       >
@@ -578,23 +688,23 @@ function Page() {
                           className="h-full flex flex-col lg:h-auto "
                         >
                           {/* Desktop Tabs - Horizontal Navigation */}
-                          <div 
+                          <div
                             className="hidden lg:block border-b"
-                            style={{ 
+                            style={{
                               background: themeColors.bg,
-                              borderColor: themeColors.secondaryBg 
+                              borderColor: themeColors.secondaryBg,
                             }}
                           >
-                            <TabsList 
+                            <TabsList
                               className="flex justify-start gap-2 bg-transparent p-2 w-full h-auto"
-                              style={{ background: 'transparent' }}
+                              style={{ background: "transparent" }}
                             >
                               <TabsTrigger
                                 value="quiz"
                                 className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
                                 style={{
                                   color: themeColors.hint,
-                                  background: 'transparent',
+                                  background: "transparent",
                                   borderColor: themeColors.secondaryBg,
                                 }}
                               >
@@ -606,7 +716,7 @@ function Page() {
                                 className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
                                 style={{
                                   color: themeColors.hint,
-                                  background: 'transparent',
+                                  background: "transparent",
                                   borderColor: themeColors.secondaryBg,
                                 }}
                               >
@@ -618,7 +728,7 @@ function Page() {
                                 className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
                                 style={{
                                   color: themeColors.hint,
-                                  background: 'transparent',
+                                  background: "transparent",
                                   borderColor: themeColors.secondaryBg,
                                 }}
                               >
@@ -630,7 +740,7 @@ function Page() {
                                 className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
                                 style={{
                                   color: themeColors.hint,
-                                  background: 'transparent',
+                                  background: "transparent",
                                   borderColor: themeColors.secondaryBg,
                                 }}
                               >
@@ -642,7 +752,7 @@ function Page() {
                                 className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
                                 style={{
                                   color: themeColors.hint,
-                                  background: 'transparent',
+                                  background: "transparent",
                                   borderColor: themeColors.secondaryBg,
                                 }}
                               >
@@ -653,11 +763,11 @@ function Page() {
                           </div>
 
                           {/* Content Area - Scrollable */}
-                          <div 
+                          <div
                             className="flex-1 overflow-y-auto lg:overflow-visible pb-32 lg:pb-4"
                             style={{ background: themeColors.bg }}
                           >
-                            <div 
+                            <div
                               className="px-2 py-2 lg:px-4 lg:py-4"
                               style={{ background: themeColors.bg }}
                             >
@@ -665,14 +775,23 @@ function Page() {
                                 <TabsContent
                                   value="mainmenu"
                                   className="lg:hidden"
-                                  style={{ background: themeColors.bg, color: themeColors.text }}
+                                  style={{
+                                    background: themeColors.bg,
+                                    color: themeColors.text,
+                                  }}
                                 >
-                                  <MainMenu data={packageData} themeColors={themeColors} />
+                                  <MainMenu
+                                    data={packageData}
+                                    themeColors={themeColors}
+                                  />
                                 </TabsContent>
                                 <TabsContent
                                   value="quiz"
                                   className=""
-                                  style={{ background: themeColors.bg, color: themeColors.text }}
+                                  style={{
+                                    background: themeColors.bg,
+                                    color: themeColors.text,
+                                  }}
                                 >
                                   <StudentQuestionForm
                                     chapter={{
@@ -687,7 +806,10 @@ function Page() {
                                 <TabsContent
                                   value="qna"
                                   className="h-full overflow-y-auto"
-                                  style={{ background: themeColors.bg, color: themeColors.text }}
+                                  style={{
+                                    background: themeColors.bg,
+                                    color: themeColors.text,
+                                  }}
                                 >
                                   <TraditionalQA
                                     packageId={data.packageId}
@@ -699,7 +821,10 @@ function Page() {
                                 <TabsContent
                                   value="feedback"
                                   className=""
-                                  style={{ background: themeColors.bg, color: themeColors.text }}
+                                  style={{
+                                    background: themeColors.bg,
+                                    color: themeColors.text,
+                                  }}
                                 >
                                   <CourseFeedback
                                     studentId={wdt_ID}
@@ -711,7 +836,10 @@ function Page() {
                                 <TabsContent
                                   value="materials"
                                   className=""
-                                  style={{ background: themeColors.bg, color: themeColors.text }}
+                                  style={{
+                                    background: themeColors.bg,
+                                    color: themeColors.text,
+                                  }}
                                 >
                                   <CourseMaterials
                                     courseId={data.packageId}
@@ -721,7 +849,10 @@ function Page() {
                                 <TabsContent
                                   value="announcements"
                                   className=""
-                                  style={{ background: themeColors.bg, color: themeColors.text }}
+                                  style={{
+                                    background: themeColors.bg,
+                                    color: themeColors.text,
+                                  }}
                                 >
                                   <CourseAnnouncements
                                     courseId={data.packageId}
@@ -732,11 +863,14 @@ function Page() {
                                 <TabsContent
                                   value="ai"
                                   className="lg:hidden"
-                                  style={{ background: themeColors.bg, color: themeColors.text }}
+                                  style={{
+                                    background: themeColors.bg,
+                                    color: themeColors.text,
+                                  }}
                                 >
                                   {/* packageId={data?.packageId || ""}  */}
-                                  <ChatComponent 
-                                    packageId={data?.packageId || ""} 
+                                  <ChatComponent
+                                    packageId={data?.packageId || ""}
                                     themeColors={themeColors}
                                   />
                                 </TabsContent>
@@ -745,162 +879,165 @@ function Page() {
                           </div>
 
                           {/* BOTTOM NAVIGATION - Profile Bar + Tabs */}
-                          <div 
+                          <div
                             className="fixed bottom-0 left-0 right-0 lg:hidden z-50"
-                            style={{ 
+                            style={{
                               background: themeColors.bg,
-                              boxShadow: `0 -2px 10px ${themeColors.secondaryBg}40`
+                              boxShadow: `0 -2px 10px ${themeColors.secondaryBg}40`,
                             }}
                           >
                             {/* Profile Bar */}
-                            <div 
+                            <div
                               className="px-4 py-2 flex items-center justify-between border-b"
-                              style={{ 
+                              style={{
                                 background: themeColors.secondaryBg,
-                                borderColor: `${themeColors.hint}30`
+                                borderColor: `${themeColors.hint}30`,
                               }}
                             >
-                            {/* Left - Back + Profile */}
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              {/* Back Button */}
-                              <button
-                                onClick={() => window.location.href = 'https://darelkubra.com'}
-                                className="p-1 rounded-full transition-all duration-200 hover:opacity-80 flex-shrink-0"
-                                style={{
-                                  background: `${themeColors.link}20`,
-                                  border: `1px solid ${themeColors.link}40`,
-                                }}
-                                aria-label="Back"
-                              >
-                                <ArrowLeft
-                                  className="w-4 h-4"
-                                  style={{ color: themeColors.link }}
-                                />
-                              </button>
-
-                              {/* Profile Picture */}
-                              <div className="relative flex-shrink-0">
-                                <Image
-                                  src="/userProfileIcon.png"
-                                  alt={packageData?.name || "Student"}
-                                  width={32}
-                                  height={32}
-                                  className="rounded-full object-cover"
+                              {/* Left - Back + Profile */}
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                {/* Back Button */}
+                                <button
+                                  onClick={() =>
+                                    (window.location.href =
+                                      "https://darelkubra.com")
+                                  }
+                                  className="p-1 rounded-full transition-all duration-200 hover:opacity-80 flex-shrink-0"
                                   style={{
-                                    border: `2px solid ${themeColors.link}40`,
+                                    background: `${themeColors.link}20`,
+                                    border: `1px solid ${themeColors.link}40`,
                                   }}
-                                />
+                                  aria-label="Back"
+                                >
+                                  <ArrowLeft
+                                    className="w-4 h-4"
+                                    style={{ color: themeColors.link }}
+                                  />
+                                </button>
+
+                                {/* Profile Picture */}
+                                <div className="relative flex-shrink-0">
+                                  <Image
+                                    src="/userProfileIcon.png"
+                                    alt={packageData?.name || "Student"}
+                                    width={32}
+                                    height={32}
+                                    className="rounded-full object-cover"
+                                    style={{
+                                      border: `2px solid ${themeColors.link}40`,
+                                    }}
+                                  />
+                                </div>
+
+                                {/* Name and Role */}
+                                <div className="flex-1 min-w-0">
+                                  <h2
+                                    className="text-xs font-bold truncate"
+                                    style={{ color: themeColors.text }}
+                                  >
+                                    {packageData?.name || "Student"}
+                                  </h2>
+                                  <p
+                                    className="text-xs truncate"
+                                    style={{ color: themeColors.hint }}
+                                  >
+                                    Student
+                                  </p>
+                                </div>
                               </div>
 
-                              {/* Name and Role */}
-                              <div className="flex-1 min-w-0">
-                                <h2
-                                  className="text-xs font-bold truncate"
-                                  style={{ color: themeColors.text }}
+                              {/* Right - News & AI Icons */}
+                              <div className="flex items-center gap-2">
+                                {/* News Icon */}
+                                <button
+                                  onClick={() => setActiveTab("announcements")}
+                                  className="p-1.5 rounded-full transition-all duration-200 hover:opacity-80"
+                                  style={{
+                                    background: `${themeColors.link}15`,
+                                    border: `1px solid ${themeColors.link}30`,
+                                  }}
+                                  aria-label="News"
                                 >
-                                  {packageData?.name || "Student"}
-                                </h2>
-                                <p
-                                  className="text-xs truncate"
-                                  style={{ color: themeColors.hint }}
+                                  <Newspaper
+                                    className="w-4 h-4"
+                                    style={{ color: themeColors.link }}
+                                  />
+                                </button>
+
+                                {/* AI/Chat Icon */}
+                                <button
+                                  onClick={() => setActiveTab("ai")}
+                                  className="p-1.5 rounded-full transition-all duration-200 hover:opacity-80"
+                                  style={{
+                                    background: `${themeColors.link}15`,
+                                    border: `1px solid ${themeColors.link}30`,
+                                  }}
+                                  aria-label="AI Assistant"
                                 >
-                                  Student
-                                </p>
+                                  <Bot
+                                    className="w-4 h-4"
+                                    style={{ color: themeColors.link }}
+                                  />
+                                </button>
                               </div>
                             </div>
 
-                            {/* Right - News & AI Icons */}
-                            <div className="flex items-center gap-2">
-                              {/* News Icon */}
-                              <button
-                                onClick={() => setActiveTab('announcements')}
-                                className="p-1.5 rounded-full transition-all duration-200 hover:opacity-80"
-                                style={{
-                                  background: `${themeColors.link}15`,
-                                  border: `1px solid ${themeColors.link}30`,
-                                }}
-                                aria-label="News"
-                              >
-                                <Newspaper
-                                  className="w-4 h-4"
-                                  style={{ color: themeColors.link }}
-                                />
-                              </button>
-
-                              {/* AI/Chat Icon */}
-                              <button
-                                onClick={() => setActiveTab('ai')}
-                                className="p-1.5 rounded-full transition-all duration-200 hover:opacity-80"
-                                style={{
-                                  background: `${themeColors.link}15`,
-                                  border: `1px solid ${themeColors.link}30`,
-                                }}
-                                aria-label="AI Assistant"
-                              >
-                                <Bot
-                                  className="w-4 h-4"
-                                  style={{ color: themeColors.link }}
-                                />
-                              </button>
-                            </div>
-                          </div>
-
-                           {/* Navigation Tabs - NO HORIZONTAL SCROLL */}
-                            <div 
+                            {/* Navigation Tabs - NO HORIZONTAL SCROLL */}
+                            <div
                               className="px-1 py-1"
-                              style={{ 
-                                background: themeColors.bg
+                              style={{
+                                background: themeColors.bg,
                               }}
                             >
-                                 <TabsList 
-                                   className="grid grid-cols-4 bg-transparent p-0 w-full h-auto py-2 gap-1"
-                                   style={{ background: 'transparent' }}
-                                 >
-                                 <TabsTrigger
-                                   value="mainmenu"
-                                   className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   <Home className="w-4 h-4" />
-                                   <span className="text-xs">Menu</span>
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="quiz"
-                                   className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   <BookOpen className="w-4 h-4" />
-                                   <span className="text-xs">Quiz</span>
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="qna"
-                                   className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   <MessageCircle className="w-4 h-4" />
-                                   <span className="text-xs">Q&A</span>
-                                 </TabsTrigger>
-                                 <TabsTrigger
-                                   value="feedback"
-                                   className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
-                                   style={{
-                                     color: themeColors.hint,
-                                     background: 'transparent',
-                                   }}
-                                 >
-                                   <MessageSquare className="w-4 h-4" />
-                                   <span className="text-xs">Feedback</span>
-                                 </TabsTrigger>
-                               </TabsList>
+                              <TabsList
+                                className="grid grid-cols-4 bg-transparent p-0 w-full h-auto py-2 gap-1"
+                                style={{ background: "transparent" }}
+                              >
+                                <TabsTrigger
+                                  value="mainmenu"
+                                  className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                  style={{
+                                    color: themeColors.hint,
+                                    background: "transparent",
+                                  }}
+                                >
+                                  <Home className="w-4 h-4" />
+                                  <span className="text-xs">Menu</span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="quiz"
+                                  className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                  style={{
+                                    color: themeColors.hint,
+                                    background: "transparent",
+                                  }}
+                                >
+                                  <BookOpen className="w-4 h-4" />
+                                  <span className="text-xs">Quiz</span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="qna"
+                                  className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                  style={{
+                                    color: themeColors.hint,
+                                    background: "transparent",
+                                  }}
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  <span className="text-xs">Q&A</span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="feedback"
+                                  className="flex flex-col items-center gap-1 px-2 py-2 bg-transparent border-none rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                  style={{
+                                    color: themeColors.hint,
+                                    background: "transparent",
+                                  }}
+                                >
+                                  <MessageSquare className="w-4 h-4" />
+                                  <span className="text-xs">Feedback</span>
+                                </TabsTrigger>
+                              </TabsList>
                             </div>
                           </div>
                         </Tabs>
@@ -908,39 +1045,39 @@ function Page() {
                     )}
                 </div>
 
-                  {/* Sticky Right Sidebar - Desktop Only */}
-                  <div 
-                    className="hidden lg:block w-80 border-l sticky top-0 h-screen overflow-hidden"
-                    style={{ 
-                      background: themeColors.bg,
-                      borderColor: themeColors.secondaryBg 
-                    }}
-                  >
-                    <div className="h-full flex flex-col">
-                      {/* Sidebar Header */}
-                      <div 
-                        className="px-4 py-3 border-b flex-shrink-0"
-                        style={{ 
-                          background: themeColors.secondaryBg,
-                          borderColor: themeColors.secondaryBg 
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <h3 
-                            className="text-sm font-semibold"
-                            style={{ color: themeColors.text }}
-                          >
-                            Course content
-                          </h3>
-                        </div>
+                {/* Sticky Right Sidebar - Desktop Only */}
+                <div
+                  className="hidden lg:block w-80 border-l sticky top-0 h-screen overflow-hidden"
+                  style={{
+                    background: themeColors.bg,
+                    borderColor: themeColors.secondaryBg,
+                  }}
+                >
+                  <div className="h-full flex flex-col">
+                    {/* Sidebar Header */}
+                    <div
+                      className="px-4 py-3 border-b flex-shrink-0"
+                      style={{
+                        background: themeColors.secondaryBg,
+                        borderColor: themeColors.secondaryBg,
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3
+                          className="text-sm font-semibold"
+                          style={{ color: themeColors.text }}
+                        >
+                          Course content
+                        </h3>
                       </div>
+                    </div>
 
                     {/* Sidebar Tabs */}
-                    <div 
+                    <div
                       className="border-b flex-shrink-0"
-                      style={{ 
+                      style={{
                         background: themeColors.bg,
-                        borderColor: themeColors.secondaryBg 
+                        borderColor: themeColors.secondaryBg,
                       }}
                     >
                       <div className="flex">
@@ -948,10 +1085,20 @@ function Page() {
                           onClick={() => setSidebarActiveTab("mainmenu")}
                           className="flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 no-theme"
                           style={{
-                            color: sidebarActiveTab === "mainmenu" ? themeColors.text : themeColors.hint,
-                            background: sidebarActiveTab === "mainmenu" ? `${themeColors.secondaryBg}` : themeColors.bg,
-                            borderBottom: sidebarActiveTab === "mainmenu" ? `2px solid ${themeColors.link}` : 'none',
-                            fontWeight: sidebarActiveTab === "mainmenu" ? '600' : '500',
+                            color:
+                              sidebarActiveTab === "mainmenu"
+                                ? themeColors.text
+                                : themeColors.hint,
+                            background:
+                              sidebarActiveTab === "mainmenu"
+                                ? `${themeColors.secondaryBg}`
+                                : themeColors.bg,
+                            borderBottom:
+                              sidebarActiveTab === "mainmenu"
+                                ? `2px solid ${themeColors.link}`
+                                : "none",
+                            fontWeight:
+                              sidebarActiveTab === "mainmenu" ? "600" : "500",
                           }}
                         >
                           Course content
@@ -960,10 +1107,20 @@ function Page() {
                           onClick={() => setSidebarActiveTab("ai")}
                           className="flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 no-theme"
                           style={{
-                            color: sidebarActiveTab === "ai" ? themeColors.text : themeColors.hint,
-                            background: sidebarActiveTab === "ai" ? `${themeColors.secondaryBg}` : themeColors.bg,
-                            borderBottom: sidebarActiveTab === "ai" ? `2px solid ${themeColors.link}` : 'none',
-                            fontWeight: sidebarActiveTab === "ai" ? '600' : '500',
+                            color:
+                              sidebarActiveTab === "ai"
+                                ? themeColors.text
+                                : themeColors.hint,
+                            background:
+                              sidebarActiveTab === "ai"
+                                ? `${themeColors.secondaryBg}`
+                                : themeColors.bg,
+                            borderBottom:
+                              sidebarActiveTab === "ai"
+                                ? `2px solid ${themeColors.link}`
+                                : "none",
+                            fontWeight:
+                              sidebarActiveTab === "ai" ? "600" : "500",
                           }}
                         >
                           AI Assistant
@@ -972,14 +1129,17 @@ function Page() {
                     </div>
 
                     {/* Sidebar Content - Only this scrolls */}
-                    <div 
+                    <div
                       className="flex-1 overflow-y-auto"
                       style={{ background: themeColors.bg }}
                     >
                       {sidebarActiveTab === "mainmenu" ? (
-                        <MainMenu data={packageData} themeColors={themeColors} />
+                        <MainMenu
+                          data={packageData}
+                          themeColors={themeColors}
+                        />
                       ) : (
-                        // packageId={data?.packageId || ""} 
+                        // packageId={data?.packageId || ""}
                         <ChatComponent packageId={data?.packageId || ""} />
                       )}
                     </div>
@@ -999,35 +1159,36 @@ export default Page;
 function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
   const router = useRouter();
   const theme = useTelegramTheme();
-  
+
   // Professional theme utilities with memoization
   const themeColors = useMemo(() => {
     let isLightTheme = true;
     if (theme.bg_color) {
       try {
-        const bgHex = theme.bg_color.replace('#', '');
+        const bgHex = theme.bg_color.replace("#", "");
         const bgValue = parseInt(bgHex, 16);
         const r = (bgValue >> 16) & 0xff;
         const g = (bgValue >> 8) & 0xff;
         const b = bgValue & 0xff;
         const avg = (r + g + b) / 3;
-        isLightTheme = avg > 128 || theme.bg_color.toLowerCase() === '#ffffff';
+        isLightTheme = avg > 128 || theme.bg_color.toLowerCase() === "#ffffff";
       } catch {
         isLightTheme = true;
       }
     }
-    
+
     return {
-      bg: theme.bg_color || '#ffffff',
-      text: theme.text_color || (isLightTheme ? '#000000' : '#ffffff'),
-      hint: theme.hint_color || (isLightTheme ? '#999999' : '#aaaaaa'),
-      link: theme.link_color || '#0ea5e9',
-      button: theme.button_color || '#0ea5e9',
-      buttonText: theme.button_text_color || '#ffffff',
-      secondaryBg: theme.secondary_bg_color || (isLightTheme ? '#f0f0f0' : '#1a1a1a'),
+      bg: theme.bg_color || "#ffffff",
+      text: theme.text_color || (isLightTheme ? "#000000" : "#ffffff"),
+      hint: theme.hint_color || (isLightTheme ? "#999999" : "#aaaaaa"),
+      link: theme.link_color || "#0ea5e9",
+      button: theme.button_color || "#0ea5e9",
+      buttonText: theme.button_text_color || "#ffffff",
+      secondaryBg:
+        theme.secondary_bg_color || (isLightTheme ? "#f0f0f0" : "#1a1a1a"),
     };
   }, [theme]);
-  
+
   console.log("showed message in message");
   useEffect(() => {
     (async () => {
@@ -1069,17 +1230,17 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
               />
             </svg>
           </TooltipTrigger>
-          <TooltipContent 
-            style={{ 
-              background: themeColors.secondaryBg, 
+          <TooltipContent
+            style={{
+              background: themeColors.secondaryBg,
               color: themeColors.text,
-              borderColor: themeColors.hint
+              borderColor: themeColors.hint,
             }}
           >
             {message}
           </TooltipContent>
         </Tooltip>
-        <span 
+        <span
           className="text-xl font-bold text-center"
           style={{ color: themeColors.text }}
         >
