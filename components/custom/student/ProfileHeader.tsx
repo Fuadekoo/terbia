@@ -32,7 +32,7 @@ export default function ProfileHeader({
 }: ProfileHeaderProps) {
   // Build the back URL with the chatId
   const backUrl = chatId
-    ? `https://exam.darelkubra.com/student/mini-app`
+    ? `https://exam.darelkubra.com/student/mini-app/${chatId}`
     : "https://exam.darelkubra.com/student/mini-app";
 
   // Use Telegram theme colors or defaults
