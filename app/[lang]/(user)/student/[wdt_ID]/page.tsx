@@ -204,10 +204,9 @@ function useTelegramTheme() {
 
 export default function Page() {
   const params = useParams();
-  const urlWdtID = params?.wdt_ID ? Number(params.wdt_ID) : null;
+  const wdt_ID = params?.wdt_ID ? Number(params.wdt_ID) : null;
 
   const [chatId, setChatId] = useState<string | null>(null);
-  const [wdt_ID, setWdtID] = useState<number | null>(urlWdtID);
   const [loading, setLoading] = useState(true);
   const [startRes, setStartRes] = useState<
     StartSingle | StartChoose | StartError | null
@@ -220,7 +219,7 @@ export default function Page() {
   const theme = useTelegramTheme();
 
   useEffect(() => {
-    // Try to read chat id and wdt_ID from Telegram WebApp
+    // Try to read chat id from Telegram WebApp
     if (typeof window !== "undefined") {
       const w = window as unknown as TelegramWindow;
 
@@ -228,53 +227,22 @@ export default function Page() {
       try {
         const raw = retrieveRawInitData();
         if (raw) {
-          const urlParams = new URLSearchParams(raw);
-
-          // Get chatId
-          const chatJson = urlParams.get("chat") || urlParams.get("user");
+          const params = new URLSearchParams(raw);
+          const chatJson = params.get("chat") || params.get("user");
           if (chatJson) {
             const parsed = JSON.parse(chatJson) as { id?: number };
             if (parsed?.id) {
               setChatId(String(parsed.id));
-            }
-          }
-
-          // Get wdt_ID from start_param (startapp parameter)
-          const startParam = urlParams.get("start_param");
-          console.log("📱 Telegram start_param (wdt_ID):", startParam);
-          if (startParam) {
-            const wdtFromTelegram = Number(startParam);
-            if (!isNaN(wdtFromTelegram)) {
-              setWdtID(wdtFromTelegram);
-              console.log("✅ Using wdt_ID from Telegram:", wdtFromTelegram);
               return;
             }
           }
         }
-      } catch (err) {
-        console.error("Error parsing Telegram init data:", err);
-      }
+      } catch {}
 
       // 2) Fallback: initDataUnsafe
       const unsafe = w.Telegram?.WebApp?.initDataUnsafe;
-
-      // Get chatId from unsafe
       const id = unsafe?.chat?.id ?? unsafe?.user?.id;
       if (id) setChatId(String(id));
-
-      // Get wdt_ID from start_param in unsafe
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const startParam = (unsafe as any)?.start_param;
-      if (startParam) {
-        const wdtFromTelegram = Number(startParam);
-        if (!isNaN(wdtFromTelegram)) {
-          setWdtID(wdtFromTelegram);
-          console.log(
-            "✅ Using wdt_ID from Telegram (unsafe):",
-            wdtFromTelegram
-          );
-        }
-      }
     }
   }, []);
 
