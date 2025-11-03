@@ -155,7 +155,7 @@ function Page() {
   const wdt_ID = Number(params?.wdt_ID ?? 0);
   const courseId = String(params?.courseId ?? "");
   const chapterId = String(params?.chapterId ?? "");
-  const [authorized, setAuthorized] = React.useState<boolean | null>(true);
+  // const [authorized, setAuthorized] = React.useState<boolean | null>(true);
   
   // Use Telegram theme hook
   const theme = useTelegramTheme();
