@@ -1,7 +1,8 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Newspaper, Bot } from "lucide-react";
+import { retrieveLaunchParams } from "@telegram-apps/sdk";
 
 interface ProfileHeaderProps {
   name: string;
@@ -25,11 +26,33 @@ export default function ProfileHeader({
   name,
   role = "Student",
   showBackButton = true,
-  backUrl = "https://darelkubra.com",
+  backUrl = "https://exam.darelkubra.com/student/mini-app/{chatId}",
   onNewsClick,
   onAIClick,
   themeColors,
 }: ProfileHeaderProps) {
+  const [actualBackUrl, setActualBackUrl] = useState(backUrl);
+
+  // Get chatId from Telegram
+  useEffect(() => {
+    try {
+      const launchParams = retrieveLaunchParams();
+      // Access the user ID from Telegram's launch params
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const initData = launchParams?.initData as any;
+      const userId = initData?.user?.id;
+
+      if (userId) {
+        // Replace {chatId} placeholder with actual user ID
+        const urlWithChatId = backUrl.replace("{chatId}", userId.toString());
+        setActualBackUrl(urlWithChatId);
+      }
+    } catch (error) {
+      console.error("Failed to retrieve Telegram user ID:", error);
+      // Keep the original backUrl if we can't get the userId
+    }
+  }, [backUrl]);
+
   // Use Telegram theme colors or defaults
   const bgColor = themeColors?.bg || "#1a1a1a";
   const textColor = themeColors?.text || "#ffffff";
@@ -38,7 +61,7 @@ export default function ProfileHeader({
 
   const handleBack = () => {
     // Redirect without opening new tab or closing mini app
-    window.location.href = backUrl;
+    window.location.href = actualBackUrl;
   };
 
   return (
@@ -62,10 +85,7 @@ export default function ProfileHeader({
             }}
             aria-label="Back to Darelkubra"
           >
-            <ArrowLeft
-              className="w-5 h-5"
-              style={{ color: linkColor }}
-            />
+            <ArrowLeft className="w-5 h-5" style={{ color: linkColor }} />
           </button>
         )}
 
@@ -91,10 +111,7 @@ export default function ProfileHeader({
           >
             {name}
           </h2>
-          <p
-            className="text-sm truncate"
-            style={{ color: hintColor }}
-          >
+          <p className="text-sm truncate" style={{ color: hintColor }}>
             {role}
           </p>
         </div>
@@ -113,10 +130,7 @@ export default function ProfileHeader({
             }}
             aria-label="News"
           >
-            <Newspaper
-              className="w-4 h-4"
-              style={{ color: linkColor }}
-            />
+            <Newspaper className="w-4 h-4" style={{ color: linkColor }} />
           </button>
         )}
 
@@ -131,14 +145,10 @@ export default function ProfileHeader({
             }}
             aria-label="AI Assistant"
           >
-            <Bot
-              className="w-4 h-4"
-              style={{ color: linkColor }}
-            />
+            <Bot className="w-4 h-4" style={{ color: linkColor }} />
           </button>
         )}
       </div>
     </div>
   );
 }
-
