@@ -1,4 +1,4 @@
-"use server"; 
+"use server";
 import prisma from "@/lib/db";
 import { getAvailablePacakges } from "@/actions/student/package";
 import { updatePathProgressData } from "@/actions/student/progress";
@@ -19,7 +19,9 @@ interface TelegramUserResult {
 }
 
 // Gate by Telegram chatId and return matching user rows
-export async function getTelegramUser(chatId: string): Promise<TelegramUserResult> {
+export async function getTelegramUser(
+  chatId: string
+): Promise<TelegramUserResult> {
   try {
     if (!chatId || !String(chatId).trim()) {
       return { success: false, error: "Missing chatId" };
@@ -46,7 +48,7 @@ export async function getTelegramUser(chatId: string): Promise<TelegramUserResul
             name: true,
           },
         },
-        
+
         // Include other columns you need here
       },
       orderBy: { wdt_ID: "asc" },
@@ -91,13 +93,22 @@ function buildAvatar(name: string | null): { initials: string; color: string } {
     .slice(0, 2)
     .map((s) => s[0]?.toUpperCase() || "S")
     .join("");
-  const palette = ["#6C5CE7", "#0984E3", "#00B894", "#E17055", "#D63031", "#E84393"];
+  const palette = [
+    "#6C5CE7",
+    "#0984E3",
+    "#00B894",
+    "#E17055",
+    "#D63031",
+    "#E84393",
+  ];
   const code = (initials.charCodeAt(0) || 83) + (initials.charCodeAt(1) || 0);
   const color = palette[code % palette.length];
   return { initials, color };
 }
 
-export async function startStudentFlow(chatId: string): Promise<StartFlowResult> {
+export async function startStudentFlow(
+  chatId: string
+): Promise<StartFlowResult> {
   try {
     if (!chatId || !String(chatId).trim()) {
       return { success: false, error: "Missing chatId" };
@@ -143,13 +154,19 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
     });
 
     if (!channels.length) {
-      return { success: false, error: "No active student found for this chatId" };
+      return {
+        success: false,
+        error: "No active student found for this chatId",
+      };
     }
 
     const choosePayload: StartFlowResultChoose["students"] = [];
     const immediate: Array<StartFlowResultSingle> = [];
 
-    async function computePackageProgress(studentId: number, packageId: string): Promise<number> {
+    async function computePackageProgress(
+      studentId: number,
+      packageId: string
+    ): Promise<number> {
       try {
         const chapters = await prisma.chapter.findMany({
           where: { course: { packageId } },
@@ -158,7 +175,11 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
         const chapterIds = chapters.map((ch) => ch.id);
         if (chapterIds.length === 0) return 0;
         const completedChapters = await prisma.studentProgress.count({
-          where: { studentId, chapterId: { in: chapterIds }, isCompleted: true },
+          where: {
+            studentId,
+            chapterId: { in: chapterIds },
+            isCompleted: true,
+          },
         });
         return Math.round((completedChapters / chapterIds.length) * 100);
       } catch {
@@ -167,8 +188,10 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
     }
 
     for (const channel of channels) {
-      const packageType = (channel as unknown as { package: string | null }).package;
-      const subject = (channel as unknown as { subject: string | null }).subject;
+      const packageType = (channel as unknown as { package: string | null })
+        .package;
+      const subject = (channel as unknown as { subject: string | null })
+        .subject;
       const isKid = (channel as unknown as { isKid: boolean | null }).isKid;
       const studentId = channel.wdt_ID;
       const studentName = channel.name;
@@ -176,22 +199,33 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
       if (!packageType || !subject || isKid === null) continue;
 
       // Fetch available packages list for choice rendering
-      type AvailablePackage = { id: string; subject: string | null; package: { id: string; name: string } };
-      const availablePackages: AvailablePackage[] = await getAvailablePacakges(packageType, subject, isKid);
+      type AvailablePackage = {
+        id: string;
+        subject: string | null;
+        package: { id: string; name: string };
+      };
+      const availablePackages: AvailablePackage[] = await getAvailablePacakges(
+        packageType,
+        subject,
+        isKid
+      );
       const validPackages = (availablePackages || []).filter((pkg) => pkg.id);
 
       if (validPackages.length === 1) {
         // Initialize progress using the student's activePackage first chapter when present
-        const firstChapterId = channel.activePackage?.courses?.[0]?.chapters?.[0]?.id as
-          | string
-          | undefined;
+        const firstChapterId = channel.activePackage?.courses?.[0]
+          ?.chapters?.[0]?.id as string | undefined;
         if (firstChapterId) {
           const existingProgress = await prisma.studentProgress.findFirst({
             where: { studentId, chapterId: firstChapterId },
           });
           if (!existingProgress) {
             await prisma.studentProgress.create({
-              data: { studentId, chapterId: firstChapterId, isCompleted: false },
+              data: {
+                studentId,
+                chapterId: firstChapterId,
+                isCompleted: false,
+              },
             });
           }
         }
@@ -206,7 +240,9 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
         immediate.push({
           mode: "single",
           url,
-          packageName: (channel.activePackage as { name?: string } | null)?.name || "Package",
+          packageName:
+            (channel.activePackage as { name?: string } | null)?.name ||
+            "Package",
           studentId,
           studentName,
         });
@@ -216,7 +252,10 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
           validPackages.map(async (p) => ({
             id: p.package.id,
             name: p.package.name,
-            progressPercentage: await computePackageProgress(studentId, p.package.id),
+            progressPercentage: await computePackageProgress(
+              studentId,
+              p.package.id
+            ),
           }))
         );
 
@@ -226,14 +265,23 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
           avatar: buildAvatar(studentName),
           packages: packagesWithProgress,
           subject: subject,
-          teacherName: (channel as unknown as { ustazdata?: { ustazname?: string | null } | null }).ustazdata?.ustazname || null,
+          teacherName:
+            (
+              channel as unknown as {
+                ustazdata?: { ustazname?: string | null } | null;
+              }
+            ).ustazdata?.ustazname || null,
           classFee: "ETB 4000", // Default fee, can be made dynamic later
         });
       }
     }
 
     // Return direct only when exactly one student and exactly one package
-    if (channels.length === 1 && immediate.length === 1 && choosePayload.length === 0) {
+    if (
+      channels.length === 1 &&
+      immediate.length === 1 &&
+      choosePayload.length === 0
+    ) {
       return { success: true, data: immediate[0] };
     }
 
@@ -244,8 +292,13 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
         ...(await Promise.all(
           immediate.map(async (i) => {
             const channel = channels.find((c) => c.wdt_ID === i.studentId);
-            const activeId = (channel?.activePackage as { id?: string } | null)?.id || "active";
-            const progress = activeId === "active" ? 0 : await computePackageProgress(i.studentId, activeId);
+            const activeId =
+              (channel?.activePackage as { id?: string } | null)?.id ||
+              "active";
+            const progress =
+              activeId === "active"
+                ? 0
+                : await computePackageProgress(i.studentId, activeId);
             return {
               studentId: i.studentId,
               name: i.studentName,
@@ -257,8 +310,15 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
                   progressPercentage: progress,
                 },
               ],
-              subject: (channel as unknown as { subject?: string | null })?.subject || null,
-              teacherName: (channel as unknown as { ustazdata?: { ustazname?: string | null } | null })?.ustazdata?.ustazname || null,
+              subject:
+                (channel as unknown as { subject?: string | null })?.subject ||
+                null,
+              teacherName:
+                (
+                  channel as unknown as {
+                    ustazdata?: { ustazname?: string | null } | null;
+                  }
+                )?.ustazdata?.ustazname || null,
               classFee: "ETB 4000",
             };
           })
@@ -292,38 +352,18 @@ export async function chooseStudentPackage(
       return { success: false, error: "Missing BASE_URL configuration" };
     }
 
-    const validPackage = await prisma.coursePackage.findUnique({ where: { id: packageId } });
+    const validPackage = await prisma.coursePackage.findUnique({
+      where: { id: packageId },
+    });
     if (!validPackage) {
       return { success: false, error: "Invalid package" };
     }
 
-    // Find the student first (supports both Telegram and browser access)
-    const student = await prisma.wpos_wpdatatable_23.findFirst({
-      where: {
-        OR: [
-          {
-            // Telegram access: match both chat_id and wdt_ID
-            chat_id: String(chatId),
-            wdt_ID: studentId,
-          },
-          {
-            // Browser access: match wdt_ID only
-            wdt_ID: studentId,
-            chat_id: { not: null },
-          },
-        ],
-        status: { in: ["Active", "Not yet", "On progress"] },
-      },
-    });
-
-    if (!student) {
-      return { success: false, error: "Student not found" };
-    }
-
-    // Update using the found student's wdt_ID
     await prisma.wpos_wpdatatable_23.update({
       where: {
-        wdt_ID: student.wdt_ID,
+        chat_id: String(chatId),
+        wdt_ID: studentId,
+        status: { in: ["Active", "Not yet", "On progress"] },
       },
       data: { youtubeSubject: packageId },
     });
@@ -333,12 +373,19 @@ export async function chooseStudentPackage(
       select: {
         courses: {
           where: { order: 1 },
-          select: { id: true, chapters: { where: { position: 1 }, select: { id: true } } },
+          select: {
+            id: true,
+            chapters: { where: { position: 1 }, select: { id: true } },
+          },
         },
       },
     });
 
-    if (!activePackage || !activePackage.courses.length || !activePackage.courses[0].chapters.length) {
+    if (
+      !activePackage ||
+      !activePackage.courses.length ||
+      !activePackage.courses[0].chapters.length
+    ) {
       return { success: false, error: "Selected package has no content" };
     }
 
@@ -369,7 +416,6 @@ export async function chooseStudentPackage(
 }
 
 // Validate that a given chatId is authorized to access a specific student (wdt_ID)
-// Supports both Telegram and browser access
 export async function validateStudentAccess(
   chatId: string,
   studentId: number
@@ -380,18 +426,8 @@ export async function validateStudentAccess(
     }
     const exists = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
-        OR: [
-          {
-            // Telegram access: match both chat_id and wdt_ID
-            chat_id: String(chatId),
-            wdt_ID: Number(studentId),
-          },
-          {
-            // Browser access: match wdt_ID only
-            wdt_ID: Number(studentId),
-            chat_id: { not: null },
-          },
-        ],
+        chat_id: String(chatId),
+        wdt_ID: Number(studentId),
         status: { in: ["Active", "Not yet", "On progress"] },
       },
       select: { wdt_ID: true },
@@ -421,21 +457,10 @@ export async function getStudentFlowById(
     }
 
     // Get the specific student record
-    // Support both Telegram (chat_id match) and browser access (wdt_ID only)
     const student = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
-        OR: [
-          {
-            // Telegram access: match both chat_id and wdt_ID
-            chat_id: String(chatId),
-            wdt_ID: studentId,
-          },
-          {
-            // Browser access: match wdt_ID only (when chatId is the wdt_ID)
-            wdt_ID: studentId,
-            chat_id: { not: null }, // Ensure student has been registered
-          },
-        ],
+        chat_id: String(chatId),
+        wdt_ID: studentId,
         status: { in: ["Active", "Not yet", "On progress"] },
       },
       select: {
@@ -470,7 +495,8 @@ export async function getStudentFlowById(
       return { success: false, error: "Student profile not found" };
     }
 
-    const packageType = (student as unknown as { package: string | null }).package;
+    const packageType = (student as unknown as { package: string | null })
+      .package;
     const subject = (student as unknown as { subject: string | null }).subject;
     const isKid = (student as unknown as { isKid: boolean | null }).isKid;
 
@@ -487,7 +513,11 @@ export async function getStudentFlowById(
         const chapterIds = chapters.map((ch) => ch.id);
         if (chapterIds.length === 0) return 0;
         const completedChapters = await prisma.studentProgress.count({
-          where: { studentId, chapterId: { in: chapterIds }, isCompleted: true },
+          where: {
+            studentId,
+            chapterId: { in: chapterIds },
+            isCompleted: true,
+          },
         });
         return Math.round((completedChapters / chapterIds.length) * 100);
       } catch {
@@ -496,18 +526,29 @@ export async function getStudentFlowById(
     }
 
     // Fetch available packages
-    type AvailablePackage = { id: string; subject: string | null; package: { id: string; name: string } };
-    const availablePackages: AvailablePackage[] = await getAvailablePacakges(packageType, subject, isKid);
+    type AvailablePackage = {
+      id: string;
+      subject: string | null;
+      package: { id: string; name: string };
+    };
+    const availablePackages: AvailablePackage[] = await getAvailablePacakges(
+      packageType,
+      subject,
+      isKid
+    );
     const validPackages = (availablePackages || []).filter((pkg) => pkg.id);
 
     if (validPackages.length === 0) {
-      return { success: false, error: "No available packages for this student" };
+      return {
+        success: false,
+        error: "No available packages for this student",
+      };
     }
 
     // If only one package, create single mode result
     if (validPackages.length === 1) {
       const packageId = validPackages[0].package.id;
-      
+
       // Get first chapter of this package to initialize progress if needed
       const firstPackageCourse = await prisma.coursePackage.findUnique({
         where: { id: packageId },
@@ -518,14 +559,15 @@ export async function getStudentFlowById(
               id: true,
               chapters: {
                 where: { position: 1 },
-                select: { id: true }
-              }
-            }
-          }
-        }
+                select: { id: true },
+              },
+            },
+          },
+        },
       });
-      
-      const firstChapterId = firstPackageCourse?.courses?.[0]?.chapters?.[0]?.id;
+
+      const firstChapterId =
+        firstPackageCourse?.courses?.[0]?.chapters?.[0]?.id;
       if (firstChapterId) {
         const existingProgress = await prisma.studentProgress.findFirst({
           where: { studentId, chapterId: firstChapterId },
@@ -541,7 +583,7 @@ export async function getStudentFlowById(
       if (!progressPath) {
         return { success: false, error: "Failed to compute progress path" };
       }
-      
+
       const [courseId, chapterId] = progressPath;
       const lang = "en";
       const stud = "student";
@@ -579,7 +621,12 @@ export async function getStudentFlowById(
             avatar: buildAvatar(student.name),
             packages: packagesWithProgress,
             subject: subject,
-            teacherName: (student as unknown as { ustazdata?: { ustazname?: string | null } | null }).ustazdata?.ustazname || null,
+            teacherName:
+              (
+                student as unknown as {
+                  ustazdata?: { ustazname?: string | null } | null;
+                }
+              ).ustazdata?.ustazname || null,
             classFee: "ETB 4000",
           },
         ],
