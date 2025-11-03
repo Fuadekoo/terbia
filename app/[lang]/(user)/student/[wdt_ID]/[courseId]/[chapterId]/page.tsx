@@ -27,8 +27,6 @@ import { getPackageData } from "@/actions/student/package";
 import MainMenu from "@/components/custom/student/bestMenu";
 import TraditionalQA from "@/components/traditionalQA";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { validateStudentAccess } from "@/actions/student/telegram";
-import { retrieveRawInitData } from "@telegram-apps/sdk";
 import Image from "next/image";
 
 // Telegram Theme Types
@@ -157,8 +155,7 @@ function Page() {
   const wdt_ID = Number(params?.wdt_ID ?? 0);
   const courseId = String(params?.courseId ?? "");
   const chapterId = String(params?.chapterId ?? "");
-  const [authorized, setAuthorized] = React.useState<boolean | null>(null);
-  const [chatId, setChatId] = React.useState<string | null>(null);
+  const [authorized, setAuthorized] = React.useState<boolean | null>(true);
   
   // Use Telegram theme hook
   const theme = useTelegramTheme();
@@ -209,43 +206,12 @@ function Page() {
     courseId
   );
   const [error, setError] = React.useState<string | null>(null);
-  // Gate by Telegram chat id like the student landing page
+  
+  // Removed Telegram chat ID restriction - direct access is now allowed
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    
-    let extractedId: string | null = null;
-    
-    try {
-      const raw = retrieveRawInitData();
-      if (raw) {
-        const p = new URLSearchParams(raw);
-        const json = p.get("chat") || p.get("user");
-        if (json) {
-          const obj = JSON.parse(json) as { id?: number };
-          if (obj?.id) extractedId = String(obj.id);
-        }
-      }
-    } catch {}
-    
-    if (!extractedId) {
-      const w = window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { chat?: { id?: number }; user?: { id?: number } } } } };
-      const unsafe = w.Telegram?.WebApp?.initDataUnsafe;
-      const id = unsafe?.chat?.id ?? unsafe?.user?.id;
-      if (id) extractedId = String(id);
-    }
-    
-    if (extractedId && !chatId) {
-      setChatId(extractedId);
-    }
-  }, [chatId]);
-
-  useEffect(() => {
-    (async () => {
-      if (!chatId || !wdt_ID) return;
-      const res = await validateStudentAccess(chatId, wdt_ID);
-      setAuthorized(res.authorized);
-    })();
-  }, [chatId, wdt_ID]);
+    // Always authorize access without Telegram check
+    setAuthorized(true);
+  }, [wdt_ID]);
   const [sidebarActiveTab, setSidebarActiveTab] = React.useState<
     "mainmenu" | "ai"
   >("mainmenu");
@@ -329,52 +295,7 @@ function Page() {
   
   const [activeTab, setActiveTab] = React.useState(defaultTab);
 
-  // Restrict access when not authorized
-  if (authorized === false) {
-    return (
-      <motion.div 
-        className="flex items-center justify-center min-h-[60vh] pt-[5px]" 
-        style={{ background: themeColors.bg }}
-        variants={containerVariants} 
-        initial="hidden" 
-        animate="visible"
-      >
-        <div 
-          className="text-center p-6 border rounded-xl"
-          style={{ 
-            background: themeColors.secondaryBg,
-            color: themeColors.text,
-            borderColor: themeColors.hint 
-          }}
-        >
-          Access denied. Please open from Telegram using your registered account.
-        </div>
-      </motion.div>
-    );
-  }
-
-  if (authorized === null) {
-    return (
-      <motion.div 
-        className="flex items-center justify-center min-h-[60vh] pt-[5px]" 
-        style={{ background: themeColors.bg, color: themeColors.text }}
-        variants={containerVariants} 
-        initial="hidden" 
-        animate="visible"
-      >
-        <div 
-          className="text-center p-6 border rounded-xl"
-          style={{ 
-            borderColor: themeColors.hint,
-            background: themeColors.secondaryBg,
-            color: themeColors.text 
-          }}
-        >
-          Verifying access…
-        </div>
-      </motion.div>
-    );
-  }
+  // Access restrictions removed - direct access allowed
 
   // return <div className="">there is no content available</div>;
 

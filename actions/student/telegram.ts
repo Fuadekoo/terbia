@@ -21,6 +21,33 @@ interface TelegramUserResult {
 // Gate by Telegram chatId and return matching user rows
 export async function getTelegramUser(chatId: string): Promise<TelegramUserResult> {
   try {
+    // Allow direct access - if chatId is 'direct_access', fetch all active students
+    if (chatId === 'direct_access') {
+      const users = await prisma.wpos_wpdatatable_23.findMany({
+        where: {
+          status: { in: ["Active", "Not yet", "On progress"] },
+        },
+        select: {
+          wdt_ID: true,
+          name: true,
+          chat_id: true,
+          status: true,
+          subject: true,
+          package: true,
+          isKid: true,
+          activePackage: {
+            where: { isPublished: true },
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: { wdt_ID: "asc" },
+      });
+      return { success: true, users };
+    }
+    
     if (!chatId || !String(chatId).trim()) {
       return { success: false, error: "Missing chatId" };
     }
@@ -108,11 +135,13 @@ export async function startStudentFlow(chatId: string): Promise<StartFlowResult>
       return { success: false, error: "Missing BASE_URL configuration" };
     }
 
+    // Modified to allow direct access
+    const whereClause = chatId === 'direct_access' 
+      ? { status: { in: ["Active", "Not yet", "On progress"] } }
+      : { chat_id: String(chatId), status: { in: ["Active", "Not yet", "On progress"] } };
+
     const channels = await prisma.wpos_wpdatatable_23.findMany({
-      where: {
-        chat_id: String(chatId),
-        status: { in: ["Active", "Not yet", "On progress"] },
-      },
+      where: whereClause,
       select: {
         wdt_ID: true,
         name: true,
@@ -297,12 +326,13 @@ export async function chooseStudentPackage(
       return { success: false, error: "Invalid package" };
     }
 
+    // Modified to allow direct access - bypass chat_id check
+    const whereClause = chatId === 'direct_access'
+      ? { wdt_ID: studentId, status: { in: ["Active", "Not yet", "On progress"] } }
+      : { chat_id: String(chatId), wdt_ID: studentId, status: { in: ["Active", "Not yet", "On progress"] } };
+
     await prisma.wpos_wpdatatable_23.update({
-      where: {
-        chat_id: String(chatId),
-        wdt_ID: studentId,
-        status: { in: ["Active", "Not yet", "On progress"] },
-      },
+      where: whereClause,
       data: { youtubeSubject: packageId },
     });
 
@@ -347,17 +377,20 @@ export async function chooseStudentPackage(
 }
 
 // Validate that a given chatId is authorized to access a specific student (wdt_ID)
+// Modified to allow direct access without Telegram chat ID requirement
 export async function validateStudentAccess(
   chatId: string,
   studentId: number
 ): Promise<{ authorized: boolean }> {
   try {
-    if (!chatId || !String(chatId).trim() || !studentId) {
+    if (!studentId) {
       return { authorized: false };
     }
+    
+    // Allow direct access - bypass Telegram chat ID check
+    // Just verify the student exists and is active
     const exists = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
-        chat_id: String(chatId),
         wdt_ID: Number(studentId),
         status: { in: ["Active", "Not yet", "On progress"] },
       },
@@ -387,13 +420,14 @@ export async function getStudentFlowById(
       return { success: false, error: "Missing BASE_URL configuration" };
     }
 
+    // Modified to allow direct access - bypass chat_id check when using direct access
+    const whereClause = chatId === 'direct_access'
+      ? { wdt_ID: studentId, status: { in: ["Active", "Not yet", "On progress"] } }
+      : { chat_id: String(chatId), wdt_ID: studentId, status: { in: ["Active", "Not yet", "On progress"] } };
+
     // Get the specific student record
     const student = await prisma.wpos_wpdatatable_23.findFirst({
-      where: {
-        chat_id: String(chatId),
-        wdt_ID: studentId,
-        status: { in: ["Active", "Not yet", "On progress"] },
-      },
+      where: whereClause,
       select: {
         wdt_ID: true,
         name: true,
