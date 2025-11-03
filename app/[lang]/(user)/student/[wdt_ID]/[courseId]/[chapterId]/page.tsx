@@ -897,23 +897,28 @@ function Page() {
                               {/* Left - Back + Profile */}
                               <div className="flex items-center gap-2 flex-1 min-w-0">
                                 {/* Back Button */}
-                                <button
-                                  onClick={() =>
-                                    (window.location.href =
-                                      "https://darelkubra.com")
+                                <a
+                                  href={
+                                    chatId
+                                      ? `https://t.me/darulkubrabot?startapp=${chatId}`
+                                      : "https://t.me/darulkubrabot?startapp="
                                   }
-                                  className="p-1 rounded-full transition-all duration-200 hover:opacity-80 flex-shrink-0"
-                                  style={{
-                                    background: `${themeColors.link}20`,
-                                    border: `1px solid ${themeColors.link}40`,
-                                  }}
-                                  aria-label="Back"
+                                  className="flex-shrink-0"
                                 >
-                                  <ArrowLeft
-                                    className="w-4 h-4"
-                                    style={{ color: themeColors.link }}
-                                  />
-                                </button>
+                                  <button
+                                    className="p-1 rounded-full transition-all duration-200 hover:opacity-80"
+                                    style={{
+                                      background: `${themeColors.link}20`,
+                                      border: `1px solid ${themeColors.link}40`,
+                                    }}
+                                    aria-label="Back"
+                                  >
+                                    <ArrowLeft
+                                      className="w-4 h-4"
+                                      style={{ color: themeColors.link }}
+                                    />
+                                  </button>
+                                </a>
 
                                 {/* Profile Picture */}
                                 <div className="relative flex-shrink-0">
