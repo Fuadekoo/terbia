@@ -1233,6 +1233,7 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
     }
   };
 
+
   const handleGoToLearn = async () => {
     // Get the first course and first chapter to re-learn
     const packageData = await getPackageData(wdt_ID);
@@ -1240,7 +1241,7 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
       const firstCourse = packageData.activePackage.courses[0];
       const firstChapter = firstCourse.chapters[0];
       router.push(
-        `/en/student/${wdt_ID}/${firstCourse.id}/${firstChapter.id}?isclick=true`
+        `/en/student/${wdt_ID}/${firstCourse.id}/${firstChapter.id}?isClicked=true`
       );
     } else {
       // Fallback to student dashboard
