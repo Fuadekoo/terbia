@@ -11,11 +11,6 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   AlertCircle,
   RefreshCw,
   ArrowLeft,
@@ -29,11 +24,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { getCoursesPackageId } from "@/actions/admin/package";
 import CourseTopOverview from "@/components/courseTopOverview";
+import { getPackageData } from "@/actions/student/package";
 import CourseAnnouncements from "@/components/CourseAnnouncements";
 import CourseFeedback from "@/components/CourseFeedback";
 import CourseMaterials from "@/components/CourseMaterials";
 import ChatComponent from "@/components/chatComponent";
-import { getPackageData } from "@/actions/student/package";
 import MainMenu from "@/components/custom/student/bestMenu";
 import TraditionalQA from "@/components/traditionalQA";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1238,8 +1233,19 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
     }
   };
 
-  const handleGoToLearn = () => {
-    router.push(`/en/student/${wdt_ID}`);
+  const handleGoToLearn = async () => {
+    // Get the first course and first chapter to re-learn
+    const packageData = await getPackageData(wdt_ID);
+    if (packageData?.activePackage?.courses?.[0]?.chapters?.[0]) {
+      const firstCourse = packageData.activePackage.courses[0];
+      const firstChapter = firstCourse.chapters[0];
+      router.push(
+        `/en/student/${wdt_ID}/${firstCourse.id}/${firstChapter.id}?isclick=true`
+      );
+    } else {
+      // Fallback to student dashboard
+      router.push(`/en/student/${wdt_ID}`);
+    }
   };
 
   const handleChangePackage = () => {
@@ -1249,69 +1255,95 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
   return (
     <AnimatePresence>
       <motion.div
-        className="flex flex-col items-center justify-center min-h-[50vh] rounded-xl p-6 gap-6"
+        className="flex flex-col items-center justify-center min-h-[80vh] p-8 gap-8"
         style={{
-          background: themeColors.secondaryBg,
+          background: themeColors.bg,
         }}
         variants={itemVariants}
         initial="hidden"
         animate="visible"
       >
-        <Tooltip>
-          <TooltipTrigger asChild>
+        {/* Celebration Icon */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        >
+          <div
+            className="w-32 h-32 rounded-full flex items-center justify-center"
+            style={{
+              background: `linear-gradient(135deg, ${themeColors.button}20, ${themeColors.link}20)`,
+              border: `4px solid ${themeColors.button}`,
+            }}
+          >
             <svg
-              className="w-16 h-16 mb-2"
-              style={{ color: themeColors.link }}
+              className="w-20 h-20"
+              style={{ color: themeColors.button }}
               fill="none"
               stroke="currentColor"
-              strokeWidth={2.5}
+              strokeWidth={3}
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-          </TooltipTrigger>
-          <TooltipContent
-            style={{
-              background: themeColors.secondaryBg,
-              color: themeColors.text,
-              borderColor: themeColors.hint,
-            }}
+          </div>
+        </motion.div>
+
+        {/* Completion Message */}
+        <div className="text-center space-y-4 max-w-lg">
+          <h2
+            className="text-3xl font-bold"
+            style={{ color: themeColors.text }}
           >
+            🎉 Congratulations!
+          </h2>
+          <p
+            className="text-xl font-semibold"
+            style={{ color: themeColors.text }}
+          >
+            Thank you for finishing this course
+          </p>
+          <p className="text-base" style={{ color: themeColors.hint }}>
             {message}
-          </TooltipContent>
-        </Tooltip>
-        <span
-          className="text-xl font-bold text-center px-4"
-          style={{ color: themeColors.text }}
-        >
-          {message}
-        </span>
+          </p>
+        </div>
 
         {/* Show buttons only when we know if package is completed */}
         {isPackageCompleted && hasFinalExam !== null && (
-          <div className="flex flex-col gap-3 w-full max-w-md mt-4">
+          <motion.div
+            className="flex flex-col gap-4 w-full max-w-md mt-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             {hasFinalExam ? (
               <>
+                <p
+                  className="text-center text-sm font-medium mb-2"
+                  style={{ color: themeColors.hint }}
+                >
+                  A final exam is available for this course
+                </p>
                 <Button
                   onClick={handleGoToFinalExam}
-                  className="w-full text-lg py-6 font-semibold"
+                  className="w-full text-lg py-7 font-bold shadow-lg hover:shadow-xl transition-all"
                   style={{
                     background: themeColors.button,
                     color: themeColors.buttonText,
                   }}
                 >
-                  <BookOpen className="mr-2 h-5 w-5" />
+                  <BookOpen className="mr-2 h-6 w-6" />
                   Take Final Exam
                 </Button>
                 <Button
                   onClick={handleChangePackage}
                   variant="outline"
-                  className="w-full text-lg py-6 font-semibold"
+                  className="w-full text-base py-6 font-semibold"
                   style={{
                     borderColor: themeColors.hint,
                     color: themeColors.text,
@@ -1323,32 +1355,38 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
               </>
             ) : (
               <>
+                <p
+                  className="text-center text-sm font-medium mb-2"
+                  style={{ color: themeColors.hint }}
+                >
+                  No exam is required for this course
+                </p>
                 <Button
                   onClick={handleGoToLearn}
-                  className="w-full text-lg py-6 font-semibold"
+                  className="w-full text-lg py-7 font-bold shadow-lg hover:shadow-xl transition-all"
                   style={{
                     background: themeColors.button,
                     color: themeColors.buttonText,
                   }}
                 >
-                  <BookOpen className="mr-2 h-5 w-5" />
-                  Go to Learn
+                  <RefreshCw className="mr-2 h-6 w-6" />
+                  Re-Learn Course
                 </Button>
                 <Button
                   onClick={handleChangePackage}
                   variant="outline"
-                  className="w-full text-lg py-6 font-semibold"
+                  className="w-full text-base py-6 font-semibold"
                   style={{
                     borderColor: themeColors.hint,
                     color: themeColors.text,
                   }}
                 >
-                  <RefreshCw className="mr-2 h-5 w-5" />
+                  <Home className="mr-2 h-5 w-5" />
                   Change Course Package
                 </Button>
               </>
             )}
-          </div>
+          </motion.div>
         )}
       </motion.div>
     </AnimatePresence>
