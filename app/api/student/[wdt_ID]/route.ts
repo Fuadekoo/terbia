@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { wdt_ID: string } }
-) {
+type RouteContext = {
+  params: Promise<{ wdt_ID: string }>;
+};
+
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const wdt_ID = parseInt(params.wdt_ID);
+    const { wdt_ID: wdt_ID_str } = await context.params;
+    const wdt_ID = parseInt(wdt_ID_str);
 
     if (isNaN(wdt_ID)) {
       return NextResponse.json(
