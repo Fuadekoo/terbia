@@ -1164,6 +1164,9 @@ export default Page;
 function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
   const router = useRouter();
   const theme = useTelegramTheme();
+  const [hasFinalExam, setHasFinalExam] = useState<boolean | null>(null);
+  const [coursesPackageId, setCoursesPackageId] = useState<string | null>(null);
+  const [isPackageCompleted, setIsPackageCompleted] = useState(false);
 
   // Professional theme utilities with memoization
   const themeColors = useMemo(() => {
@@ -1195,21 +1198,58 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
   }, [theme]);
 
   console.log("showed message in message");
+
+  // Check if package is completed and if it has final exam
   useEffect(() => {
     (async () => {
-      if (await packageCompleted(wdt_ID)) {
-        const coursesPackageId = await getCoursesPackageId(wdt_ID);
-        setTimeout(() => {
-          router.push(`/en/student/${wdt_ID}/finalexam/${coursesPackageId}`);
-        }, 5000);
+      const completedResult = await packageCompleted(wdt_ID);
+      // Handle both boolean and object return types
+      const isCompleted =
+        typeof completedResult === "boolean"
+          ? completedResult
+          : completedResult?.completed ?? false;
+
+      setIsPackageCompleted(isCompleted);
+
+      if (isCompleted) {
+        const packageId = await getCoursesPackageId(wdt_ID);
+        setCoursesPackageId(packageId ?? null);
+
+        // Check if package has final exam questions
+        if (packageId) {
+          try {
+            const packageData = await fetch(
+              `/api/package/${packageId}/has-exam`
+            ).then((res) => res.json());
+            setHasFinalExam(packageData.hasFinalExam);
+          } catch (error) {
+            console.error("Error checking final exam:", error);
+            // Fallback: assume no final exam if API fails
+            setHasFinalExam(false);
+          }
+        }
       }
     })();
-  }, [router, wdt_ID]);
+  }, [wdt_ID]);
+
+  const handleGoToFinalExam = () => {
+    if (coursesPackageId) {
+      router.push(`/en/student/${wdt_ID}/finalexam/${coursesPackageId}`);
+    }
+  };
+
+  const handleGoToLearn = () => {
+    router.push(`/en/student/${wdt_ID}`);
+  };
+
+  const handleChangePackage = () => {
+    router.push(`/en/student`);
+  };
 
   return (
     <AnimatePresence>
       <motion.div
-        className="flex flex-col items-center justify-center min-h-[50vh] rounded-xl"
+        className="flex flex-col items-center justify-center min-h-[50vh] rounded-xl p-6 gap-6"
         style={{
           background: themeColors.secondaryBg,
         }}
@@ -1220,7 +1260,7 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <svg
-              className="w-12 h-12 mb-4"
+              className="w-16 h-16 mb-2"
               style={{ color: themeColors.link }}
               fill="none"
               stroke="currentColor"
@@ -1246,11 +1286,70 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
           </TooltipContent>
         </Tooltip>
         <span
-          className="text-xl font-bold text-center"
+          className="text-xl font-bold text-center px-4"
           style={{ color: themeColors.text }}
         >
           {message}
         </span>
+
+        {/* Show buttons only when we know if package is completed */}
+        {isPackageCompleted && hasFinalExam !== null && (
+          <div className="flex flex-col gap-3 w-full max-w-md mt-4">
+            {hasFinalExam ? (
+              <>
+                <Button
+                  onClick={handleGoToFinalExam}
+                  className="w-full text-lg py-6 font-semibold"
+                  style={{
+                    background: themeColors.button,
+                    color: themeColors.buttonText,
+                  }}
+                >
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  Take Final Exam
+                </Button>
+                <Button
+                  onClick={handleChangePackage}
+                  variant="outline"
+                  className="w-full text-lg py-6 font-semibold"
+                  style={{
+                    borderColor: themeColors.hint,
+                    color: themeColors.text,
+                  }}
+                >
+                  <RefreshCw className="mr-2 h-5 w-5" />
+                  Change Course Package
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={handleGoToLearn}
+                  className="w-full text-lg py-6 font-semibold"
+                  style={{
+                    background: themeColors.button,
+                    color: themeColors.buttonText,
+                  }}
+                >
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  Go to Learn
+                </Button>
+                <Button
+                  onClick={handleChangePackage}
+                  variant="outline"
+                  className="w-full text-lg py-6 font-semibold"
+                  style={{
+                    borderColor: themeColors.hint,
+                    color: themeColors.text,
+                  }}
+                >
+                  <RefreshCw className="mr-2 h-5 w-5" />
+                  Change Course Package
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </motion.div>
     </AnimatePresence>
   );
