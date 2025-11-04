@@ -16,6 +16,15 @@ interface PlayerProps {
   title?: string;
   onVideoPlay?: () => void;
   onVideoPause?: () => void;
+  themeColors?: {
+    bg: string;
+    text: string;
+    hint: string;
+    link: string;
+    button: string;
+    buttonText: string;
+    secondaryBg: string;
+  };
 }
 
 function Player({
@@ -24,8 +33,14 @@ function Player({
   playlist = [],
   onVideoPlay,
   onVideoPause,
+  themeColors,
 }: // title,
 PlayerProps) {
+  // Use Telegram theme colors or defaults
+  const buttonColor = themeColors?.button || "#0ea5e9";
+  const textColor = themeColors?.buttonText || "#fff";
+  const secondaryBg = themeColors?.secondaryBg || "rgba(0, 0, 0, 0.5)";
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
@@ -458,34 +473,36 @@ PlayerProps) {
               }}
               style={{
                 pointerEvents: "auto",
-                background: "rgba(59, 130, 246, 0.6)", // More transparent blue
+                background: `${buttonColor}99`,
                 border: "none",
-                color: "#fff",
+                color: textColor,
                 fontSize: 24,
                 borderRadius: "50%",
-                width: 60,
-                height: 60,
+                width: 70,
+                height: 70,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+                boxShadow: `0 4px 20px ${buttonColor}aa, 0 0 40px ${buttonColor}66`,
                 transition: "all 0.3s ease",
                 WebkitTapHighlightColor: "transparent",
                 touchAction: "manipulation",
-                backdropFilter: "blur(5px)",
+                backdropFilter: "blur(8px)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.background = "rgba(59, 130, 246, 0.7)";
+                e.currentTarget.style.transform = "scale(1.1)";
+                e.currentTarget.style.background = `${buttonColor}cc`;
+                e.currentTarget.style.boxShadow = `0 6px 30px ${buttonColor}dd, 0 0 60px ${buttonColor}99`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.background = "rgba(59, 130, 246, 0.6)";
+                e.currentTarget.style.background = `${buttonColor}99`;
+                e.currentTarget.style.boxShadow = `0 4px 20px ${buttonColor}aa, 0 0 40px ${buttonColor}66`;
               }}
               aria-label="Play"
             >
-              <Play size={24} />
+              <Play size={28} style={{ marginLeft: 2 }} />
             </button>
           </div>
         )}
@@ -503,20 +520,20 @@ PlayerProps) {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "rgba(59, 130, 246, 0.9)", // Regular blue background
+              backgroundColor: buttonColor,
               borderRadius: "50%",
               width: "80px",
               height: "80px",
               pointerEvents: "none",
               boxShadow:
-                "0 4px 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.3)",
+                `0 4px 20px ${buttonColor}cc, 0 0 30px ${buttonColor}4d`,
             }}
           >
-            <CustomSpinner size={32} color="#fff" />
+            <CustomSpinner size={32} color={textColor} />
             {!isOnline && (
               <span
                 style={{
-                  color: "#fff",
+                  color: textColor,
                   fontSize: "12px",
                   marginTop: "8px",
                   textAlign: "center",
@@ -536,7 +553,7 @@ PlayerProps) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: "rgba(59, 130, 246, 0.4)", // More transparent blue
+              background: `${secondaryBg}66`,
               padding: "12px 16px",
               borderBottomLeftRadius: 8,
               borderBottomRightRadius: 8,
@@ -557,9 +574,9 @@ PlayerProps) {
               }}
               title={playing ? "Pause" : "Play"}
               style={{
-                background: "rgba(59, 130, 246, 0.9)",
+                background: buttonColor,
                 border: "none",
-                color: "#fff",
+                color: textColor,
                 fontSize: 18,
                 borderRadius: "50%",
                 width: 44,
@@ -568,7 +585,7 @@ PlayerProps) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                boxShadow: `0 2px 8px ${buttonColor}33`,
                 WebkitTapHighlightColor: "transparent",
                 touchAction: "manipulation",
                 minHeight: "44px",
@@ -596,7 +613,7 @@ PlayerProps) {
               />
               {/* Time Display below progress bar */}
               <span style={{ 
-                color: "#fff", 
+                color: textColor, 
                 fontSize: 12, 
                 fontWeight: "500",
                 alignSelf: "flex-start",
@@ -633,7 +650,7 @@ PlayerProps) {
               opacity: showControls ? 1 : 0,
               pointerEvents: showControls ? "auto" : "none",
               transition: "opacity 0.3s",
-              background: "rgba(59, 130, 246, 0.2)", // Glassy blue background
+              background: `${secondaryBg}33`,
               padding: "8px 16px",
               borderBottomLeftRadius: 8,
               borderBottomRightRadius: 8,
@@ -652,9 +669,9 @@ PlayerProps) {
               }}
               title={playing ? "Pause" : "Play"}
               style={{
-                background: "rgba(59, 130, 246, 0.8)", // Glassy blue background
+                background: buttonColor,
                 border: "none",
-                color: "#fff",
+                color: textColor,
                 fontSize: 20,
                 borderRadius: "50%",
                 width: 40,
@@ -663,7 +680,7 @@ PlayerProps) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(59, 130, 246, 0.3)",
+                boxShadow: `0 2px 8px ${buttonColor}4d`,
               }}
             >
               {playing ? <Pause /> : <Play />}
@@ -682,7 +699,7 @@ PlayerProps) {
             </div>
 
             {/* Time Display */}
-            <span style={{ color: "#fff", fontSize: 14, minWidth: 50 }}>
+            <span style={{ color: textColor, fontSize: 14, minWidth: 50 }}>
               -{formatTime(duration - currentTime)}
             </span>
 
@@ -701,9 +718,9 @@ PlayerProps) {
                 changeSpeed(speed >= 2 ? 1 : speed + 0.25);
               }}
               style={{
-                background: "rgba(59, 130, 246, 0.6)",
+                background: secondaryBg,
                 border: "none",
-                color: "#fff",
+                color: textColor,
                 fontSize: 14,
                 cursor: "pointer",
                 padding: "4px 8px",

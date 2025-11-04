@@ -9,6 +9,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { retrieveRawInitData } from "@telegram-apps/sdk";
 import { Progress } from "@/components/ui/progress";
+import ProfileHeader from "@/components/custom/student/ProfileHeader";
 
 type TGInitData = { chat?: { id?: number }; user?: { id?: number } };
 
@@ -342,453 +343,421 @@ export default function Page() {
   return (
     <div
       style={{
-        maxWidth: 900,
-        margin: "0 auto",
-        padding: 16,
         background: getBgColor(),
         color: getTextColor(),
         minHeight: "100vh",
       }}
-      className="pt-60"
     >
-      {!chatId && (
-        <div
-          style={{
-            padding: 16,
-            border: `1px solid ${getSecondaryBgColor()}`,
-            borderRadius: 12,
-            background: getSecondaryBgColor(),
-            marginBottom: 12,
+      {/* Global styles for fullscreen */}
+      <style jsx global>{`
+        /* Hide header in fullscreen mode */
+        :fullscreen .profile-header,
+        :-webkit-full-screen .profile-header,
+        :-moz-full-screen .profile-header,
+        :-ms-fullscreen .profile-header {
+          display: none !important;
+        }
+      `}</style>
+
+      {/* Profile Header */}
+      {chatId && chooseData && chooseData.students.length === 1 && (
+        <ProfileHeader
+          name={chooseData.students[0].name || "Student"}
+          role="Student"
+          chatId={chatId}
+          themeColors={{
+            bg: getBgColor(),
+            text: getTextColor(),
+            hint: getHintColor(),
+            link: getLinkColor(),
+            button: getButtonColor(),
+            buttonText: getButtonTextColor(),
+            secondaryBg: getSecondaryBgColor(),
           }}
-        >
+        />
+      )}
+
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
+        {!chatId && (
           <div
-            style={{ fontWeight: 700, marginBottom: 6, color: getTextColor() }}
+            style={{
+              padding: 16,
+              border: `1px solid ${getSecondaryBgColor()}`,
+              borderRadius: 12,
+              background: getSecondaryBgColor(),
+              marginBottom: 12,
+            }}
           >
-            Open in Telegram
-          </div>
-          <div style={{ color: getHintColor(), marginBottom: 12 }}>
-            We couldn&apos;t detect your Telegram chat. Please open this page
-            from the Telegram Mini App.
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ? (
-              <button
-                onClick={() => {
-                  const username = process.env
-                    .NEXT_PUBLIC_TELEGRAM_BOT_USERNAME as string;
-                  const url = `https://t.me/${username}?start=webapp`;
-                  const w = window as unknown as {
-                    Telegram?: {
-                      WebApp?: { openTelegramLink?: (u: string) => void };
+            <div
+              style={{
+                fontWeight: 700,
+                marginBottom: 6,
+                color: getTextColor(),
+              }}
+            >
+              Open in Telegram
+            </div>
+            <div style={{ color: getHintColor(), marginBottom: 12 }}>
+              We couldn&apos;t detect your Telegram chat. Please open this page
+              from the Telegram Mini App.
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ? (
+                <button
+                  onClick={() => {
+                    const username = process.env
+                      .NEXT_PUBLIC_TELEGRAM_BOT_USERNAME as string;
+                    const url = `https://t.me/${username}?start=webapp`;
+                    const w = window as unknown as {
+                      Telegram?: {
+                        WebApp?: { openTelegramLink?: (u: string) => void };
+                      };
                     };
-                  };
-                  if (w.Telegram?.WebApp?.openTelegramLink) {
-                    w.Telegram.WebApp.openTelegramLink(url);
-                  } else {
-                    window.open(url, "_blank");
-                  }
-                }}
-                style={{
-                  padding: "10px 14px",
-                  background: getButtonColor(),
-                  color: getButtonTextColor(),
-                  border: "none",
-                  borderRadius: 8,
-                  cursor: "pointer",
-                }}
-              >
-                Open Telegram
-              </button>
-            ) : null}
-            <span style={{ fontSize: 12, color: getHintColor() }}>
-              Tip: Find our bot in Telegram and tap &quot;Open&quot;.
-            </span>
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <div
-          style={{
-            padding: 12,
-            border: `1px solid ${getSecondaryBgColor()}`,
-            background: getSecondaryBgColor(),
-            color: getTextColor(),
-            borderRadius: 8,
-            marginBottom: 12,
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      {chatId && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {loading && (
-            <div
-              style={{
-                padding: 12,
-                border: `1px solid ${getSecondaryBgColor()}`,
-                borderRadius: 8,
-                color: getTextColor(),
-              }}
-            >
-              Loading...
-            </div>
-          )}
-
-          {!loading && startRes && startRes.success === false && (
-            <div
-              style={{
-                padding: 16,
-                border: `1px solid ${getSecondaryBgColor()}`,
-                borderRadius: 12,
-                background: getSecondaryBgColor(),
-                color: getTextColor(),
-              }}
-            >
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                Access not granted
-              </div>
-              <div>
-                {startRes.error ||
-                  "Your account does not have access to the course yet."}
-              </div>
-              <div
-                style={{ fontSize: 12, color: getHintColor(), marginTop: 8 }}
-              >
-                Please contact the admin to enable your access.
-              </div>
-            </div>
-          )}
-
-          {!loading && singleData && (
-            <div
-              style={{
-                padding: 12,
-                border: `1px solid ${getSecondaryBgColor()}`,
-                borderRadius: 8,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                color: getTextColor(),
-              }}
-            >
-              <Loader2
-                size={16}
-                style={{ animation: "spin 1s linear infinite" }}
-              />{" "}
-              Redirecting...
-            </div>
-          )}
-
-          {!loading && chooseData && chooseData.students.length > 1 && (
-            <div className="pt-10">
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-                  gap: 24,
-                  justifyItems: "center",
-                }}
-              >
-                {chooseData.students.map((s) => (
-                  <button
-                    key={s.studentId}
-                    onClick={() => {
-                      if (s.packages.length === 1) {
-                        handleChoose(s.studentId, s.packages[0].id);
-                      } else {
-                        // Navigate to this student's page with wdt_ID
-                        window.location.href = `/en/student/${s.studentId}`;
-                      }
-                    }}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      textAlign: "center",
-                    }}
-                  >
-                    <Image
-                      src="/userProfileIcon.png"
-                      alt={s.name || "Student avatar"}
-                      width={120}
-                      height={120}
-                      style={{
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        border: `4px solid ${getLinkColor()}`,
-                        boxShadow: `0 10px 24px ${getLinkColor()}40`,
-                        display: "block",
-                        margin: "0 auto",
-                        background: getSecondaryBgColor() || "#e0f2fe",
-                      }}
-                    />
-                    <div
-                      style={{
-                        marginTop: 10,
-                        color: getLinkColor(),
-                        textAlign: "center",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {s.name || "Student"}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {!loading && chooseData && chooseData.students.length === 1 && (
-            <div>
-              {/* Blurred overlay above header - Sticky */}
-              <div
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 10,
-                  height: 30,
-                  background: `${getBgColor()}dd`,
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  marginBottom: 0,
-                }}
-              />
-              {/* Profile Header Card - Sticky */}
-              <div
-                style={{
-                  position: "sticky",
-                  top: 30,
-                  zIndex: 9,
-                  background: getButtonColor(),
-                  borderRadius: 16,
-                  padding: 20,
-                  marginTop: 0,
-                  marginBottom: 20,
-                  color: getButtonTextColor(),
-                  boxShadow: "0 10px 24px rgba(0,0,0,0.1)",
-                }}
-              >
-                <div
-                  style={{ display: "flex", alignItems: "flex-start", gap: 16 }}
+                    if (w.Telegram?.WebApp?.openTelegramLink) {
+                      w.Telegram.WebApp.openTelegramLink(url);
+                    } else {
+                      window.open(url, "_blank");
+                    }
+                  }}
+                  style={{
+                    padding: "10px 14px",
+                    background: getButtonColor(),
+                    color: getButtonTextColor(),
+                    border: "none",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                  }}
                 >
-                  {/* Avatar */}
-                  <Image
-                    src="/userProfileIcon.png"
-                    alt={chooseData.students[0].name || "Student avatar"}
-                    width={80}
-                    height={80}
-                    style={{
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: `3px solid ${getButtonTextColor()}4d`,
-                      flexShrink: 0,
-                    }}
-                  />
-                  {/* Student Info */}
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}
-                    >
-                      {chooseData.students[0].name || "Student"}
-                    </div>
-                    <div
-                      style={{ fontSize: 14, opacity: 0.9, marginBottom: 8 }}
-                    >
-                      <span>
-                        {chooseData.students[0].packages.length}{" "}
-                        {chooseData.students[0].packages.length === 1
-                          ? "package"
-                          : "packages"}
-                      </span>
-                      <span style={{ margin: "0 8px" }}>•</span>
-                      <span>Available</span>
-                    </div>
-                    <div style={{ fontSize: 13, opacity: 0.85 }}>
-                      Teacher:{" "}
-                      {chooseData.students[0].teacherName || "Not assigned"}
-                    </div>
-                  </div>
+                  Open Telegram
+                </button>
+              ) : null}
+              <span style={{ fontSize: 12, color: getHintColor() }}>
+                Tip: Find our bot in Telegram and tap &quot;Open&quot;.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div
+            style={{
+              padding: 12,
+              border: `1px solid ${getSecondaryBgColor()}`,
+              background: getSecondaryBgColor(),
+              color: getTextColor(),
+              borderRadius: 8,
+              marginBottom: 12,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {chatId && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {loading && (
+              <div
+                style={{
+                  padding: 12,
+                  border: `1px solid ${getSecondaryBgColor()}`,
+                  borderRadius: 8,
+                  color: getTextColor(),
+                }}
+              >
+                Loading...
+              </div>
+            )}
+
+            {!loading && startRes && startRes.success === false && (
+              <div
+                style={{
+                  padding: 16,
+                  border: `1px solid ${getSecondaryBgColor()}`,
+                  borderRadius: 12,
+                  background: getSecondaryBgColor(),
+                  color: getTextColor(),
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>
+                  Access not granted
+                </div>
+                <div>
+                  {startRes.error ||
+                    "Your account does not have access to the course yet."}
+                </div>
+                <div
+                  style={{ fontSize: 12, color: getHintColor(), marginTop: 8 }}
+                >
+                  Please contact the admin to enable your access.
                 </div>
               </div>
-              {/* Package Cards Grid */}
+            )}
+
+            {!loading && singleData && (
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))",
-                  gap: 18,
+                  padding: 12,
+                  border: `1px solid ${getSecondaryBgColor()}`,
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: getTextColor(),
                 }}
               >
-                {chooseData.students[0].packages.map((pkg) => (
-                  <div
-                    key={pkg.id}
-                    style={{
-                      background: getSecondaryBgColor() || "#ffffff",
-                      border: `1px solid ${getSecondaryBgColor()}`,
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      boxShadow: "0 10px 24px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ height: 140, position: "relative" }}>
+                <Loader2
+                  size={16}
+                  style={{ animation: "spin 1s linear infinite" }}
+                />{" "}
+                Redirecting...
+              </div>
+            )}
+
+            {!loading && chooseData && chooseData.students.length > 1 && (
+              <div className="pt-10">
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(120px, 1fr))",
+                    gap: 24,
+                    justifyItems: "center",
+                  }}
+                >
+                  {chooseData.students.map((s) => (
+                    <button
+                      key={s.studentId}
+                      onClick={() => {
+                        if (s.packages.length === 1) {
+                          handleChoose(s.studentId, s.packages[0].id);
+                        } else {
+                          // Navigate to this student's page with wdt_ID
+                          window.location.href = `/en/student/${s.studentId}`;
+                        }
+                      }}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        textAlign: "center",
+                      }}
+                    >
                       <Image
-                        src="/quranlogo.png"
-                        alt="Package thumbnail"
-                        fill
-                        style={{ objectFit: "cover" }}
+                        src="/userProfileIcon.png"
+                        alt={s.name || "Student avatar"}
+                        width={120}
+                        height={120}
+                        style={{
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: `4px solid ${getLinkColor()}`,
+                          boxShadow: `0 10px 24px ${getLinkColor()}40`,
+                          display: "block",
+                          margin: "0 auto",
+                          background: getSecondaryBgColor() || "#e0f2fe",
+                        }}
                       />
                       <div
                         style={{
-                          position: "absolute",
-                          top: "50%",
-                          left: "50%",
-                          transform: "translate(-50%, -50%)",
-                          width: 60,
-                          height: 60,
-                          borderRadius: "50%",
-                          background: `${getBgColor()}d9`,
-                          boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
+                          marginTop: 10,
+                          color: getLinkColor(),
+                          textAlign: "center",
+                          fontWeight: 700,
                         }}
                       >
-                        <div
-                          style={{
-                            width: 0,
-                            height: 0,
-                            borderTop: "10px solid transparent",
-                            borderBottom: "10px solid transparent",
-                            borderLeft: `16px solid ${getLinkColor()}`,
-                            marginLeft: 4,
-                          }}
+                        {s.name || "Student"}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!loading && chooseData && chooseData.students.length === 1 && (
+              <div>
+                {/* Package Cards Grid */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(290px, 1fr))",
+                    gap: 18,
+                  }}
+                >
+                  {chooseData.students[0].packages.map((pkg) => (
+                    <div
+                      key={pkg.id}
+                      style={{
+                        background: getSecondaryBgColor() || "#ffffff",
+                        border: `1px solid ${getSecondaryBgColor()}`,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        boxShadow: "0 10px 24px rgba(0,0,0,0.08)",
+                      }}
+                    >
+                      <div style={{ height: 140, position: "relative" }}>
+                        <Image
+                          src="/quranlogo.png"
+                          alt="Package thumbnail"
+                          fill
+                          style={{ objectFit: "cover" }}
                         />
-                      </div>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginBottom: 8,
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: 12,
-                            color: getLinkColor(),
-                            background: getSecondaryBgColor() || "#e0f2fe",
-                            border: `1px solid ${getSecondaryBgColor()}`,
-                            padding: "4px 10px",
-                            borderRadius: 9999,
-                          }}
-                        >
-                          beginner
-                        </span>
-                        <span style={{ fontSize: 12, color: getTextColor() }}>
-                          ⭐ 4.8
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          justifyContent: "space-between",
-                          gap: 8,
-                        }}
-                      >
                         <div
                           style={{
-                            fontWeight: 800,
-                            color: getTextColor(),
-                            lineHeight: 1.35,
-                            fontSize: 18,
-                            flex: 1,
+                            position: "absolute",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            width: 60,
+                            height: 60,
+                            borderRadius: "50%",
+                            background: `${getBgColor()}d9`,
+                            boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                         >
-                          {pkg.name}
-                        </div>
-                        <div
-                          style={{
-                            color: getLinkColor(),
-                            fontWeight: 800,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          Available
+                          <div
+                            style={{
+                              width: 0,
+                              height: 0,
+                              borderTop: "10px solid transparent",
+                              borderBottom: "10px solid transparent",
+                              borderLeft: `16px solid ${getLinkColor()}`,
+                              marginLeft: 4,
+                            }}
+                          />
                         </div>
                       </div>
-                      <div
-                        style={{
-                          color: getHintColor(),
-                          fontSize: 13,
-                          marginTop: 8,
-                        }}
-                      >
-                        Kickstart your learning with engaging lessons and
-                        hands-on practice.
-                      </div>
-                      <div style={{ marginTop: 12 }}>
+                      <div style={{ padding: 14 }}>
                         <div
                           style={{
                             display: "flex",
-                            justifyContent: "flex-end",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginBottom: 8,
                           }}
                         >
-                          <span style={{ fontSize: 12, color: getHintColor() }}>
-                            {pkg.progressPercentage ?? 0}%
+                          <span
+                            style={{
+                              fontSize: 12,
+                              color: getLinkColor(),
+                              background: getSecondaryBgColor() || "#e0f2fe",
+                              border: `1px solid ${getSecondaryBgColor()}`,
+                              padding: "4px 10px",
+                              borderRadius: 9999,
+                            }}
+                          >
+                            beginner
+                          </span>
+                          <span style={{ fontSize: 12, color: getTextColor() }}>
+                            ⭐ 4.8
                           </span>
                         </div>
-                        <Progress value={pkg.progressPercentage ?? 0} />
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            justifyContent: "space-between",
+                            gap: 8,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontWeight: 800,
+                              color: getTextColor(),
+                              lineHeight: 1.35,
+                              fontSize: 18,
+                              flex: 1,
+                            }}
+                          >
+                            {pkg.name}
+                          </div>
+                          <div
+                            style={{
+                              color: getLinkColor(),
+                              fontWeight: 800,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            Available
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            color: getHintColor(),
+                            fontSize: 13,
+                            marginTop: 8,
+                          }}
+                        >
+                          Kickstart your learning with engaging lessons and
+                          hands-on practice.
+                        </div>
+                        <div style={{ marginTop: 12 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "flex-end",
+                            }}
+                          >
+                            <span
+                              style={{ fontSize: 12, color: getHintColor() }}
+                            >
+                              {pkg.progressPercentage ?? 0}%
+                            </span>
+                          </div>
+                          <Progress value={pkg.progressPercentage ?? 0} />
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleChoose(
+                              chooseData.students[0].studentId,
+                              pkg.id
+                            )
+                          }
+                          style={{
+                            width: "100%",
+                            marginTop: 14,
+                            padding: "12px 14px",
+                            background: getButtonColor(),
+                            color: getButtonTextColor(),
+                            border: "none",
+                            borderRadius: 10,
+                            cursor: "pointer",
+                            fontWeight: 800,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 8,
+                          }}
+                          disabled={
+                            pendingChoice ===
+                            `${chooseData.students[0].studentId}:${pkg.id}`
+                          }
+                        >
+                          {pendingChoice ===
+                          `${chooseData.students[0].studentId}:${pkg.id}` ? (
+                            <>
+                              <Loader2
+                                size={16}
+                                style={{ animation: "spin 1s linear infinite" }}
+                              />{" "}
+                              Continuing...
+                            </>
+                          ) : (
+                            "continue Learning"
+                          )}
+                        </button>
                       </div>
-                      <button
-                        onClick={() =>
-                          handleChoose(chooseData.students[0].studentId, pkg.id)
-                        }
-                        style={{
-                          width: "100%",
-                          marginTop: 14,
-                          padding: "12px 14px",
-                          background: getButtonColor(),
-                          color: getButtonTextColor(),
-                          border: "none",
-                          borderRadius: 10,
-                          cursor: "pointer",
-                          fontWeight: 800,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 8,
-                        }}
-                        disabled={
-                          pendingChoice ===
-                          `${chooseData.students[0].studentId}:${pkg.id}`
-                        }
-                      >
-                        {pendingChoice ===
-                        `${chooseData.students[0].studentId}:${pkg.id}` ? (
-                          <>
-                            <Loader2
-                              size={16}
-                              style={{ animation: "spin 1s linear infinite" }}
-                            />{" "}
-                            Continuing...
-                          </>
-                        ) : (
-                          "continue Learning"
-                        )}
-                      </button>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

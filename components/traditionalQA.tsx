@@ -49,13 +49,32 @@ interface TraditionalQAProps {
   packageId: string;
   lang: string;
   studentId: number;
+  themeColors?: {
+    bg: string;
+    text: string;
+    hint: string;
+    link: string;
+    button: string;
+    buttonText: string;
+    secondaryBg: string;
+  };
 }
 
 export default function TraditionalQA({
   studentId,
   packageId,
   lang,
+  themeColors,
 }: TraditionalQAProps) {
+  // Use Telegram theme colors or defaults
+  const bgColor = themeColors?.bg || "#ffffff";
+  const textColor = themeColors?.text || "#000000";
+  const hintColor = themeColors?.hint || "#6b7280";
+  const linkColor = themeColors?.link || "#0ea5e9";
+  const buttonColor = themeColors?.button || "#0ea5e9";
+  const buttonTextColor = themeColors?.buttonText || "#ffffff";
+  const secondaryBg = themeColors?.secondaryBg || "#f3f4f6";
+
   // const { data: session } = useSession();
   const [questions, setQuestions] = useState<VideoQuestion[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
@@ -159,24 +178,44 @@ export default function TraditionalQA({
   // };
 
   return (
-    <div className="space-y-1 h-full flex flex-col bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 rounded-md p-1.5 shadow-sm">
+    <div 
+      className="space-y-1 h-full flex flex-col rounded-md p-1.5 shadow-sm"
+      style={{ background: bgColor }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between gap-1">
         <div className="flex items-center gap-1 min-w-0 flex-1">
-          <div className="p-1 bg-primary/10 rounded-md shadow-sm">
-            <MessageCircle className="w-3 h-3 text-primary" />
+          <div 
+            className="p-1 rounded-md shadow-sm"
+            style={{ background: `${linkColor}20` }}
+          >
+            <MessageCircle className="w-3 h-3" style={{ color: linkColor }} />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+            <h3 
+              className="text-sm font-bold truncate"
+              style={{ color: textColor }}
+            >
               {lang === "en" ? "Q&A" : "ጥያቄዎች"}
             </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 hidden sm:block">
+            <p 
+              className="text-xs hidden sm:block"
+              style={{ color: hintColor }}
+            >
               {lang === "en" 
                 ? "Ask instructors" 
                 : "አስተማሪዎችን ጠይቅ"}
             </p>
           </div>
-          <Badge variant="secondary" className="px-1.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary border-primary/20 shadow-sm">
+          <Badge 
+            variant="secondary" 
+            className="px-1.5 py-0.5 text-xs font-semibold shadow-sm"
+            style={{ 
+              background: `${linkColor}20`, 
+              color: linkColor,
+              borderColor: `${linkColor}40`
+            }}
+          >
             {questions.length}
           </Badge>
         </div>
@@ -185,7 +224,8 @@ export default function TraditionalQA({
             <Button
               variant="default"
               size="sm"
-              className="flex-shrink-0 text-xs px-1 py-0.5 bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all duration-200 rounded-md font-semibold"
+              className="flex-shrink-0 text-xs px-1 py-0.5 shadow-sm hover:shadow-md transition-all duration-200 rounded-md font-semibold"
+              style={{ background: buttonColor, color: buttonTextColor }}
             >
               <Plus className="w-2.5 h-2.5 mr-0.5" />
               <span className="hidden sm:inline">
@@ -194,17 +234,26 @@ export default function TraditionalQA({
               <span className="sm:hidden">+</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-xs shadow-xl border-0 bg-white dark:bg-slate-900">
+          <DialogContent 
+            className="max-w-xs shadow-xl border-0"
+            style={{ background: secondaryBg, color: textColor }}
+          >
             <DialogHeader className="space-y-0.5">
               <div className="flex items-center gap-1">
-                <div className="p-0.5 bg-primary/10 rounded">
-                  <MessageCircle className="w-3 h-3 text-primary" />
+                <div 
+                  className="p-0.5 rounded"
+                  style={{ background: `${linkColor}20` }}
+                >
+                  <MessageCircle className="w-3 h-3" style={{ color: linkColor }} />
                 </div>
-                <DialogTitle className="text-sm font-bold text-slate-900 dark:text-white">
+                <DialogTitle 
+                  className="text-sm font-bold"
+                  style={{ color: textColor }}
+                >
                   {lang === "en" ? "Ask Question" : "ጥያቄ ጠይቅ"}
                 </DialogTitle>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
+              <p className="text-xs" style={{ color: hintColor }}>
                 {lang === "en" 
                   ? "Share your question" 
                   : "ጥያቄዎን ያጋሩ"}
@@ -221,7 +270,12 @@ export default function TraditionalQA({
                 }
                 rows={3}
                 disabled={submitting}
-                className="resize-none border border-slate-200 dark:border-slate-700 focus:border-primary transition-colors duration-200 rounded-md"
+                className="resize-none border transition-colors duration-200 rounded-md"
+                style={{ 
+                  background: bgColor, 
+                  color: textColor,
+                  borderColor: hintColor
+                }}
               />
             </div>
             <DialogFooter className="gap-1.5">
@@ -229,7 +283,12 @@ export default function TraditionalQA({
                 variant="outline"
                 onClick={() => setDialogOpen(false)}
                 disabled={submitting}
-                className="px-3 py-1 border border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors duration-200 rounded-md text-xs"
+                className="px-3 py-1 border transition-colors duration-200 rounded-md text-xs"
+                style={{ 
+                  borderColor: hintColor,
+                  color: textColor,
+                  background: bgColor
+                }}
               >
                 {lang === "en" ? "Cancel" : "ተወው"}
               </Button>
@@ -237,11 +296,15 @@ export default function TraditionalQA({
                 variant="default"
                 onClick={handleSubmitQuestion}
                 disabled={!newQuestion.trim() || submitting}
-                className="px-3 py-1 bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all duration-200 rounded-md font-semibold text-xs"
+                className="px-3 py-1 shadow-sm hover:shadow-md transition-all duration-200 rounded-md font-semibold text-xs"
+                style={{ background: buttonColor, color: buttonTextColor }}
               >
                 {submitting ? (
                   <div className="flex items-center gap-1">
-                    <div className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div 
+                      className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin"
+                      style={{ borderColor: buttonTextColor }}
+                    ></div>
                     <span>
                       {lang === "en" ? "Submitting..." : "በመላክ ላይ..."}
                     </span>
@@ -264,43 +327,75 @@ export default function TraditionalQA({
       {loading ? (
         <div className="space-y-1 flex-1 min-h-[150px]">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse shadow-sm border-0 bg-white dark:bg-slate-800">
+            <Card 
+              key={i} 
+              className="animate-pulse shadow-sm border-0"
+              style={{ background: secondaryBg }}
+            >
               <CardHeader className="p-1.5">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-6 h-6 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                  <div 
+                    className="w-6 h-6 rounded-full"
+                    style={{ background: `${hintColor}40` }}
+                  ></div>
                   <div className="space-y-0.5 flex-1">
-                    <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-                    <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded w-1/4"></div>
+                    <div 
+                      className="h-2.5 rounded w-1/3"
+                      style={{ background: `${hintColor}40` }}
+                    ></div>
+                    <div 
+                      className="h-2 rounded w-1/4"
+                      style={{ background: `${hintColor}30` }}
+                    ></div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-1.5 pt-0">
                 <div className="space-y-0.5">
-                  <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
-                  <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                  <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                  <div 
+                    className="h-2.5 rounded w-full"
+                    style={{ background: `${hintColor}40` }}
+                  ></div>
+                  <div 
+                    className="h-2.5 rounded w-3/4"
+                    style={{ background: `${hintColor}30` }}
+                  ></div>
+                  <div 
+                    className="h-2.5 rounded w-1/2"
+                    style={{ background: `${hintColor}20` }}
+                  ></div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : questions.length === 0 ? (
-        <Card className="flex-1 flex items-center justify-center min-h-[120px] shadow-sm border-0 bg-white dark:bg-slate-800">
+        <Card 
+          className="flex-1 flex items-center justify-center min-h-[120px] shadow-sm border-0"
+          style={{ background: secondaryBg }}
+        >
           <CardContent className="text-center py-3 px-3">
-            <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-full w-12 h-12 mx-auto mb-2 flex items-center justify-center">
-              <MessageCircle className="w-6 h-6 text-slate-400 dark:text-slate-500" />
+            <div 
+              className="p-2 rounded-full w-12 h-12 mx-auto mb-2 flex items-center justify-center"
+              style={{ background: `${hintColor}20` }}
+            >
+              <MessageCircle className="w-6 h-6" style={{ color: hintColor }} />
             </div>
-            <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+            <h4 
+              className="text-sm font-semibold mb-1"
+              style={{ color: textColor }}
+            >
               {lang === "en" ? "No Questions Yet" : "ገና ጥያቄዎች የሉም"}
             </h4>
-            <p className="text-slate-600 dark:text-slate-400 text-xs mb-3 max-w-sm mx-auto">
+            <p className="text-xs mb-3 max-w-sm mx-auto" style={{ color: hintColor }}>
               {lang === "en"
                 ? "Be the first to ask a question."
                 : "የመጀመሪያው ጥያቄ ጠይቂ ይሁኑ።"}
             </p>
             <Button
               onClick={() => setDialogOpen(true)}
-              className="bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all duration-200 rounded-md px-3 py-1.5 font-semibold text-xs"
+              className="shadow-sm hover:shadow-md transition-all duration-200 rounded-md px-3 py-1.5 font-semibold text-xs"
+              style={{ background: buttonColor, color: buttonTextColor }}
             >
               <Plus className="w-3 h-3 mr-1" />
               {lang === "en" ? "Ask Question" : "ጥያቄ ጠይቅ"}
@@ -312,23 +407,47 @@ export default function TraditionalQA({
           {questions.map((question) => (
             <Card
               key={question.id}
-              className="border-l-2 border-l-primary shadow-sm hover:shadow-md transition-all duration-200 bg-white dark:bg-slate-800 border-0 rounded-md overflow-hidden group"
+              className="border-l-2 shadow-sm hover:shadow-md transition-all duration-200 border-0 rounded-md overflow-hidden group"
+              style={{ 
+                background: secondaryBg,
+                borderLeftColor: linkColor
+              }}
             >
               <CardHeader className="flex items-start justify-between gap-1.5 p-1.5">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  <Avatar className="bg-gradient-to-br from-primary to-primary/80 text-white flex-shrink-0 w-6 h-6 shadow-sm border border-primary/20 flex items-center justify-center">
+                  <Avatar 
+                    className="flex-shrink-0 w-6 h-6 shadow-sm flex items-center justify-center"
+                    style={{ 
+                      background: linkColor,
+                      color: buttonTextColor,
+                      border: `1px solid ${linkColor}33`
+                    }}
+                  >
                     <User className="w-3 h-3" />
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1 mb-0.5">
-                      <p className="font-semibold text-xs text-slate-900 dark:text-white truncate">
+                      <p 
+                        className="font-semibold text-xs truncate"
+                        style={{ color: textColor }}
+                      >
                         {question.student?.firstName} {question.student?.fatherName}
                       </p>
-                      <Badge variant="secondary" className="text-xs px-1 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                      <Badge 
+                        variant="secondary" 
+                        className="text-xs px-1 py-0.5"
+                        style={{ 
+                          background: `${linkColor}20`,
+                          color: linkColor
+                        }}
+                      >
                         {lang === "en" ? "Student" : "ተማሪ"}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    <div 
+                      className="flex items-center gap-0.5 text-xs"
+                      style={{ color: hintColor }}
+                    >
                       <Clock className="w-2.5 h-2.5 flex-shrink-0" />
                       <span className="truncate">
                         {formatDistanceToNow(new Date(question.createdAt), {
@@ -340,30 +459,56 @@ export default function TraditionalQA({
                 </div>
               </CardHeader>
               <CardContent className="p-1.5 pt-0">
-                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-md p-1.5 ml-6">
-                  <p className="text-slate-800 dark:text-slate-200 text-xs leading-relaxed">
+                <div 
+                  className="rounded-md p-1.5 ml-6"
+                  style={{ background: `${secondaryBg}cc` }}
+                >
+                  <p 
+                    className="text-xs leading-relaxed"
+                    style={{ color: textColor }}
+                  >
                     {question.question}
                   </p>
                 </div>
 
                 {question.responses?.length > 0 ? (
-                  <div className="ml-6 space-y-1 border-l border-slate-200 dark:border-slate-600 pl-1.5 mt-1.5">
+                  <div 
+                    className="ml-6 space-y-1 border-l pl-1.5 mt-1.5"
+                    style={{ borderColor: `${hintColor}40` }}
+                  >
                     {question.responses.map((response) => (
                       <div key={response.id} className="space-y-1">
                         <div className="flex items-center gap-1.5">
-                          <Avatar className="bg-gradient-to-br from-green-500 to-green-600 text-white flex-shrink-0 w-5 h-5 shadow-sm border border-green-500/20 flex items-center justify-center">
+                          <Avatar 
+                            className="flex-shrink-0 w-5 h-5 shadow-sm flex items-center justify-center"
+                            style={{ 
+                              background: "#22c55e",
+                              color: "#ffffff",
+                              border: "1px solid #22c55e33"
+                            }}
+                          >
                             <User className="w-2.5 h-2.5" />
                           </Avatar>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1 mb-0.5">
-                              <p className="font-semibold text-xs text-slate-900 dark:text-white truncate">
+                              <p 
+                                className="font-semibold text-xs truncate"
+                                style={{ color: textColor }}
+                              >
                                 {response.instructor?.firstName} {response.instructor?.fatherName}
                               </p>
-                              <Badge variant="default" className="text-xs px-1 py-0.5 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                              <Badge 
+                                variant="default" 
+                                className="text-xs px-1 py-0.5"
+                                style={{ 
+                                  background: "#dcfce7",
+                                  color: "#166534"
+                                }}
+                              >
                                 {lang === "en" ? "Instructor" : "አስተማሪ"}
                               </Badge>
                             </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                            <p className="text-xs" style={{ color: hintColor }}>
                               {formatDistanceToNow(
                                 new Date(response.createdAt),
                                 { addSuffix: true }
@@ -371,8 +516,14 @@ export default function TraditionalQA({
                             </p>
                           </div>
                         </div>
-                        <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-1.5 ml-5">
-                          <p className="text-slate-800 dark:text-slate-200 text-xs leading-relaxed">
+                        <div 
+                          className="rounded-md p-1.5 ml-5"
+                          style={{ background: "#dcfce740" }}
+                        >
+                          <p 
+                            className="text-xs leading-relaxed"
+                            style={{ color: textColor }}
+                          >
                             {response.response}
                           </p>
                         </div>
@@ -380,8 +531,17 @@ export default function TraditionalQA({
                     ))}
                   </div>
                 ) : (
-                  <div className="ml-6 p-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-md mt-1.5 border border-amber-200 dark:border-amber-800">
-                    <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-1">
+                  <div 
+                    className="ml-6 p-1.5 rounded-md mt-1.5 border"
+                    style={{ 
+                      background: "#fef3c740",
+                      borderColor: "#facc1540"
+                    }}
+                  >
+                    <p 
+                      className="text-xs flex items-center gap-1"
+                      style={{ color: hintColor }}
+                    >
                       <Reply className="w-2.5 h-2.5 flex-shrink-0" />
                       <span>
                         {lang === "en"

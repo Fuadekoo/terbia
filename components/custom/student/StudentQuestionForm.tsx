@@ -17,7 +17,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 // SVG Icons
@@ -64,6 +63,15 @@ interface StudentQuestionFormProps {
 
   courseId: string;
   chapterId: string;
+  themeColors?: {
+    bg: string;
+    text: string;
+    hint: string;
+    link: string;
+    button: string;
+    buttonText: string;
+    secondaryBg: string;
+  };
 }
 
 const StudentQuestionForm = ({
@@ -73,7 +81,14 @@ const StudentQuestionForm = ({
 
   courseId,
   chapterId,
+  themeColors,
 }: StudentQuestionFormProps) => {
+  // Use Telegram theme colors or defaults
+  const bgColor = themeColors?.bg || "#ffffff";
+  const textColor = themeColors?.text || "#000000";
+  const linkColor = themeColors?.link || "#0ea5e9";
+  const secondaryBg = themeColors?.secondaryBg || "#f3f4f6";
+
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<string, string[]>
   >({});
@@ -211,6 +226,7 @@ const StudentQuestionForm = ({
   return (
     <motion.div
       className="flex flex-col gap-2 py-2 md:px-8"
+      style={{ background: bgColor, color: textColor }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -227,7 +243,10 @@ const StudentQuestionForm = ({
                   initial="hidden"
                   animate="visible"
                 >
-                  <h3 className="text-base md:text-lg font-semibold text-sky-800 dark:text-sky-100">
+                  <h3 
+                    className="text-base md:text-lg font-semibold"
+                    style={{ color: textColor }}
+                  >
                     {index + 1}. {question.question}
                   </h3>
                   <ul className="mt-3 space-y-2">
@@ -242,38 +261,59 @@ const StudentQuestionForm = ({
                         question.id
                       ]?.includes(option.id);
 
-                      let optionClass = cn(
-                        "p-3 border rounded-md transition-all duration-200",
-                        "hover:bg-sky-100/50 dark:hover:bg-sky-800/50",
-                        "text-gray-800 dark:text-gray-200"
-                      );
+                      let optionStyle: React.CSSProperties = {
+                        padding: "12px",
+                        border: `2px solid ${secondaryBg}`,
+                        borderRadius: "8px",
+                        transition: "all 0.2s",
+                        background: secondaryBg,
+                        color: textColor,
+                        cursor: showCorrect ? "default" : "pointer",
+                      };
                       let icon = null;
 
                       if (showCorrect && feedback) {
                         if (isStudentSelected && isCorrectOption) {
-                          optionClass +=
-                            " bg-green-100 border-green-500 text-green-800 font-semibold";
+                          optionStyle = {
+                            ...optionStyle,
+                            background: "#dcfce7",
+                            borderColor: "#22c55e",
+                            color: "#166534",
+                            fontWeight: 600,
+                          };
                           icon = <CheckIcon />;
                         } else if (isStudentSelected && !isCorrectOption) {
-                          optionClass +=
-                            " bg-red-100 border-red-500 text-red-800 font-semibold";
+                          optionStyle = {
+                            ...optionStyle,
+                            background: "#fee2e2",
+                            borderColor: "#ef4444",
+                            color: "#991b1b",
+                            fontWeight: 600,
+                          };
                           icon = <XIcon />;
                         } else if (!isStudentSelected && isCorrectOption) {
-                          optionClass +=
-                            " bg-yellow-100 border-yellow-400 text-green-700";
+                          optionStyle = {
+                            ...optionStyle,
+                            background: "#fef3c7",
+                            borderColor: "#facc15",
+                            color: "#166534",
+                          };
                           icon = <CheckIcon />;
-                        } else {
-                          optionClass += " bg-gray-50 dark:bg-gray-800";
                         }
                       } else if (isSelected) {
-                        optionClass +=
-                          " border-sky-600 bg-sky-100 text-sky-800 font-semibold";
+                        optionStyle = {
+                          ...optionStyle,
+                          borderColor: linkColor,
+                          background: `${linkColor}20`,
+                          color: textColor,
+                          fontWeight: 600,
+                        };
                       }
 
                       return (
                         <motion.li
                           key={option.id}
-                          className={optionClass}
+                          style={optionStyle}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                         >
