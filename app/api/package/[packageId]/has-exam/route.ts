@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { packageId: string } }
-) {
+type RouteContext = {
+  params: Promise<{ packageId: string }>;
+};
+
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { packageId } = params;
+    const { packageId } = await context.params;
 
     if (!packageId) {
       return NextResponse.json(
