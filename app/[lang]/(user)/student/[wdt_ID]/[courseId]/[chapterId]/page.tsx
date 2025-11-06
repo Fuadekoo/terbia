@@ -659,6 +659,8 @@ function Page() {
                   <Message
                     message={data.message}
                     wdt_ID={wdt_ID}
+                    courseId={courseId}
+                    chapterId={chapterId}
                     onOpenSidebar={() => setIsMobileSidebarOpen(true)}
                   />
                 </div>
@@ -1328,10 +1330,14 @@ export default Page;
 function Message({
   message,
   wdt_ID,
+  courseId,
+  chapterId,
   onOpenSidebar,
 }: {
   message: string;
   wdt_ID: number;
+  courseId: string;
+  chapterId: string;
   onOpenSidebar?: () => void;
 }) {
   const router = useRouter();
@@ -1411,29 +1417,17 @@ function Message({
   };
 
   const handleGoToLearn = async () => {
-    // Get the first course and first chapter to re-learn
+    // Redirect to CURRENT active course/chapter to re-learn
     console.log("🔍 Re-Learn Course clicked!");
     console.log("📊 Student ID (wdt_ID):", wdt_ID);
+    console.log("📚 Current Course ID:", courseId);
+    console.log("📖 Current Chapter ID:", chapterId);
 
-    const packageData = await getPackageData(wdt_ID);
-    console.log("📦 Package Data:", packageData);
+    // Use the current active course and chapter (not first course)
+    const reLearnUrl = `/en/student/${wdt_ID}/${courseId}/${chapterId}?isClicked=true`;
+    console.log("🚀 Redirecting to current active course:", reLearnUrl);
 
-    if (packageData?.activePackage?.courses?.[0]?.chapters?.[0]) {
-      const firstCourse = packageData.activePackage.courses[0];
-      const firstChapter = firstCourse.chapters[0];
-
-      const reLearnUrl = `/en/student/${wdt_ID}/${firstCourse.id}/${firstChapter.id}?isClicked=true`;
-      console.log("✅ First Course:", firstCourse);
-      console.log("✅ First Chapter:", firstChapter);
-      console.log("🚀 Redirecting to:", reLearnUrl);
-
-      router.push(reLearnUrl);
-    } else {
-      console.log("❌ No courses/chapters found, redirecting to dashboard");
-      console.log("🚀 Dashboard URL:", `/en/student/${wdt_ID}`);
-      // Fallback to student dashboard
-      router.push(`/en/student/${wdt_ID}`);
-    }
+    router.push(reLearnUrl);
   };
 
   const handleChangePackage = () => {
