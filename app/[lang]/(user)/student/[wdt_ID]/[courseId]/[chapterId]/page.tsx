@@ -647,7 +647,116 @@ function Page() {
               {console.log("🎉 Showing completion message")}
               {console.log("📝 Message data:", data)}
               {console.log("🔄 isRelearning:", isRelearning)}
-              <Message message={data.message} wdt_ID={wdt_ID} />
+              {/* Main Layout with Sidebar for Completion Message */}
+              <div
+                className="flex h-screen"
+                style={{ background: themeColors.bg }}
+              >
+                {/* Main Content Area - Completion Message */}
+                <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
+                  <Message message={data.message} wdt_ID={wdt_ID} />
+                </div>
+
+                {/* Sidebar - Desktop only */}
+                <div
+                  className="hidden lg:block w-80 border-l sticky top-0 h-screen overflow-hidden"
+                  style={{
+                    background: themeColors.bg,
+                    borderColor: themeColors.secondaryBg,
+                  }}
+                >
+                  <div className="h-full flex flex-col">
+                    {/* Sidebar Header */}
+                    <div
+                      className="px-4 py-3 border-b flex-shrink-0"
+                      style={{
+                        background: themeColors.secondaryBg,
+                        borderColor: themeColors.secondaryBg,
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3
+                          className="text-sm font-semibold"
+                          style={{ color: themeColors.text }}
+                        >
+                          Course content
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Sidebar Tabs */}
+                    <div
+                      className="border-b flex-shrink-0"
+                      style={{
+                        background: themeColors.bg,
+                        borderColor: themeColors.secondaryBg,
+                      }}
+                    >
+                      <div className="flex">
+                        <button
+                          onClick={() => setSidebarActiveTab("mainmenu")}
+                          className="flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 no-theme"
+                          style={{
+                            color:
+                              sidebarActiveTab === "mainmenu"
+                                ? themeColors.text
+                                : themeColors.hint,
+                            background:
+                              sidebarActiveTab === "mainmenu"
+                                ? `${themeColors.secondaryBg}`
+                                : themeColors.bg,
+                            borderBottom:
+                              sidebarActiveTab === "mainmenu"
+                                ? `2px solid ${themeColors.link}`
+                                : "none",
+                            fontWeight:
+                              sidebarActiveTab === "mainmenu" ? "600" : "500",
+                          }}
+                        >
+                          Course content
+                        </button>
+                        <button
+                          onClick={() => setSidebarActiveTab("ai")}
+                          className="flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 no-theme"
+                          style={{
+                            color:
+                              sidebarActiveTab === "ai"
+                                ? themeColors.text
+                                : themeColors.hint,
+                            background:
+                              sidebarActiveTab === "ai"
+                                ? `${themeColors.secondaryBg}`
+                                : themeColors.bg,
+                            borderBottom:
+                              sidebarActiveTab === "ai"
+                                ? `2px solid ${themeColors.link}`
+                                : "none",
+                            fontWeight:
+                              sidebarActiveTab === "ai" ? "600" : "500",
+                          }}
+                        >
+                          AI Assistant
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sidebar Content */}
+                    <div
+                      className="flex-1 overflow-y-auto"
+                      style={{ background: themeColors.bg }}
+                    >
+                      {sidebarActiveTab === "mainmenu" ? (
+                        <MainMenu
+                          data={packageData}
+                          themeColors={themeColors}
+                        />
+                      ) : (
+                        <ChatComponent packageId="" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </>
           ) : !data || isLoading ? (
             <motion.div
