@@ -180,11 +180,20 @@ function Page() {
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
       const isClicked = searchParams.get("isClicked");
+
+      console.log("🔄 Checking re-learning status...");
+      console.log("📍 Current URL:", window.location.href);
+      console.log("🔗 isClicked parameter:", isClicked);
+
       if (isClicked === "true") {
+        console.log("✅ Re-learning mode activated!");
         setIsRelearning(true);
         // Remove the parameter from URL to keep it clean
         const newUrl = window.location.pathname;
+        console.log("🧹 Cleaning URL to:", newUrl);
         window.history.replaceState({}, "", newUrl);
+      } else {
+        console.log("ℹ️ Normal mode (not re-learning)");
       }
     }
   }, []);
@@ -634,7 +643,12 @@ function Page() {
             "message" in data &&
             !isRelearning &&
             !("chapter" in data) ? (
-            <Message message={data.message} wdt_ID={wdt_ID} />
+            <>
+              {console.log("🎉 Showing completion message")}
+              {console.log("📝 Message data:", data)}
+              {console.log("🔄 isRelearning:", isRelearning)}
+              <Message message={data.message} wdt_ID={wdt_ID} />
+            </>
           ) : !data || isLoading ? (
             <motion.div
               className="flex flex-col items-center justify-center min-h-[50vh]"
@@ -663,7 +677,11 @@ function Page() {
                   {/* Video Player Section */}
                   <div
                     className="flex-shrink-0 flex justify-center"
-                    style={{ background: "#000000" }}
+                    style={{
+                      background: "#000000",
+                      marginTop: "env(safe-area-inset-top, 20px)", // Safe area for mobile notch/status bar
+                      paddingTop: "12px", // Additional padding
+                    }}
                   >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
                       <iframe
@@ -676,15 +694,22 @@ function Page() {
                         allowFullScreen
                         aria-label="Chapter video player"
                         style={{
-                          // width: "100%",
-                          // height: "100%",
+                          width: "100%",
+                          height: "280px",
+                          maxHeight: "50vh",
                           display: "block",
                         }}
                       />
                     ) : data &&
                       "chapter" in data &&
                       data?.chapter?.customVideo ? (
-                      <div className="w-full h-full lg:w-3xl lg:h-auto">
+                      <div
+                        className="w-full lg:w-3xl"
+                        style={{
+                          height: "280px",
+                          maxHeight: "50vh",
+                        }}
+                      >
                         <CourseTopOverview
                           video={data?.chapter?.customVideo}
                           themeColors={themeColors}
@@ -692,8 +717,12 @@ function Page() {
                       </div>
                     ) : (
                       <div
-                        className="w-full h-full flex items-center justify-center"
-                        style={{ background: "#111827" }}
+                        className="w-full flex items-center justify-center"
+                        style={{
+                          background: "#111827",
+                          height: "280px",
+                          maxHeight: "50vh",
+                        }}
                       >
                         <span
                           className="text-xl font-semibold"
@@ -1276,14 +1305,25 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
 
   const handleGoToLearn = async () => {
     // Get the first course and first chapter to re-learn
+    console.log("🔍 Re-Learn Course clicked!");
+    console.log("📊 Student ID (wdt_ID):", wdt_ID);
+
     const packageData = await getPackageData(wdt_ID);
+    console.log("📦 Package Data:", packageData);
+
     if (packageData?.activePackage?.courses?.[0]?.chapters?.[0]) {
       const firstCourse = packageData.activePackage.courses[0];
       const firstChapter = firstCourse.chapters[0];
-      router.push(
-        `/en/student/${wdt_ID}/${firstCourse.id}/${firstChapter.id}?isClicked=true`
-      );
+
+      const reLearnUrl = `/en/student/${wdt_ID}/${firstCourse.id}/${firstChapter.id}?isClicked=true`;
+      console.log("✅ First Course:", firstCourse);
+      console.log("✅ First Chapter:", firstChapter);
+      console.log("🚀 Redirecting to:", reLearnUrl);
+
+      router.push(reLearnUrl);
     } else {
+      console.log("❌ No courses/chapters found, redirecting to dashboard");
+      console.log("🚀 Dashboard URL:", `/en/student/${wdt_ID}`);
       // Fallback to student dashboard
       router.push(`/en/student/${wdt_ID}`);
     }
