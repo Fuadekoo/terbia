@@ -166,12 +166,29 @@ const itemVariants = {
 };
 function Page() {
   const params = useParams();
+  const router = useRouter();
   const lang = "en";
   const wdt_ID = Number(params?.wdt_ID ?? 0);
   const courseId = String(params?.courseId ?? "");
   const chapterId = String(params?.chapterId ?? "");
   const [authorized, setAuthorized] = React.useState<boolean | null>(null);
   const [chatId, setChatId] = React.useState<string | null>(null);
+
+  // Check if user is re-learning (coming from "Re-Learn Course" button)
+  const [isRelearning, setIsRelearning] = React.useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const isClicked = searchParams.get("isClicked");
+      if (isClicked === "true") {
+        setIsRelearning(true);
+        // Remove the parameter from URL to keep it clean
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, []);
 
   // Use Telegram theme hook
   const theme = useTelegramTheme();
@@ -614,8 +631,27 @@ function Page() {
                 Retry
               </Button>
             </motion.div>
-          ) : data && "message" in data ? (
+          ) : data &&
+            "message" in data &&
+            !isRelearning &&
+            !("chapter" in data) ? (
             <Message message={data.message} wdt_ID={wdt_ID} />
+          ) : !data || isLoading ? (
+            <motion.div
+              className="flex flex-col items-center justify-center min-h-[50vh]"
+              style={{ background: themeColors.secondaryBg }}
+              variants={itemVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <div
+                className="animate-spin rounded-full h-12 w-12 border-b-2"
+                style={{ borderColor: themeColors.button }}
+              ></div>
+              <p className="mt-4" style={{ color: themeColors.text }}>
+                Loading chapter...
+              </p>
+            </motion.div>
           ) : (
             <>
               {/* Main Layout Container */}
@@ -646,7 +682,9 @@ function Page() {
                           display: "block",
                         }}
                       />
-                    ) : data?.chapter?.customVideo ? (
+                    ) : data &&
+                      "chapter" in data &&
+                      data?.chapter?.customVideo ? (
                       <div className="w-full h-full lg:w-3xl lg:h-auto">
                         <CourseTopOverview
                           video={data?.chapter?.customVideo}
@@ -1140,7 +1178,11 @@ function Page() {
                         />
                       ) : (
                         // packageId={data?.packageId || ""}
-                        <ChatComponent packageId={data?.packageId || ""} />
+                        <ChatComponent
+                          packageId={
+                            data && "packageId" in data ? data.packageId : ""
+                          }
+                        />
                       )}
                     </div>
                   </div>
@@ -1232,7 +1274,6 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
       router.push(`/en/student/${wdt_ID}/finalexam/${coursesPackageId}`);
     }
   };
-
 
   const handleGoToLearn = async () => {
     // Get the first course and first chapter to re-learn
