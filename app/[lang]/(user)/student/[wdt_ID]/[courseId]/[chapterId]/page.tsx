@@ -166,7 +166,6 @@ const itemVariants = {
 };
 function Page() {
   const params = useParams();
-  const router = useRouter();
   const lang = "en";
   const wdt_ID = Number(params?.wdt_ID ?? 0);
   const courseId = String(params?.courseId ?? "");
