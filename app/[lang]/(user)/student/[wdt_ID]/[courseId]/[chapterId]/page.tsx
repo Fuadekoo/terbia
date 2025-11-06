@@ -766,8 +766,9 @@ function Page() {
                     className="flex-shrink-0 w-full portrait:block landscape:hidden"
                     style={{
                       background: "#000000",
-                      height: "max(env(safe-area-inset-top), 40px)",
-                      minHeight: "40px",
+                      height:
+                        "calc(max(env(safe-area-inset-top), 20px) + 40px)",
+                      minHeight: "60px",
                     }}
                   />
 
