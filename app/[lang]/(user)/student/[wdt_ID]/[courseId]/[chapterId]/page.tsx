@@ -1307,28 +1307,6 @@ function Page() {
             </>
           )}
         </AnimatePresence>
-
-        {/* Fixed Back Button at Bottom - Hidden in landscape */}
-        {!error && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="fixed bottom-4 left-4 z-50 portrait:block landscape:hidden"
-          >
-            <Button
-              onClick={() => router.push(`/en/student/${wdt_ID}`)}
-              className="flex items-center gap-2 px-6 py-3 shadow-lg hover:shadow-xl transition-all"
-              style={{
-                background: themeColors.button,
-                color: themeColors.buttonText,
-              }}
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="hidden sm:inline">Back to Courses</span>
-            </Button>
-          </motion.div>
-        )}
       </div>
     </motion.div>
   );
