@@ -763,23 +763,23 @@ function Page() {
                 <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
                   {/* Black Header Bar - Prevents video overlap with status bar */}
                   <div
-                    className="flex-shrink-0 w-full"
+                    className="flex-shrink-0 w-full portrait:block landscape:hidden"
                     style={{
                       background: "#000000",
-                      height: "max(env(safe-area-inset-top), 24px)",
-                      minHeight: "24px",
+                      height: "max(env(safe-area-inset-top), 40px)",
+                      minHeight: "40px",
                     }}
                   />
 
                   {/* Video Player Section */}
                   <div
-                    className="flex-shrink-0 w-full"
+                    className="flex-shrink-0 w-full landscape:h-screen landscape:flex landscape:items-center landscape:justify-center"
                     style={{
                       background: "#000000",
                     }}
                   >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
-                      <div className="w-full aspect-video max-w-4xl mx-auto">
+                      <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
                         <iframe
                           className="w-full h-full"
                           src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
@@ -798,7 +798,7 @@ function Page() {
                     ) : data &&
                       "chapter" in data &&
                       data?.chapter?.customVideo ? (
-                      <div className="w-full aspect-video max-w-4xl mx-auto">
+                      <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
                         <CourseTopOverview
                           video={data?.chapter?.customVideo}
                           themeColors={themeColors}
@@ -806,7 +806,7 @@ function Page() {
                       </div>
                     ) : (
                       <div
-                        className="w-full aspect-video max-w-4xl mx-auto flex items-center justify-center"
+                        className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto flex items-center justify-center"
                         style={{
                           background: "#111827",
                         }}
@@ -821,13 +821,13 @@ function Page() {
                     )}
                   </div>
 
-                  {/* Content Tabs Area */}
+                  {/* Content Tabs Area - Hidden in landscape */}
                   {data &&
                     "chapter" in data &&
                     data.chapter &&
                     Array.isArray(data.chapter.questions) && (
                       <div
-                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative"
+                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative portrait:flex landscape:hidden"
                         style={{ background: themeColors.bg }}
                       >
                         <Tabs
@@ -1198,9 +1198,9 @@ function Page() {
                     )}
                 </div>
 
-                {/* Sticky Right Sidebar - Desktop Only */}
+                {/* Sticky Right Sidebar - Desktop Only, Hidden in Landscape */}
                 <div
-                  className="hidden lg:block w-80 border-l sticky top-0 h-screen overflow-hidden"
+                  className="hidden lg:portrait:block w-80 border-l sticky top-0 h-screen overflow-hidden"
                   style={{
                     background: themeColors.bg,
                     borderColor: themeColors.secondaryBg,
@@ -1307,13 +1307,13 @@ function Page() {
           )}
         </AnimatePresence>
 
-        {/* Fixed Back Button at Bottom */}
+        {/* Fixed Back Button at Bottom - Hidden in landscape */}
         {!error && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="fixed bottom-4 left-4 z-50"
+            className="fixed bottom-4 left-4 z-50 portrait:block landscape:hidden"
           >
             <Button
               onClick={() => router.push(`/en/student/${wdt_ID}`)}
