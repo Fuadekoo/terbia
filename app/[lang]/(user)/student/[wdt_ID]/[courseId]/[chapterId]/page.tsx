@@ -166,6 +166,7 @@ const itemVariants = {
 };
 function Page() {
   const params = useParams();
+  const router = useRouter();
   const lang = "en";
   const wdt_ID = Number(params?.wdt_ID ?? 0);
   const courseId = String(params?.courseId ?? "");
@@ -294,6 +295,7 @@ function Page() {
   const [sidebarActiveTab, setSidebarActiveTab] = React.useState<
     "mainmenu" | "ai"
   >("mainmenu");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
 
   // FIX: Correctly access coursesPackageId from the 'data' object.
   // Assuming 'data' will have a 'packageId' property when successfully fetched.
@@ -654,19 +656,27 @@ function Page() {
               >
                 {/* Main Content Area - Completion Message */}
                 <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
-                  <Message message={data.message} wdt_ID={wdt_ID} />
+                  <Message
+                    message={data.message}
+                    wdt_ID={wdt_ID}
+                    onOpenSidebar={() => setIsMobileSidebarOpen(true)}
+                  />
                 </div>
 
-                {/* Sidebar - Desktop only */}
+                {/* Sidebar - Desktop & Mobile (when opened) */}
                 <div
-                  className="hidden lg:block w-80 border-l sticky top-0 h-screen overflow-hidden"
+                  className={`${
+                    isMobileSidebarOpen
+                      ? "fixed inset-0 z-50 lg:relative lg:inset-auto"
+                      : "hidden"
+                  } lg:block w-full lg:w-80 border-l lg:sticky top-0 h-screen overflow-hidden`}
                   style={{
                     background: themeColors.bg,
                     borderColor: themeColors.secondaryBg,
                   }}
                 >
                   <div className="h-full flex flex-col">
-                    {/* Sidebar Header */}
+                    {/* Sidebar Header with Close Button */}
                     <div
                       className="px-4 py-3 border-b flex-shrink-0"
                       style={{
@@ -681,6 +691,27 @@ function Page() {
                         >
                           Course content
                         </h3>
+                        {/* Close button for mobile sidebar */}
+                        <button
+                          onClick={() => setIsMobileSidebarOpen(false)}
+                          className="lg:hidden p-1.5 rounded-lg hover:opacity-80 transition-all"
+                          style={{ color: themeColors.text }}
+                          aria-label="Close sidebar"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
                       </div>
                     </div>
 
@@ -1328,6 +1359,28 @@ function Page() {
             </>
           )}
         </AnimatePresence>
+
+        {/* Fixed Back Button at Bottom */}
+        {!error && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="fixed bottom-4 left-4 z-50"
+          >
+            <Button
+              onClick={() => router.push(`/en/student/${wdt_ID}`)}
+              className="flex items-center gap-2 px-6 py-3 shadow-lg hover:shadow-xl transition-all"
+              style={{
+                background: themeColors.button,
+                color: themeColors.buttonText,
+              }}
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="hidden sm:inline">Back to Courses</span>
+            </Button>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );
@@ -1335,7 +1388,15 @@ function Page() {
 
 export default Page;
 
-function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
+function Message({
+  message,
+  wdt_ID,
+  onOpenSidebar,
+}: {
+  message: string;
+  wdt_ID: number;
+  onOpenSidebar?: () => void;
+}) {
   const router = useRouter();
   const theme = useTelegramTheme();
   const [hasFinalExam, setHasFinalExam] = useState<boolean | null>(null);
@@ -1530,6 +1591,21 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
                   <BookOpen className="mr-2 h-6 w-6" />
                   Take Final Exam
                 </Button>
+                {/* View Courses button - Opens sidebar on mobile */}
+                {onOpenSidebar && (
+                  <Button
+                    onClick={onOpenSidebar}
+                    variant="outline"
+                    className="w-full text-base py-6 font-semibold lg:hidden"
+                    style={{
+                      borderColor: themeColors.link,
+                      color: themeColors.link,
+                    }}
+                  >
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    View All Courses
+                  </Button>
+                )}
                 <Button
                   onClick={handleChangePackage}
                   variant="outline"
@@ -1562,6 +1638,21 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
                   <RefreshCw className="mr-2 h-6 w-6" />
                   Re-Learn Course
                 </Button>
+                {/* View Courses button - Opens sidebar on mobile */}
+                {onOpenSidebar && (
+                  <Button
+                    onClick={onOpenSidebar}
+                    variant="outline"
+                    className="w-full text-base py-6 font-semibold lg:hidden"
+                    style={{
+                      borderColor: themeColors.link,
+                      color: themeColors.link,
+                    }}
+                  >
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    View All Courses
+                  </Button>
+                )}
                 <Button
                   onClick={handleChangePackage}
                   variant="outline"

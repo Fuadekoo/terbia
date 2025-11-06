@@ -757,6 +757,61 @@ export default function Page() {
             )}
           </div>
         )}
+
+        {/* Fixed Back Button at Bottom - Redirect to Telegram Bot */}
+        {chatId && !loading && (
+          <div className="fixed bottom-4 left-4 z-50">
+            <button
+              onClick={() => {
+                // Redirect to Telegram bot
+                const botUsername =
+                  process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ||
+                  "MubareksBot";
+                const url = `https://t.me/${botUsername}`;
+
+                const w = window as unknown as {
+                  Telegram?: {
+                    WebApp?: {
+                      openTelegramLink?: (u: string) => void;
+                      close?: () => void;
+                    };
+                  };
+                };
+
+                if (w.Telegram?.WebApp?.close) {
+                  // Close the Mini App and return to bot
+                  w.Telegram.WebApp.close();
+                } else if (w.Telegram?.WebApp?.openTelegramLink) {
+                  w.Telegram.WebApp.openTelegramLink(url);
+                } else {
+                  window.open(url, "_blank");
+                }
+              }}
+              className="flex items-center gap-2 px-6 py-3 shadow-lg hover:shadow-xl transition-all rounded-lg"
+              style={{
+                background: getButtonColor(),
+                color: getButtonTextColor(),
+              }}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              <span className="hidden sm:inline font-semibold">
+                Back to Bot
+              </span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
