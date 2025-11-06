@@ -761,12 +761,21 @@ function Page() {
               >
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
+                  {/* Black Header Bar - Prevents video overlap with status bar */}
+                  <div
+                    className="flex-shrink-0 w-full"
+                    style={{
+                      background: "#000000",
+                      height: "max(env(safe-area-inset-top), 24px)",
+                      minHeight: "24px",
+                    }}
+                  />
+
                   {/* Video Player Section */}
                   <div
                     className="flex-shrink-0 w-full"
                     style={{
                       background: "#000000",
-                      paddingTop: "max(env(safe-area-inset-top), 0px)",
                     }}
                   >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
