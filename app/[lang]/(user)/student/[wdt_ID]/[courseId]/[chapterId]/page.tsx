@@ -763,40 +763,33 @@ function Page() {
                 <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
                   {/* Video Player Section */}
                   <div
-                    className="flex-shrink-0 flex justify-center"
+                    className="flex-shrink-0 w-full"
                     style={{
                       background: "#000000",
-                      marginTop: "env(safe-area-inset-top, 20px)", // Safe area for mobile notch/status bar
-                      paddingTop: "12px", // Additional padding
+                      paddingTop: "max(env(safe-area-inset-top), 0px)",
                     }}
                   >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
-                      <iframe
-                        className="aspect-video lg:w-3xl"
-                        src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
-                        title="Darulkubra video player"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerPolicy="strict-origin-when-cross-origin"
-                        allowFullScreen
-                        aria-label="Chapter video player"
-                        style={{
-                          width: "100%",
-                          height: "280px",
-                          maxHeight: "50vh",
-                          display: "block",
-                        }}
-                      />
+                      <div className="w-full aspect-video max-w-4xl mx-auto">
+                        <iframe
+                          className="w-full h-full"
+                          src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
+                          title="Darulkubra video player"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          allowFullScreen
+                          aria-label="Chapter video player"
+                          style={{
+                            display: "block",
+                            border: "none",
+                          }}
+                        />
+                      </div>
                     ) : data &&
                       "chapter" in data &&
                       data?.chapter?.customVideo ? (
-                      <div
-                        className="w-full lg:w-3xl"
-                        style={{
-                          height: "280px",
-                          maxHeight: "50vh",
-                        }}
-                      >
+                      <div className="w-full aspect-video max-w-4xl mx-auto">
                         <CourseTopOverview
                           video={data?.chapter?.customVideo}
                           themeColors={themeColors}
@@ -804,11 +797,9 @@ function Page() {
                       </div>
                     ) : (
                       <div
-                        className="w-full flex items-center justify-center"
+                        className="w-full aspect-video max-w-4xl mx-auto flex items-center justify-center"
                         style={{
                           background: "#111827",
-                          height: "280px",
-                          maxHeight: "50vh",
                         }}
                       >
                         <span
