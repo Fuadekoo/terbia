@@ -649,6 +649,7 @@ function Page() {
               {console.log("🎉 Showing completion message")}
               {console.log("📝 Message data:", data)}
               {console.log("🔄 isRelearning:", isRelearning)}
+              {console.log("✅ Has chapter?", "chapter" in data)}
               {/* Main Layout with Sidebar for Completion Message */}
               <div
                 className="flex h-screen"
@@ -659,8 +660,6 @@ function Page() {
                   <Message
                     message={data.message}
                     wdt_ID={wdt_ID}
-                    courseId={courseId}
-                    chapterId={chapterId}
                     onOpenSidebar={() => setIsMobileSidebarOpen(true)}
                   />
                 </div>
@@ -729,23 +728,32 @@ function Page() {
               </div>
             </>
           ) : !data || isLoading ? (
-            <motion.div
-              className="flex flex-col items-center justify-center min-h-[50vh]"
-              style={{ background: themeColors.secondaryBg }}
-              variants={itemVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <div
-                className="animate-spin rounded-full h-12 w-12 border-b-2"
-                style={{ borderColor: themeColors.button }}
-              ></div>
-              <p className="mt-4" style={{ color: themeColors.text }}>
-                Loading chapter...
-              </p>
-            </motion.div>
+            <>
+              {console.log("⏳ Loading state...")}
+              {console.log("📊 data:", data)}
+              {console.log("🔄 isLoading:", isLoading)}
+              {console.log("🔄 isRelearning:", isRelearning)}
+              <motion.div
+                className="flex flex-col items-center justify-center min-h-[50vh]"
+                style={{ background: themeColors.secondaryBg }}
+                variants={itemVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <div
+                  className="animate-spin rounded-full h-12 w-12 border-b-2"
+                  style={{ borderColor: themeColors.button }}
+                ></div>
+                <p className="mt-4" style={{ color: themeColors.text }}>
+                  Loading chapter...
+                </p>
+              </motion.div>
+            </>
           ) : (
             <>
+              {console.log("📚 Rendering chapter content")}
+              {console.log("📊 Final data:", data)}
+              {console.log("🔄 isRelearning:", isRelearning)}
               {/* Main Layout Container */}
               <div
                 className="flex h-screen"
@@ -1330,14 +1338,10 @@ export default Page;
 function Message({
   message,
   wdt_ID,
-  courseId,
-  chapterId,
   onOpenSidebar,
 }: {
   message: string;
   wdt_ID: number;
-  courseId: string;
-  chapterId: string;
   onOpenSidebar?: () => void;
 }) {
   const router = useRouter();
@@ -1417,17 +1421,29 @@ function Message({
   };
 
   const handleGoToLearn = async () => {
-    // Redirect to CURRENT active course/chapter to re-learn
+    // Redirect to FIRST course/chapter to re-learn from beginning
     console.log("🔍 Re-Learn Course clicked!");
     console.log("📊 Student ID (wdt_ID):", wdt_ID);
-    console.log("📚 Current Course ID:", courseId);
-    console.log("📖 Current Chapter ID:", chapterId);
 
-    // Use the current active course and chapter (not first course)
-    const reLearnUrl = `/en/student/${wdt_ID}/${courseId}/${chapterId}?isClicked=true`;
-    console.log("🚀 Redirecting to current active course:", reLearnUrl);
+    const packageData = await getPackageData(wdt_ID);
+    console.log("📦 Package Data:", packageData);
 
-    router.push(reLearnUrl);
+    if (packageData?.activePackage?.courses?.[0]?.chapters?.[0]) {
+      const firstCourse = packageData.activePackage.courses[0];
+      const firstChapter = firstCourse.chapters[0];
+
+      const reLearnUrl = `/en/student/${wdt_ID}/${firstCourse.id}/${firstChapter.id}?isClicked=true`;
+      console.log("✅ First Course ID:", firstCourse.id);
+      console.log("✅ First Chapter ID:", firstChapter.id);
+      console.log("🚀 Redirecting to first chapter:", reLearnUrl);
+
+      router.push(reLearnUrl);
+    } else {
+      console.log("❌ No courses/chapters found, redirecting to course list");
+      console.log("🚀 Course List URL:", `/en/student/${wdt_ID}`);
+      // Fallback to course list
+      router.push(`/en/student/${wdt_ID}`);
+    }
   };
 
   const handleChangePackage = () => {

@@ -29,15 +29,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
 
+  console.log("🔧 Layout Debug:");
+  console.log("  isClicked:", isClicked);
+  console.log("  Current courseId:", courseId);
+  console.log("  Current chapterId:", chapterId);
+  console.log("  Updated courseId:", updatedCourseId);
+  console.log("  Updated chapterId:", updatedChapterId);
+  console.log("  Update data:", update);
+
   useEffect(() => {
     if (
       !isClicked &&
       ((updatedCourseId && updatedCourseId !== courseId) ||
         (updatedChapterId && updatedChapterId !== chapterId))
     ) {
+      console.log(
+        "🚀 Layout redirecting to:",
+        `/en/student/${wdtIdNum}/${updatedCourseId}/${updatedChapterId}`
+      );
       redirect(
         `/en/student/${wdtIdNum}/${updatedCourseId}/${updatedChapterId}`
       );
+    } else {
+      console.log("ℹ️ No redirect needed or isClicked=true");
     }
   }, [
     updatedCourseId,
