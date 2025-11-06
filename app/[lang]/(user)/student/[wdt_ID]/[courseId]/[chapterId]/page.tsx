@@ -689,7 +689,7 @@ function Page() {
                           className="text-sm font-semibold"
                           style={{ color: themeColors.text }}
                         >
-                          Course content
+                          All Courses
                         </h3>
                         {/* Close button for mobile sidebar */}
                         <button
@@ -715,75 +715,12 @@ function Page() {
                       </div>
                     </div>
 
-                    {/* Sidebar Tabs */}
-                    <div
-                      className="border-b flex-shrink-0"
-                      style={{
-                        background: themeColors.bg,
-                        borderColor: themeColors.secondaryBg,
-                      }}
-                    >
-                      <div className="flex">
-                        <button
-                          onClick={() => setSidebarActiveTab("mainmenu")}
-                          className="flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 no-theme"
-                          style={{
-                            color:
-                              sidebarActiveTab === "mainmenu"
-                                ? themeColors.text
-                                : themeColors.hint,
-                            background:
-                              sidebarActiveTab === "mainmenu"
-                                ? `${themeColors.secondaryBg}`
-                                : themeColors.bg,
-                            borderBottom:
-                              sidebarActiveTab === "mainmenu"
-                                ? `2px solid ${themeColors.link}`
-                                : "none",
-                            fontWeight:
-                              sidebarActiveTab === "mainmenu" ? "600" : "500",
-                          }}
-                        >
-                          Course content
-                        </button>
-                        <button
-                          onClick={() => setSidebarActiveTab("ai")}
-                          className="flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 no-theme"
-                          style={{
-                            color:
-                              sidebarActiveTab === "ai"
-                                ? themeColors.text
-                                : themeColors.hint,
-                            background:
-                              sidebarActiveTab === "ai"
-                                ? `${themeColors.secondaryBg}`
-                                : themeColors.bg,
-                            borderBottom:
-                              sidebarActiveTab === "ai"
-                                ? `2px solid ${themeColors.link}`
-                                : "none",
-                            fontWeight:
-                              sidebarActiveTab === "ai" ? "600" : "500",
-                          }}
-                        >
-                          AI Assistant
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Sidebar Content */}
+                    {/* Main Menu Content - No Tabs */}
                     <div
                       className="flex-1 overflow-y-auto"
                       style={{ background: themeColors.bg }}
                     >
-                      {sidebarActiveTab === "mainmenu" ? (
-                        <MainMenu
-                          data={packageData}
-                          themeColors={themeColors}
-                        />
-                      ) : (
-                        <ChatComponent packageId="" />
-                      )}
+                      <MainMenu data={packageData} themeColors={themeColors} />
                     </div>
                   </div>
                 </div>
