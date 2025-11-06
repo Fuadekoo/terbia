@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
-
 import { useParams, useRouter } from "next/navigation";
 import useAction from "@/hooks/useAction";
 import { packageCompleted } from "@/actions/student/progress";
@@ -20,6 +19,7 @@ import {
   MessageSquare,
   Newspaper,
   Bot,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCoursesPackageId } from "@/actions/admin/package";
@@ -1349,6 +1349,7 @@ function Message({
   const [hasFinalExam, setHasFinalExam] = useState<boolean | null>(null);
   const [coursesPackageId, setCoursesPackageId] = useState<string | null>(null);
   const [isPackageCompleted, setIsPackageCompleted] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Professional theme utilities with memoization
   const themeColors = useMemo(() => {
@@ -1421,6 +1422,9 @@ function Message({
   };
 
   const handleGoToLearn = async () => {
+    // Show loading state
+    setIsRedirecting(true);
+
     // Redirect to FIRST course/chapter to re-learn from beginning
     console.log("🔍 Re-Learn Course clicked!");
     console.log("📊 Student ID (wdt_ID):", wdt_ID);
@@ -1435,14 +1439,15 @@ function Message({
       const reLearnUrl = `/en/student/${wdt_ID}/${firstCourse.id}/${firstChapter.id}?isClicked=true`;
       console.log("✅ First Course ID:", firstCourse.id);
       console.log("✅ First Chapter ID:", firstChapter.id);
-      console.log("🚀 Redirecting to first chapter:", reLearnUrl);
+      console.log("🚀 Hard redirecting to first chapter:", reLearnUrl);
 
-      router.push(reLearnUrl);
+      // Use window.location.href for full page reload (not router.push)
+      window.location.href = reLearnUrl;
     } else {
       console.log("❌ No courses/chapters found, redirecting to course list");
       console.log("🚀 Course List URL:", `/en/student/${wdt_ID}`);
       // Fallback to course list
-      router.push(`/en/student/${wdt_ID}`);
+      window.location.href = `/en/student/${wdt_ID}`;
     }
   };
 
@@ -1539,7 +1544,7 @@ function Message({
                   Take Final Exam
                 </Button>
                 {/* View Courses button - Opens sidebar on mobile */}
-                {onOpenSidebar && (
+                {onOpenSidebar && !isRedirecting && (
                   <Button
                     onClick={onOpenSidebar}
                     variant="outline"
@@ -1555,11 +1560,13 @@ function Message({
                 )}
                 <Button
                   onClick={handleChangePackage}
+                  disabled={isRedirecting}
                   variant="outline"
                   className="w-full text-base py-6 font-semibold"
                   style={{
                     borderColor: themeColors.hint,
                     color: themeColors.text,
+                    opacity: isRedirecting ? 0.5 : 1,
                   }}
                 >
                   <RefreshCw className="mr-2 h-5 w-5" />
@@ -1576,17 +1583,28 @@ function Message({
                 </p>
                 <Button
                   onClick={handleGoToLearn}
+                  disabled={isRedirecting}
                   className="w-full text-lg py-7 font-bold shadow-lg hover:shadow-xl transition-all"
                   style={{
                     background: themeColors.button,
                     color: themeColors.buttonText,
+                    opacity: isRedirecting ? 0.7 : 1,
                   }}
                 >
-                  <RefreshCw className="mr-2 h-6 w-6" />
-                  Re-Learn Course
+                  {isRedirecting ? (
+                    <>
+                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-6 w-6" />
+                      Re-Learn Course
+                    </>
+                  )}
                 </Button>
                 {/* View Courses button - Opens sidebar on mobile */}
-                {onOpenSidebar && (
+                {onOpenSidebar && !isRedirecting && (
                   <Button
                     onClick={onOpenSidebar}
                     variant="outline"
@@ -1602,11 +1620,13 @@ function Message({
                 )}
                 <Button
                   onClick={handleChangePackage}
+                  disabled={isRedirecting}
                   variant="outline"
                   className="w-full text-base py-6 font-semibold"
                   style={{
                     borderColor: themeColors.hint,
                     color: themeColors.text,
+                    opacity: isRedirecting ? 0.5 : 1,
                   }}
                 >
                   <Home className="mr-2 h-5 w-5" />
