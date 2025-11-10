@@ -23,6 +23,7 @@ model coursePackage {
   id                  String                @id @default(uuid())
   name                String                @db.Text
   description         String?               @db.Text
+  thumbnail           String?               @db.Text
   courses             course[]
   questions           question[]
   finalExamResult     finalExamResult[]

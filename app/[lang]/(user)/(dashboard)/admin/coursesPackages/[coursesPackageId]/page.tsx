@@ -4,6 +4,7 @@ import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TitleForm } from "../../../../../../../components/custom/admin/title-form";
 import { DescriptionForm } from "../../../../../../../components/custom/admin/description-form";
+import { ThumbnailForm } from "../../../../../../../components/custom/admin/thumbnail-form";
 // import { auth } from "@/auth";
 // import { isTeacher } from "@/lib/teacher";
 import { CoursesForm } from "@/components/custom/admin/courses-form";
@@ -154,6 +155,10 @@ const CoursesPackageIdPage = async ({
                   initialData={coursesPackage}
                   coursesPackageId={coursesPackage.id}
                 />
+                <ThumbnailForm
+                  initialData={coursesPackage}
+                  coursesPackageId={coursesPackage.id}
+                />
               </div>
             </div>
 
@@ -175,13 +180,15 @@ const CoursesPackageIdPage = async ({
 
               <div className="space-y-6">
                 <UstazSelector coursesPackageId={coursesPackage.id} />
-                <AssignedStudentsList coursesPackageId={coursesPackage.id} />
               </div>
             </div>
           </div>
 
           {/* Right Column - Course Management */}
           <div className="space-y-6">
+            <div className="space-y-6">
+              <AssignedStudentsList coursesPackageId={coursesPackage.id} />
+            </div>
             {/* Course Management Card */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6">
               <div className="flex items-center gap-3 mb-6">
