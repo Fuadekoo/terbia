@@ -65,6 +65,7 @@ interface StartFlowResultSingle {
   mode: "single";
   url: string;
   packageName: string;
+  packageThumbnail?: string | null;
   studentId: number;
   studentName: string | null;
 }
@@ -75,7 +76,12 @@ interface StartFlowResultChoose {
     studentId: number;
     name: string | null;
     avatar: { initials: string; color: string };
-    packages: Array<{ id: string; name: string; progressPercentage?: number }>;
+    packages: Array<{
+      id: string;
+      name: string;
+      thumbnail?: string | null;
+      progressPercentage?: number;
+    }>;
     subject?: string | null;
     teacherName?: string | null;
     classFee?: string | null;
@@ -202,7 +208,7 @@ export async function startStudentFlow(
       type AvailablePackage = {
         id: string;
         subject: string | null;
-        package: { id: string; name: string };
+        package: { id: string; name: string; thumbnail: string | null };
       };
       const availablePackages: AvailablePackage[] = await getAvailablePacakges(
         packageType,
@@ -243,6 +249,7 @@ export async function startStudentFlow(
           packageName:
             (channel.activePackage as { name?: string } | null)?.name ||
             "Package",
+          packageThumbnail: validPackages[0].package.thumbnail ?? null,
           studentId,
           studentName,
         });
@@ -252,6 +259,7 @@ export async function startStudentFlow(
           validPackages.map(async (p) => ({
             id: p.package.id,
             name: p.package.name,
+            thumbnail: p.package.thumbnail ?? null,
             progressPercentage: await computePackageProgress(
               studentId,
               p.package.id
@@ -307,6 +315,7 @@ export async function startStudentFlow(
                 {
                   id: activeId,
                   name: i.packageName,
+                  thumbnail: i.packageThumbnail ?? null,
                   progressPercentage: progress,
                 },
               ],
@@ -529,7 +538,7 @@ export async function getStudentFlowById(
     type AvailablePackage = {
       id: string;
       subject: string | null;
-      package: { id: string; name: string };
+      package: { id: string; name: string; thumbnail: string | null };
     };
     const availablePackages: AvailablePackage[] = await getAvailablePacakges(
       packageType,
@@ -595,6 +604,7 @@ export async function getStudentFlowById(
           mode: "single",
           url,
           packageName: validPackages[0].package.name,
+          packageThumbnail: validPackages[0].package.thumbnail ?? null,
           studentId,
           studentName: student.name,
         },
@@ -606,6 +616,7 @@ export async function getStudentFlowById(
       validPackages.map(async (p) => ({
         id: p.package.id,
         name: p.package.name,
+        thumbnail: p.package.thumbnail ?? null,
         progressPercentage: await computePackageProgress(p.package.id),
       }))
     );

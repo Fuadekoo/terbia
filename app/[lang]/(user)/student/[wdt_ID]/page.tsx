@@ -58,6 +58,7 @@ type StartSingle = {
     mode: "single";
     url: string;
     packageName: string;
+    packageThumbnail?: string | null;
     studentId: number;
     studentName: string | null;
   };
@@ -73,6 +74,7 @@ type StartChoose = {
       packages: Array<{
         id: string;
         name: string;
+        thumbnail?: string | null;
         progressPercentage?: number;
       }>;
       subject?: string | null;
@@ -358,6 +360,17 @@ export default function Page() {
   const getButtonTextColor = () => themeColors.buttonText;
   const getSecondaryBgColor = () => themeColors.secondaryBg;
 
+  const resolvePackageThumbnail = (thumbnail?: string | null) => {
+    if (!thumbnail) return "/quranlogo.png";
+    if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) {
+      return thumbnail;
+    }
+    if (thumbnail.startsWith("/")) {
+      return thumbnail;
+    }
+    return `/api/thumbnails/${thumbnail}`;
+  };
+
   return (
     <div
       style={{
@@ -604,7 +617,7 @@ export default function Page() {
                     >
                       <div style={{ height: 140, position: "relative" }}>
                         <Image
-                          src="/quranlogo.png"
+                          src={resolvePackageThumbnail(pkg.thumbnail)}
                           alt="Package thumbnail"
                           fill
                           style={{ objectFit: "cover" }}

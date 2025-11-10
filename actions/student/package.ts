@@ -67,6 +67,7 @@ export async function getAvailablePacakges(
         select: {
           id: true,
           name: true,
+          thumbnail: true,
         },
       },
     },
