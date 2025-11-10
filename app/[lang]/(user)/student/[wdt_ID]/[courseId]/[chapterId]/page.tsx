@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
-
 import { useParams, useRouter } from "next/navigation";
 import useAction from "@/hooks/useAction";
 import { packageCompleted } from "@/actions/student/progress";
@@ -11,11 +10,6 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   AlertCircle,
   RefreshCw,
   ArrowLeft,
@@ -25,15 +19,16 @@ import {
   MessageSquare,
   Newspaper,
   Bot,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCoursesPackageId } from "@/actions/admin/package";
 import CourseTopOverview from "@/components/courseTopOverview";
+import { getPackageData } from "@/actions/student/package";
 import CourseAnnouncements from "@/components/CourseAnnouncements";
 import CourseFeedback from "@/components/CourseFeedback";
 import CourseMaterials from "@/components/CourseMaterials";
 import ChatComponent from "@/components/chatComponent";
-import { getPackageData } from "@/actions/student/package";
 import MainMenu from "@/components/custom/student/bestMenu";
 import TraditionalQA from "@/components/traditionalQA";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -178,6 +173,31 @@ function Page() {
   const [authorized, setAuthorized] = React.useState<boolean | null>(null);
   const [chatId, setChatId] = React.useState<string | null>(null);
 
+  // Check if user is re-learning (coming from "Re-Learn Course" button)
+  const [isRelearning, setIsRelearning] = React.useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const isClicked = searchParams.get("isClicked");
+
+      console.log("🔄 Checking re-learning status...");
+      console.log("📍 Current URL:", window.location.href);
+      console.log("🔗 isClicked parameter:", isClicked);
+
+      if (isClicked === "true") {
+        console.log("✅ Re-learning mode activated!");
+        setIsRelearning(true);
+        // Remove the parameter from URL to keep it clean
+        const newUrl = window.location.pathname;
+        console.log("🧹 Cleaning URL to:", newUrl);
+        window.history.replaceState({}, "", newUrl);
+      } else {
+        console.log("ℹ️ Normal mode (not re-learning)");
+      }
+    }
+  }, []);
+
   // Use Telegram theme hook
   const theme = useTelegramTheme();
 
@@ -274,6 +294,7 @@ function Page() {
   const [sidebarActiveTab, setSidebarActiveTab] = React.useState<
     "mainmenu" | "ai"
   >("mainmenu");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
 
   // FIX: Correctly access coursesPackageId from the 'data' object.
   // Assuming 'data' will have a 'packageId' property when successfully fetched.
@@ -619,10 +640,119 @@ function Page() {
                 Retry
               </Button>
             </motion.div>
-          ) : data && "message" in data ? (
-            <Message message={data.message} wdt_ID={wdt_ID} />
+          ) : data &&
+            "message" in data &&
+            !isRelearning &&
+            !("chapter" in data) ? (
+            <>
+              {console.log("🎉 Showing completion message")}
+              {console.log("📝 Message data:", data)}
+              {console.log("🔄 isRelearning:", isRelearning)}
+              {console.log("✅ Has chapter?", "chapter" in data)}
+              {/* Main Layout with Sidebar for Completion Message */}
+              <div
+                className="flex h-screen"
+                style={{ background: themeColors.bg }}
+              >
+                {/* Main Content Area - Completion Message */}
+                <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
+                  <Message
+                    message={data.message}
+                    wdt_ID={wdt_ID}
+                    onOpenSidebar={() => setIsMobileSidebarOpen(true)}
+                  />
+                </div>
+
+                {/* Sidebar - Desktop & Mobile (when opened) */}
+                <div
+                  className={`${
+                    isMobileSidebarOpen
+                      ? "fixed inset-0 z-50 lg:relative lg:inset-auto"
+                      : "hidden"
+                  } lg:block w-full lg:w-80 border-l lg:sticky top-0 h-screen overflow-hidden`}
+                  style={{
+                    background: themeColors.bg,
+                    borderColor: themeColors.secondaryBg,
+                  }}
+                >
+                  <div className="h-full flex flex-col">
+                    {/* Sidebar Header with Close Button */}
+                    <div
+                      className="px-4 py-3 border-b flex-shrink-0"
+                      style={{
+                        background: themeColors.secondaryBg,
+                        borderColor: themeColors.secondaryBg,
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3
+                          className="text-sm font-semibold"
+                          style={{ color: themeColors.text }}
+                        >
+                          All Courses
+                        </h3>
+                        {/* Close button for mobile sidebar */}
+                        <button
+                          onClick={() => setIsMobileSidebarOpen(false)}
+                          className="lg:hidden p-1.5 rounded-lg hover:opacity-80 transition-all"
+                          style={{ color: themeColors.text }}
+                          aria-label="Close sidebar"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Main Menu Content - No Tabs */}
+                    <div
+                      className="flex-1 overflow-y-auto"
+                      style={{ background: themeColors.bg }}
+                    >
+                      <MainMenu data={packageData} themeColors={themeColors} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : !data || isLoading ? (
+            <>
+              {console.log("⏳ Loading state...")}
+              {console.log("📊 data:", data)}
+              {console.log("🔄 isLoading:", isLoading)}
+              {console.log("🔄 isRelearning:", isRelearning)}
+              <motion.div
+                className="flex flex-col items-center justify-center min-h-[50vh]"
+                style={{ background: themeColors.secondaryBg }}
+                variants={itemVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <div
+                  className="animate-spin rounded-full h-12 w-12 border-b-2"
+                  style={{ borderColor: themeColors.button }}
+                ></div>
+                <p className="mt-4" style={{ color: themeColors.text }}>
+                  Loading chapter...
+                </p>
+              </motion.div>
+            </>
           ) : (
             <>
+              {console.log("📚 Rendering chapter content")}
+              {console.log("📊 Final data:", data)}
+              {console.log("🔄 isRelearning:", isRelearning)}
               {/* Main Layout Container */}
               <div
                 className="flex h-screen"
@@ -630,29 +760,45 @@ function Page() {
               >
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
+                  {/* Black Header Bar - Prevents video overlap with status bar */}
+                  <div
+                    className="flex-shrink-0 w-full portrait:block landscape:hidden"
+                    style={{
+                      background: "#000000",
+                      height:
+                        "calc(max(env(safe-area-inset-top), 20px) + 40px)",
+                      minHeight: "60px",
+                    }}
+                  />
+
                   {/* Video Player Section */}
                   <div
-                    className="flex-shrink-0 flex justify-center"
-                    style={{ background: "#000000" }}
+                    className="flex-shrink-0 w-full landscape:h-screen landscape:flex landscape:items-center landscape:justify-center"
+                    style={{
+                      background: "#000000",
+                    }}
                   >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
-                      <iframe
-                        className="aspect-video lg:w-3xl"
-                        src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
-                        title="Darulkubra video player"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerPolicy="strict-origin-when-cross-origin"
-                        allowFullScreen
-                        aria-label="Chapter video player"
-                        style={{
-                          // width: "100%",
-                          // height: "100%",
-                          display: "block",
-                        }}
-                      />
-                    ) : data?.chapter?.customVideo ? (
-                      <div className="w-full h-full lg:w-3xl lg:h-auto">
+                      <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
+                        <iframe
+                          className="w-full h-full"
+                          src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
+                          title="Darulkubra video player"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          allowFullScreen
+                          aria-label="Chapter video player"
+                          style={{
+                            display: "block",
+                            border: "none",
+                          }}
+                        />
+                      </div>
+                    ) : data &&
+                      "chapter" in data &&
+                      data?.chapter?.customVideo ? (
+                      <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
                         <CourseTopOverview
                           video={data?.chapter?.customVideo}
                           themeColors={themeColors}
@@ -660,8 +806,10 @@ function Page() {
                       </div>
                     ) : (
                       <div
-                        className="w-full h-full flex items-center justify-center"
-                        style={{ background: "#111827" }}
+                        className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto flex items-center justify-center"
+                        style={{
+                          background: "#111827",
+                        }}
                       >
                         <span
                           className="text-xl font-semibold"
@@ -673,13 +821,13 @@ function Page() {
                     )}
                   </div>
 
-                  {/* Content Tabs Area */}
+                  {/* Content Tabs Area - Hidden in landscape */}
                   {data &&
                     "chapter" in data &&
                     data.chapter &&
                     Array.isArray(data.chapter.questions) && (
                       <div
-                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative"
+                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative portrait:flex landscape:hidden"
                         style={{ background: themeColors.bg }}
                       >
                         <Tabs
@@ -1050,9 +1198,9 @@ function Page() {
                     )}
                 </div>
 
-                {/* Sticky Right Sidebar - Desktop Only */}
+                {/* Sticky Right Sidebar - Desktop Only, Hidden in Landscape */}
                 <div
-                  className="hidden lg:block w-80 border-l sticky top-0 h-screen overflow-hidden"
+                  className="hidden lg:portrait:block w-80 border-l sticky top-0 h-screen overflow-hidden"
                   style={{
                     background: themeColors.bg,
                     borderColor: themeColors.secondaryBg,
@@ -1145,7 +1293,11 @@ function Page() {
                         />
                       ) : (
                         // packageId={data?.packageId || ""}
-                        <ChatComponent packageId={data?.packageId || ""} />
+                        <ChatComponent
+                          packageId={
+                            data && "packageId" in data ? data.packageId : ""
+                          }
+                        />
                       )}
                     </div>
                   </div>
@@ -1161,9 +1313,21 @@ function Page() {
 
 export default Page;
 
-function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
+function Message({
+  message,
+  wdt_ID,
+  onOpenSidebar,
+}: {
+  message: string;
+  wdt_ID: number;
+  onOpenSidebar?: () => void;
+}) {
   const router = useRouter();
   const theme = useTelegramTheme();
+  const [hasFinalExam, setHasFinalExam] = useState<boolean | null>(null);
+  const [coursesPackageId, setCoursesPackageId] = useState<string | null>(null);
+  const [isPackageCompleted, setIsPackageCompleted] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Professional theme utilities with memoization
   const themeColors = useMemo(() => {
@@ -1195,62 +1359,261 @@ function Message({ message, wdt_ID }: { message: string; wdt_ID: number }) {
   }, [theme]);
 
   console.log("showed message in message");
+
+  // Check if package is completed and if it has final exam
   useEffect(() => {
     (async () => {
-      if (await packageCompleted(wdt_ID)) {
-        const coursesPackageId = await getCoursesPackageId(wdt_ID);
-        setTimeout(() => {
-          router.push(`/en/student/${wdt_ID}/finalexam/${coursesPackageId}`);
-        }, 5000);
+      const completedResult = await packageCompleted(wdt_ID);
+      // Handle both boolean and object return types
+      const isCompleted =
+        typeof completedResult === "boolean"
+          ? completedResult
+          : completedResult?.completed ?? false;
+
+      setIsPackageCompleted(isCompleted);
+
+      if (isCompleted) {
+        const packageId = await getCoursesPackageId(wdt_ID);
+        setCoursesPackageId(packageId ?? null);
+
+        // Check if package has final exam questions
+        if (packageId) {
+          try {
+            const packageData = await fetch(
+              `/api/package/${packageId}/has-exam`
+            ).then((res) => res.json());
+            setHasFinalExam(packageData.hasFinalExam);
+          } catch (error) {
+            console.error("Error checking final exam:", error);
+            // Fallback: assume no final exam if API fails
+            setHasFinalExam(false);
+          }
+        }
       }
     })();
-  }, [router, wdt_ID]);
+  }, [wdt_ID]);
+
+  const handleGoToFinalExam = () => {
+    if (coursesPackageId) {
+      router.push(`/en/student/${wdt_ID}/finalexam/${coursesPackageId}`);
+    }
+  };
+
+  const handleGoToLearn = async () => {
+    // Show loading state
+    setIsRedirecting(true);
+
+    // Redirect to FIRST course/chapter to re-learn from beginning
+    console.log("🔍 Re-Learn Course clicked!");
+    console.log("📊 Student ID (wdt_ID):", wdt_ID);
+
+    const packageData = await getPackageData(wdt_ID);
+    console.log("📦 Package Data:", packageData);
+
+    if (packageData?.activePackage?.courses?.[0]?.chapters?.[0]) {
+      const firstCourse = packageData.activePackage.courses[0];
+      const firstChapter = firstCourse.chapters[0];
+
+      const reLearnUrl = `/en/student/${wdt_ID}/${firstCourse.id}/${firstChapter.id}?isClicked=true`;
+      console.log("✅ First Course ID:", firstCourse.id);
+      console.log("✅ First Chapter ID:", firstChapter.id);
+      console.log("🚀 Hard redirecting to first chapter:", reLearnUrl);
+
+      // Use window.location.href for full page reload (not router.push)
+      window.location.href = reLearnUrl;
+    } else {
+      console.log("❌ No courses/chapters found, redirecting to course list");
+      console.log("🚀 Course List URL:", `/en/student/${wdt_ID}`);
+      // Fallback to course list
+      window.location.href = `/en/student/${wdt_ID}`;
+    }
+  };
+
+  const handleChangePackage = () => {
+    router.push(`/en/student`);
+  };
 
   return (
     <AnimatePresence>
       <motion.div
-        className="flex flex-col items-center justify-center min-h-[50vh] rounded-xl"
+        className="flex flex-col items-center justify-center min-h-[80vh] p-8 gap-8"
         style={{
-          background: themeColors.secondaryBg,
+          background: themeColors.bg,
         }}
         variants={itemVariants}
         initial="hidden"
         animate="visible"
       >
-        <Tooltip>
-          <TooltipTrigger asChild>
+        {/* Celebration Icon */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        >
+          <div
+            className="w-32 h-32 rounded-full flex items-center justify-center"
+            style={{
+              background: `linear-gradient(135deg, ${themeColors.button}20, ${themeColors.link}20)`,
+              border: `4px solid ${themeColors.button}`,
+            }}
+          >
             <svg
-              className="w-12 h-12 mb-4"
-              style={{ color: themeColors.link }}
+              className="w-20 h-20"
+              style={{ color: themeColors.button }}
               fill="none"
               stroke="currentColor"
-              strokeWidth={2.5}
+              strokeWidth={3}
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-          </TooltipTrigger>
-          <TooltipContent
-            style={{
-              background: themeColors.secondaryBg,
-              color: themeColors.text,
-              borderColor: themeColors.hint,
-            }}
+          </div>
+        </motion.div>
+
+        {/* Completion Message */}
+        <div className="text-center space-y-4 max-w-lg">
+          <h2
+            className="text-3xl font-bold"
+            style={{ color: themeColors.text }}
           >
+            🎉 Congratulations!
+          </h2>
+          <p
+            className="text-xl font-semibold"
+            style={{ color: themeColors.text }}
+          >
+            Thank you for finishing this course
+          </p>
+          <p className="text-base" style={{ color: themeColors.hint }}>
             {message}
-          </TooltipContent>
-        </Tooltip>
-        <span
-          className="text-xl font-bold text-center"
-          style={{ color: themeColors.text }}
-        >
-          {message}
-        </span>
+          </p>
+        </div>
+
+        {/* Show buttons only when we know if package is completed */}
+        {isPackageCompleted && hasFinalExam !== null && (
+          <motion.div
+            className="flex flex-col gap-4 w-full max-w-md mt-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            {hasFinalExam ? (
+              <>
+                <p
+                  className="text-center text-sm font-medium mb-2"
+                  style={{ color: themeColors.hint }}
+                >
+                  A final exam is available for this course
+                </p>
+                <Button
+                  onClick={handleGoToFinalExam}
+                  className="w-full text-lg py-7 font-bold shadow-lg hover:shadow-xl transition-all"
+                  style={{
+                    background: themeColors.button,
+                    color: themeColors.buttonText,
+                  }}
+                >
+                  <BookOpen className="mr-2 h-6 w-6" />
+                  Take Final Exam
+                </Button>
+                {/* View Courses button - Opens sidebar on mobile */}
+                {onOpenSidebar && !isRedirecting && (
+                  <Button
+                    onClick={onOpenSidebar}
+                    variant="outline"
+                    className="w-full text-base py-6 font-semibold lg:hidden"
+                    style={{
+                      borderColor: themeColors.link,
+                      color: themeColors.link,
+                    }}
+                  >
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    View All Courses
+                  </Button>
+                )}
+                <Button
+                  onClick={handleChangePackage}
+                  disabled={isRedirecting}
+                  variant="outline"
+                  className="w-full text-base py-6 font-semibold"
+                  style={{
+                    borderColor: themeColors.hint,
+                    color: themeColors.text,
+                    opacity: isRedirecting ? 0.5 : 1,
+                  }}
+                >
+                  <RefreshCw className="mr-2 h-5 w-5" />
+                  Change Course Package
+                </Button>
+              </>
+            ) : (
+              <>
+                <p
+                  className="text-center text-sm font-medium mb-2"
+                  style={{ color: themeColors.hint }}
+                >
+                  No exam is required for this course
+                </p>
+                <Button
+                  onClick={handleGoToLearn}
+                  disabled={isRedirecting}
+                  className="w-full text-lg py-7 font-bold shadow-lg hover:shadow-xl transition-all"
+                  style={{
+                    background: themeColors.button,
+                    color: themeColors.buttonText,
+                    opacity: isRedirecting ? 0.7 : 1,
+                  }}
+                >
+                  {isRedirecting ? (
+                    <>
+                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-6 w-6" />
+                      Re-Learn Course
+                    </>
+                  )}
+                </Button>
+                {/* View Courses button - Opens sidebar on mobile */}
+                {onOpenSidebar && !isRedirecting && (
+                  <Button
+                    onClick={onOpenSidebar}
+                    variant="outline"
+                    className="w-full text-base py-6 font-semibold lg:hidden"
+                    style={{
+                      borderColor: themeColors.link,
+                      color: themeColors.link,
+                    }}
+                  >
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    View All Courses
+                  </Button>
+                )}
+                <Button
+                  onClick={handleChangePackage}
+                  disabled={isRedirecting}
+                  variant="outline"
+                  className="w-full text-base py-6 font-semibold"
+                  style={{
+                    borderColor: themeColors.hint,
+                    color: themeColors.text,
+                    opacity: isRedirecting ? 0.5 : 1,
+                  }}
+                >
+                  <Home className="mr-2 h-5 w-5" />
+                  Change Course Package
+                </Button>
+              </>
+            )}
+          </motion.div>
+        )}
       </motion.div>
     </AnimatePresence>
   );

@@ -215,6 +215,23 @@ export default function Page() {
 
   const [pendingChoice, setPendingChoice] = useState<string | null>(null);
 
+  // Check if coming from re-learning (prevent auto-redirect)
+  const [preventRedirect, setPreventRedirect] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const isClicked = searchParams.get("isClicked");
+
+      if (isClicked === "true") {
+        console.log("🔄 Re-learning mode detected - preventing auto-redirect");
+        setPreventRedirect(true);
+        // Clean URL
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, []);
+
   // Use professional Telegram theme hook
   const theme = useTelegramTheme();
 
@@ -293,11 +310,12 @@ export default function Page() {
   const chooseData =
     hasData(startRes) && startRes.data.mode === "choose" ? startRes.data : null;
 
-  // Auto-redirect when there is a single package path
+  // Auto-redirect when there is a single package path (unless preventing redirect)
   useEffect(() => {
-    if (!singleData) return;
+    if (!singleData || preventRedirect) return;
+    console.log("🚀 Auto-redirecting to active course:", singleData.url);
     window.location.href = singleData.url;
-  }, [singleData]);
+  }, [singleData, preventRedirect]);
 
   // Professional theme utilities with memoization for performance
   const themeColors = useMemo(() => {
@@ -359,25 +377,14 @@ export default function Page() {
         }
       `}</style>
 
-      {/* Profile Header */}
-      {chatId && chooseData && chooseData.students.length === 1 && (
-        <ProfileHeader
-          name={chooseData.students[0].name || "Student"}
-          role="Student"
-          chatId={chatId}
-          themeColors={{
-            bg: getBgColor(),
-            text: getTextColor(),
-            hint: getHintColor(),
-            link: getLinkColor(),
-            button: getButtonColor(),
-            buttonText: getButtonTextColor(),
-            secondaryBg: getSecondaryBgColor(),
-          }}
-        />
-      )}
-
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
+      <div
+        style={{
+          maxWidth: 900,
+          margin: "0 auto",
+          padding: 16,
+          paddingBottom: "120px",
+        }}
+      >
         {!chatId && (
           <div
             style={{
@@ -757,6 +764,29 @@ export default function Page() {
             )}
           </div>
         )}
+
+        {/* Fixed ProfileHeader at Bottom */}
+        {chatId &&
+          !loading &&
+          chooseData &&
+          chooseData.students.length === 1 && (
+            <div className="fixed bottom-0 left-0 right-0 z-50">
+              <ProfileHeader
+                name={chooseData.students[0].name || "Student"}
+                role="Student"
+                chatId={chatId}
+                themeColors={{
+                  bg: getBgColor(),
+                  text: getTextColor(),
+                  hint: getHintColor(),
+                  link: getLinkColor(),
+                  button: getButtonColor(),
+                  buttonText: getButtonTextColor(),
+                  secondaryBg: getSecondaryBgColor(),
+                }}
+              />
+            </div>
+          )}
       </div>
     </div>
   );
