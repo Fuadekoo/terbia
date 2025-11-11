@@ -774,11 +774,11 @@ function Page() {
 
                     {/* Video Player Section */}
                     <div
-                      className="flex-shrink-0 w-full flex justify-center items-center px-2 lg:px-4"
+                      className="flex-shrink-0 w-full flex justify-center items-center px-0"
                       style={{ background: "#000000" }}
                     >
                       {data && "chapter" in data && data.chapter?.videoUrl ? (
-                        <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
+                        <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto lg:max-w-[1200px]">
                           <iframe
                             className="w-full h-full"
                             src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
