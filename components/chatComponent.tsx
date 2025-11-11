@@ -126,7 +126,7 @@ export default function ChatComponent({ packageId, themeColors }: ChatComponentP
                 className="text-sm font-medium"
                 style={{ color: textColor }}
               >
-                AI is processing your question...
+                Darelkubra AI is processing your question...
               </span>
               <span 
                 className="text-sm font-medium"
