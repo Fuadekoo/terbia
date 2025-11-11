@@ -759,12 +759,12 @@ function Page() {
                 style={{ background: themeColors.bg }}
               >
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col overflow-hidden lg:overflow-y-auto">
+                <div className="flex-1 flex flex-col overflow-hidden lg:flex-row lg:overflow-hidden">
                   {/* Black Header Bar - Prevents video overlap with status bar */}
                   <div
                     className="flex-shrink-0 w-full portrait:block landscape:hidden"
                     style={{
-                      background: "#000000",
+                      background: themeColors.bg,
                       height:
                         "calc(max(env(safe-area-inset-top), 20px) + 40px)",
                       minHeight: "60px",
@@ -773,9 +773,9 @@ function Page() {
 
                   {/* Video Player Section */}
                   <div
-                    className="flex-shrink-0 w-full landscape:h-screen landscape:flex landscape:items-center landscape:justify-center"
+                    className="flex-shrink-0 w-full landscape:h-screen landscape:flex landscape:items-center landscape:justify-center lg:w-3/5 lg:h-full lg:max-h-screen lg:landscape:h-full lg:flex lg:items-start lg:justify-center"
                     style={{
-                      background: "#000000",
+                      background: themeColors.bg,
                     }}
                   >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
