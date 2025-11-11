@@ -774,50 +774,52 @@ function Page() {
 
                     {/* Video Player Section */}
                     <div
-                      className="flex-shrink-0 w-full flex justify-center items-center px-0"
+                      className="flex-shrink-0 w-full flex justify-center items-center"
                       style={{ background: "#000000" }}
                     >
-                      {data && "chapter" in data && data.chapter?.videoUrl ? (
-                        <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto lg:max-w-[1200px]">
-                          <iframe
-                            className="w-full h-full"
-                            src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
-                            title="Darulkubra video player"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            referrerPolicy="strict-origin-when-cross-origin"
-                            allowFullScreen
-                            aria-label="Chapter video player"
+                      <div className="w-full max-w-[1200px]">
+                        {data && "chapter" in data && data.chapter?.videoUrl ? (
+                          <div className="w-full aspect-video">
+                            <iframe
+                              className="w-full h-full"
+                              src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
+                              title="Darulkubra video player"
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              referrerPolicy="strict-origin-when-cross-origin"
+                              allowFullScreen
+                              aria-label="Chapter video player"
+                              style={{
+                                display: "block",
+                                border: "none",
+                              }}
+                            />
+                          </div>
+                        ) : data &&
+                          "chapter" in data &&
+                          data?.chapter?.customVideo ? (
+                          <div className="w-full aspect-video">
+                            <CourseTopOverview
+                              video={data?.chapter?.customVideo}
+                              themeColors={themeColors}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className="w-full aspect-video flex items-center justify-center"
                             style={{
-                              display: "block",
-                              border: "none",
+                              background: "#111827",
                             }}
-                          />
-                        </div>
-                      ) : data &&
-                        "chapter" in data &&
-                        data?.chapter?.customVideo ? (
-                        <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
-                          <CourseTopOverview
-                            video={data?.chapter?.customVideo}
-                            themeColors={themeColors}
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto flex items-center justify-center"
-                          style={{
-                            background: "#111827",
-                          }}
-                        >
-                          <span
-                            className="text-xl font-semibold"
-                            style={{ color: themeColors.hint }}
                           >
-                            No video available
-                          </span>
-                        </div>
-                      )}
+                            <span
+                              className="text-xl font-semibold"
+                              style={{ color: themeColors.hint }}
+                            >
+                              No video available
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Content Tabs Area */}
@@ -1183,8 +1185,6 @@ function Page() {
                   }}
                 >
                   <div className="h-full flex flex-col">
-                    
-
                     {/* Sidebar Tabs */}
                     <div
                       className="border-b flex-shrink-0"
