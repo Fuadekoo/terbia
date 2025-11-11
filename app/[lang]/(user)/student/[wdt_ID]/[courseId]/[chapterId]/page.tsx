@@ -759,8 +759,8 @@ function Page() {
                 style={{ background: themeColors.bg }}
               >
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col overflow-hidden lg:flex-row lg:overflow-hidden">
-                  <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex-1 flex flex-col overflow-y-auto lg:flex-row">
+                  <div className="flex-1 flex flex-col overflow-y-auto">
                     {/* Black Header Bar - Prevents video overlap with status bar */}
                     <div
                       className="flex-shrink-0 w-full portrait:block landscape:hidden"
@@ -775,7 +775,7 @@ function Page() {
                     {/* Video Player Section */}
                     <div
                       className="flex-shrink-0 w-full flex justify-center items-center px-2 lg:px-4"
-                      style={{ background: themeColors.bg }}
+                      style={{ background: "#000000" }}
                     >
                       {data && "chapter" in data && data.chapter?.videoUrl ? (
                         <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
