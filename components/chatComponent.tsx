@@ -19,7 +19,10 @@ interface ChatComponentProps {
   };
 }
 
-export default function ChatComponent({ packageId, themeColors }: ChatComponentProps) {
+export default function ChatComponent({
+  packageId,
+  themeColors,
+}: ChatComponentProps) {
   // Use Telegram theme colors or defaults
   const bgColor = themeColors?.bg || "#ffffff";
   const textColor = themeColors?.text || "#000000";
@@ -34,7 +37,6 @@ export default function ChatComponent({ packageId, themeColors }: ChatComponentP
   const [loading, setLoading] = useState(false);
   const [currentAiProvider, setCurrentAiProvider] = useState<string>("");
   const [progress, setProgress] = useState(0);
-  
 
   const handleAsk = async () => {
     setLoading(true);
@@ -69,12 +71,12 @@ export default function ChatComponent({ packageId, themeColors }: ChatComponentP
   };
 
   return (
-    <Card 
+    <Card
       className="w-full max-w-2xl mx-auto border-0 shadow-none"
       style={{ background: bgColor }}
     >
       <CardHeader style={{ background: secondaryBg }} className="rounded-t-lg">
-        <CardTitle 
+        <CardTitle
           className="flex items-center gap-2"
           style={{ color: textColor }}
         >
@@ -82,10 +84,7 @@ export default function ChatComponent({ packageId, themeColors }: ChatComponentP
           Ask Darelkubra AI
         </CardTitle>
       </CardHeader>
-      <CardContent 
-        className="space-y-4 pt-4"
-        style={{ background: bgColor }}
-      >
+      <CardContent className="space-y-4 pt-4" style={{ background: bgColor }}>
         <div className="flex gap-2">
           <Input
             type="text"
@@ -119,35 +118,34 @@ export default function ChatComponent({ packageId, themeColors }: ChatComponentP
           </Button>
         </div>
         {loading && (
-          
           <div className="mt-4">
             <div className="flex justify-between items-center mb-2">
-              <span 
+              <span
                 className="text-sm font-medium"
                 style={{ color: textColor }}
               >
                 Darelkubra AI is processing your question...
               </span>
-              <span 
+              <span
                 className="text-sm font-medium"
                 style={{ color: linkColor }}
               >
                 {progress}%
               </span>
             </div>
-            <div 
+            <div
               className="rounded-full h-3"
               style={{ background: `${hintColor}30` }}
             >
               <div
                 className="h-3 rounded-full transition-all duration-300 ease-out"
-                style={{ 
+                style={{
                   width: `${progress}%`,
                   background: linkColor,
                 }}
               ></div>
             </div>
-            <p 
+            <p
               className="text-xs mt-1 text-center"
               style={{ color: hintColor }}
             >
@@ -158,25 +156,24 @@ export default function ChatComponent({ packageId, themeColors }: ChatComponentP
               {progress >= 75 && progress < 90 && "Finalizing answer..."}
               {progress >= 90 && progress < 100 && "Almost done..."}
               {progress === 100 && "Complete!"}
-            
             </p>
           </div>
         )}
         {answer && (
-          <div 
+          <div
             className="mt-4 p-4 rounded-lg border"
             style={{
               background: secondaryBg,
               borderColor: `${linkColor}30`,
             }}
           >
-            <h3 
+            <h3
               className="font-semibold text-sm mb-2"
               style={{ color: linkColor }}
             >
-              Answer {currentAiProvider && `(MelaverseAI)`}:
+              Answer {currentAiProvider && `(Darelkubra AI)`}:
             </h3>
-            <p 
+            <p
               className="whitespace-pre-wrap leading-relaxed"
               style={{ color: textColor }}
             >
