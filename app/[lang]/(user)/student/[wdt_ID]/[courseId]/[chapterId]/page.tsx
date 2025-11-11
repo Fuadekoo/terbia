@@ -777,9 +777,9 @@ function Page() {
                       className="flex-shrink-0 w-full flex justify-center items-center"
                       style={{ background: "#000000" }}
                     >
-                      <div className="w-full max-w-[1200px]">
+                      <div className="w-full">
                         {data && "chapter" in data && data.chapter?.videoUrl ? (
-                          <div className="w-full aspect-video">
+                          <div className="w-full aspect-video lg:h-full lg:aspect-auto">
                             <iframe
                               className="w-full h-full"
                               src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
@@ -798,7 +798,7 @@ function Page() {
                         ) : data &&
                           "chapter" in data &&
                           data?.chapter?.customVideo ? (
-                          <div className="w-full aspect-video">
+                          <div className="w-full aspect-video lg:h-full lg:aspect-auto">
                             <CourseTopOverview
                               video={data?.chapter?.customVideo}
                               themeColors={themeColors}
@@ -806,7 +806,7 @@ function Page() {
                           </div>
                         ) : (
                           <div
-                            className="w-full aspect-video flex items-center justify-center"
+                            className="w-full aspect-video lg:h-full lg:aspect-auto flex items-center justify-center"
                             style={{
                               background: "#111827",
                             }}
