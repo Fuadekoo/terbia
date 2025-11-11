@@ -760,6 +760,7 @@ function Page() {
               >
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden lg:flex-row lg:overflow-hidden">
+                  <div className="flex-1 flex flex-col overflow-hidden">
                   {/* Black Header Bar - Prevents video overlap with status bar */}
                   <div
                     className="flex-shrink-0 w-full portrait:block landscape:hidden"
@@ -773,10 +774,8 @@ function Page() {
 
                   {/* Video Player Section */}
                   <div
-                    className="flex-shrink-0 w-full landscape:h-screen landscape:flex landscape:items-center landscape:justify-center lg:w-3/5 lg:h-full lg:max-h-screen lg:landscape:h-full lg:flex lg:items-start lg:justify-center"
-                    style={{
-                      background: themeColors.bg,
-                    }}
+                    className="flex-shrink-0 w-full flex justify-center items-center px-2 lg:px-4"
+                    style={{ background: themeColors.bg }}
                   >
                     {data && "chapter" in data && data.chapter?.videoUrl ? (
                       <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
@@ -826,12 +825,10 @@ function Page() {
                     "chapter" in data &&
                     data.chapter &&
                     Array.isArray(data.chapter.questions) && (
-                      <>
-                        {/* Mobile / Tablet layout */}
-                        <div
-                          className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative portrait:flex landscape:hidden lg:hidden"
-                          style={{ background: themeColors.bg }}
-                        >
+                      <div
+                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative"
+                        style={{ background: themeColors.bg }}
+                      >
                           <Tabs
                             value={activeTab}
                             onValueChange={setActiveTab}
@@ -946,7 +943,7 @@ function Page() {
 
                             {/* Mobile bottom nav */}
                             <div
-                              className="fixed bottom-0 left-0 right-0 z-50"
+                              className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
                               style={{
                                 background: themeColors.bg,
                                 boxShadow: `0 -2px 10px ${themeColors.secondaryBg}40`,
@@ -1098,176 +1095,8 @@ function Page() {
                             </div>
                           </Tabs>
                         </div>
-
-                        {/* Desktop layout */}
-                        <div
-                          className="hidden lg:flex flex-1 flex-col overflow-hidden lg:overflow-visible relative"
-                          style={{ background: themeColors.bg }}
-                        >
-                          <Tabs
-                            value={activeTab}
-                            onValueChange={setActiveTab}
-                            className="h-full flex flex-col"
-                          >
-                            <div
-                              className="border-b"
-                              style={{
-                                background: themeColors.bg,
-                                borderColor: themeColors.secondaryBg,
-                              }}
-                            >
-                              <TabsList
-                                className="flex justify-start gap-2 bg-transparent p-2 w-full h-auto"
-                                style={{ background: "transparent" }}
-                              >
-                                <TabsTrigger
-                                  value="quiz"
-                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
-                                  style={{
-                                    color: themeColors.hint,
-                                    background: "transparent",
-                                    borderColor: themeColors.secondaryBg,
-                                  }}
-                                >
-                                  <BookOpen className="w-4 h-4" />
-                                  <span>Quiz</span>
-                                </TabsTrigger>
-                                <TabsTrigger
-                                  value="qna"
-                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
-                                  style={{
-                                    color: themeColors.hint,
-                                    background: "transparent",
-                                    borderColor: themeColors.secondaryBg,
-                                  }}
-                                >
-                                  <MessageCircle className="w-4 h-4" />
-                                  <span>Q&A</span>
-                                </TabsTrigger>
-                                <TabsTrigger
-                                  value="feedback"
-                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
-                                  style={{
-                                    color: themeColors.hint,
-                                    background: "transparent",
-                                    borderColor: themeColors.secondaryBg,
-                                  }}
-                                >
-                                  <MessageSquare className="w-4 h-4" />
-                                  <span>Feedback</span>
-                                </TabsTrigger>
-                                <TabsTrigger
-                                  value="materials"
-                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
-                                  style={{
-                                    color: themeColors.hint,
-                                    background: "transparent",
-                                    borderColor: themeColors.secondaryBg,
-                                  }}
-                                >
-                                  <BookOpen className="w-4 h-4" />
-                                  <span>Materials</span>
-                                </TabsTrigger>
-                                <TabsTrigger
-                                  value="announcements"
-                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
-                                  style={{
-                                    color: themeColors.hint,
-                                    background: "transparent",
-                                    borderColor: themeColors.secondaryBg,
-                                  }}
-                                >
-                                  <Newspaper className="w-4 h-4" />
-                                  <span>Announcements</span>
-                                </TabsTrigger>
-                              </TabsList>
-                            </div>
-
-                            <div
-                              className="flex-1 overflow-y-auto pb-4"
-                              style={{ background: themeColors.bg }}
-                            >
-                              <div
-                                className="px-4 py-4"
-                                style={{ background: themeColors.bg }}
-                              >
-                                <TabsContent
-                                  value="quiz"
-                                  style={{
-                                    background: themeColors.bg,
-                                    color: themeColors.text,
-                                  }}
-                                >
-                                  <StudentQuestionForm
-                                    chapter={{
-                                      questions: data.chapter.questions,
-                                    }}
-                                    wdt_ID={wdt_ID}
-                                    courseId={courseId}
-                                    chapterId={data.chapter.id}
-                                    themeColors={themeColors}
-                                  />
-                                </TabsContent>
-                                <TabsContent
-                                  value="qna"
-                                  className="h-full overflow-y-auto"
-                                  style={{
-                                    background: themeColors.bg,
-                                    color: themeColors.text,
-                                  }}
-                                >
-                                  <TraditionalQA
-                                    packageId={data.packageId}
-                                    lang={lang}
-                                    studentId={wdt_ID}
-                                    themeColors={themeColors}
-                                  />
-                                </TabsContent>
-                                <TabsContent
-                                  value="feedback"
-                                  style={{
-                                    background: themeColors.bg,
-                                    color: themeColors.text,
-                                  }}
-                                >
-                                  <CourseFeedback
-                                    studentId={wdt_ID}
-                                    courseId={data.packageId}
-                                    lang={lang}
-                                    themeColors={themeColors}
-                                  />
-                                </TabsContent>
-                                <TabsContent
-                                  value="materials"
-                                  style={{
-                                    background: themeColors.bg,
-                                    color: themeColors.text,
-                                  }}
-                                >
-                                  <CourseMaterials
-                                    courseId={data.packageId}
-                                    lang={lang}
-                                  />
-                                </TabsContent>
-                                <TabsContent
-                                  value="announcements"
-                                  style={{
-                                    background: themeColors.bg,
-                                    color: themeColors.text,
-                                  }}
-                                >
-                                  <CourseAnnouncements
-                                    courseId={data.packageId}
-                                    lang={lang}
-                                    themeColors={themeColors}
-                                  />
-                                </TabsContent>
-                              </div>
-                            </div>
-                          </Tabs>
-                        </div>
-                      </>
                     )}
+                  </div>
                 </div>
 
                 {/* Sticky Right Sidebar - Desktop Only, Hidden in Landscape */}
