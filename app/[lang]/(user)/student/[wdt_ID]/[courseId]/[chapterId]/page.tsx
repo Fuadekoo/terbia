@@ -761,79 +761,154 @@ function Page() {
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden lg:flex-row lg:overflow-hidden">
                   <div className="flex-1 flex flex-col overflow-hidden">
-                  {/* Black Header Bar - Prevents video overlap with status bar */}
-                  <div
-                    className="flex-shrink-0 w-full portrait:block landscape:hidden"
-                    style={{
-                      background: themeColors.bg,
-                      height:
-                        "calc(max(env(safe-area-inset-top), 20px) + 40px)",
-                      minHeight: "60px",
-                    }}
-                  />
+                    {/* Black Header Bar - Prevents video overlap with status bar */}
+                    <div
+                      className="flex-shrink-0 w-full portrait:block landscape:hidden"
+                      style={{
+                        background: themeColors.bg,
+                        height:
+                          "calc(max(env(safe-area-inset-top), 20px) + 40px)",
+                        minHeight: "60px",
+                      }}
+                    />
 
-                  {/* Video Player Section */}
-                  <div
-                    className="flex-shrink-0 w-full flex justify-center items-center px-2 lg:px-4"
-                    style={{ background: themeColors.bg }}
-                  >
-                    {data && "chapter" in data && data.chapter?.videoUrl ? (
-                      <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
-                        <iframe
-                          className="w-full h-full"
-                          src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
-                          title="Darulkubra video player"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          referrerPolicy="strict-origin-when-cross-origin"
-                          allowFullScreen
-                          aria-label="Chapter video player"
+                    {/* Video Player Section */}
+                    <div
+                      className="flex-shrink-0 w-full flex justify-center items-center px-2 lg:px-4"
+                      style={{ background: themeColors.bg }}
+                    >
+                      {data && "chapter" in data && data.chapter?.videoUrl ? (
+                        <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
+                          <iframe
+                            className="w-full h-full"
+                            src={`https://www.youtube.com/embed/${data.chapter.videoUrl}`}
+                            title="Darulkubra video player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            allowFullScreen
+                            aria-label="Chapter video player"
+                            style={{
+                              display: "block",
+                              border: "none",
+                            }}
+                          />
+                        </div>
+                      ) : data &&
+                        "chapter" in data &&
+                        data?.chapter?.customVideo ? (
+                        <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
+                          <CourseTopOverview
+                            video={data?.chapter?.customVideo}
+                            themeColors={themeColors}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto flex items-center justify-center"
                           style={{
-                            display: "block",
-                            border: "none",
+                            background: "#111827",
                           }}
-                        />
-                      </div>
-                    ) : data &&
-                      "chapter" in data &&
-                      data?.chapter?.customVideo ? (
-                      <div className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto">
-                        <CourseTopOverview
-                          video={data?.chapter?.customVideo}
-                          themeColors={themeColors}
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className="w-full portrait:aspect-video portrait:max-w-4xl landscape:w-full landscape:h-full mx-auto flex items-center justify-center"
-                        style={{
-                          background: "#111827",
-                        }}
-                      >
-                        <span
-                          className="text-xl font-semibold"
-                          style={{ color: themeColors.hint }}
                         >
-                          No video available
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                          <span
+                            className="text-xl font-semibold"
+                            style={{ color: themeColors.hint }}
+                          >
+                            No video available
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Content Tabs Area - Hidden in landscape */}
-                  {data &&
-                    "chapter" in data &&
-                    data.chapter &&
-                    Array.isArray(data.chapter.questions) && (
-                      <div
-                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative"
-                        style={{ background: themeColors.bg }}
-                      >
+                    {/* Content Tabs Area */}
+                    {data &&
+                      "chapter" in data &&
+                      data.chapter &&
+                      Array.isArray(data.chapter.questions) && (
+                        <div
+                          className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative"
+                          style={{ background: themeColors.bg }}
+                        >
                           <Tabs
                             value={activeTab}
                             onValueChange={setActiveTab}
                             className="h-full flex flex-col"
                           >
+                            {/* Desktop Tabs */}
+                            <div
+                              className="hidden lg:block border-t"
+                              style={{
+                                background: themeColors.bg,
+                                borderColor: themeColors.secondaryBg,
+                              }}
+                            >
+                              <TabsList
+                                className="flex justify-start gap-2 bg-transparent px-4 py-3 w-full h-auto"
+                                style={{ background: "transparent" }}
+                              >
+                                <TabsTrigger
+                                  value="quiz"
+                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                  style={{
+                                    color: themeColors.hint,
+                                    background: "transparent",
+                                    borderColor: themeColors.secondaryBg,
+                                  }}
+                                >
+                                  <BookOpen className="w-4 h-4" />
+                                  <span>Quiz</span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="qna"
+                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                  style={{
+                                    color: themeColors.hint,
+                                    background: "transparent",
+                                    borderColor: themeColors.secondaryBg,
+                                  }}
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  <span>Q&A</span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="feedback"
+                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                  style={{
+                                    color: themeColors.hint,
+                                    background: "transparent",
+                                    borderColor: themeColors.secondaryBg,
+                                  }}
+                                >
+                                  <MessageSquare className="w-4 h-4" />
+                                  <span>Feedback</span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="materials"
+                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                  style={{
+                                    color: themeColors.hint,
+                                    background: "transparent",
+                                    borderColor: themeColors.secondaryBg,
+                                  }}
+                                >
+                                  <BookOpen className="w-4 h-4" />
+                                  <span>Materials</span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="announcements"
+                                  className="flex items-center gap-2 px-4 py-2 bg-transparent border rounded-lg data-[state=active]:font-semibold transition-all duration-200"
+                                  style={{
+                                    color: themeColors.hint,
+                                    background: "transparent",
+                                    borderColor: themeColors.secondaryBg,
+                                  }}
+                                >
+                                  <Newspaper className="w-4 h-4" />
+                                  <span>Announcements</span>
+                                </TabsTrigger>
+                              </TabsList>
+                            </div>
+
                             {/* Mobile Content */}
                             <div
                               className="flex-1 overflow-y-auto pb-32"
@@ -1095,7 +1170,7 @@ function Page() {
                             </div>
                           </Tabs>
                         </div>
-                    )}
+                      )}
                   </div>
                 </div>
 
