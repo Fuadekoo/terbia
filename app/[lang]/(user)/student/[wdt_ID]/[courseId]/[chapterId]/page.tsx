@@ -1183,23 +1183,7 @@ function Page() {
                   }}
                 >
                   <div className="h-full flex flex-col">
-                    {/* Sidebar Header */}
-                    <div
-                      className="px-4 py-3 border-b flex-shrink-0"
-                      style={{
-                        background: themeColors.secondaryBg,
-                        borderColor: themeColors.secondaryBg,
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <h3
-                          className="text-sm font-semibold"
-                          style={{ color: themeColors.text }}
-                        >
-                          Course content
-                        </h3>
-                      </div>
-                    </div>
+                    
 
                     {/* Sidebar Tabs */}
                     <div
