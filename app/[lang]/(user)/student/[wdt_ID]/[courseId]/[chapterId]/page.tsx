@@ -843,7 +843,7 @@ function Page() {
                               }}
                             >
                               <TabsList
-                                className="flex justify-start gap-2 bg-transparent px-4 py-3 w-full h-auto"
+                                className="flex justify-center gap-6 bg-transparent px-8 py-4 w-full h-auto"
                                 style={{ background: "transparent" }}
                               >
                                 <TabsTrigger
@@ -1174,9 +1174,9 @@ function Page() {
                   </div>
                 </div>
 
-                {/* Sticky Right Sidebar - Desktop Only, Hidden in Landscape */}
+                {/* Sticky Right Sidebar - Desktop Only */}
                 <div
-                  className="hidden lg:portrait:block w-80 border-l sticky top-0 h-screen overflow-hidden"
+                  className="hidden lg:block w-80 border-l sticky top-0 h-screen overflow-hidden"
                   style={{
                     background: themeColors.bg,
                     borderColor: themeColors.secondaryBg,
