@@ -774,10 +774,10 @@ function Page() {
 
                     {/* Video Player Section */}
                     <div
-                      className="flex-shrink-0 w-full flex justify-between items-center"
+                      className="flex-shrink-0 w-full flex justify-center items-center"
                       style={{ background: "#000000" }}
                     >
-                      <div className="w-full">
+                      <div className="w-full max-w-[1000px]">
                         {data && "chapter" in data && data.chapter?.videoUrl ? (
                           <div className="w-full aspect-video lg:h-full lg:aspect-auto">
                             <iframe
