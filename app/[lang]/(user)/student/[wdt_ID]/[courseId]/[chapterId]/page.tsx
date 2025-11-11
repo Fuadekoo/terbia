@@ -827,7 +827,7 @@ function Page() {
                     data.chapter &&
                     Array.isArray(data.chapter.questions) && (
                       <div
-                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative portrait:flex landscape:hidden"
+                        className="flex-1 flex flex-col overflow-hidden lg:overflow-visible relative portrait:flex landscape:hidden lg:flex lg:landscape:flex"
                         style={{ background: themeColors.bg }}
                       >
                         <Tabs
