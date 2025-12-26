@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { retrieveRawInitData } from "@telegram-apps/sdk";
+import { retrieveLaunchParams } from "@tma.js/sdk";
 import prisma from "./lib/db";
 import dotenv from "dotenv";
 
@@ -28,7 +28,7 @@ export async function startMiniBot() {
 
     try {
       // Get the raw init data from Telegram
-      const initDataRaw = retrieveRawInitData();
+      const initDataRaw = retrieveLaunchParams().initDataRaw;
 
       console.log("Raw init data:", initDataRaw);
 

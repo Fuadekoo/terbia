@@ -7,7 +7,7 @@ import {
   getStudentFlowById,
 } from "@/actions/student/telegram";
 import { Loader2 } from "lucide-react";
-import { retrieveRawInitData } from "@telegram-apps/sdk";
+import { retrieveLaunchParams } from "@tma.js/sdk";
 import { Progress } from "@/components/ui/progress";
 import ProfileHeader from "@/components/custom/student/ProfileHeader";
 
@@ -244,7 +244,7 @@ export default function Page() {
 
       // 1) Prefer initialDataRaw via SDK
       try {
-        const raw = retrieveRawInitData();
+        const raw = retrieveLaunchParams().initDataRaw;
         if (raw) {
           const params = new URLSearchParams(raw);
           const chatJson = params.get("chat") || params.get("user");

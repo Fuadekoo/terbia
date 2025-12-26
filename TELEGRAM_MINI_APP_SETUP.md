@@ -73,8 +73,7 @@ AUTH_URL=your_domain_url
 
 The required packages are already in your `package.json`:
 
-- `@telegram-apps/sdk`
-- `@telegram-apps/sdk-react`
+- `@tma.js/sdk`
 
 ### 3. Start the Services
 

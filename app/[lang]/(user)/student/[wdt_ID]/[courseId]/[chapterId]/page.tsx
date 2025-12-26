@@ -33,7 +33,7 @@ import MainMenu from "@/components/custom/student/bestMenu";
 import TraditionalQA from "@/components/traditionalQA";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { validateStudentAccess } from "@/actions/student/telegram";
-import { retrieveRawInitData } from "@telegram-apps/sdk";
+import { retrieveLaunchParams } from "@tma.js/sdk";
 import Image from "next/image";
 
 // Telegram Theme Types
@@ -255,7 +255,7 @@ function Page() {
     let extractedId: string | null = null;
 
     try {
-      const raw = retrieveRawInitData();
+      const raw = retrieveLaunchParams().initDataRaw;
       if (raw) {
         const p = new URLSearchParams(raw);
         const json = p.get("chat") || p.get("user");
