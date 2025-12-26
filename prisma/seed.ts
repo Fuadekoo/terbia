@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
-
+ 
 (async () => {
   // Seed Admin
   await prisma.admin.create({
