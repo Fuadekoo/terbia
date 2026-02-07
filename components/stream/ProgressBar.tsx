@@ -28,63 +28,48 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
       style={{
         position: "relative",
         flex: 1,
-        height: 6,
+        height: 8,
         display: "flex",
         alignItems: "center",
       }}
     >
-      {/* Background bar */}
+      {/* Background bar (darker sky blue) */}
       <div
         style={{
           position: "absolute",
           left: 0,
           top: 0,
-          height: 6,
+          height: 8,
           width: "100%",
-          background: "rgba(255, 255, 255, 0.3)",
-          borderRadius: 3,
+          background: "rgba(59, 130, 246, 0.3)", // Darker sky blue background
+          borderRadius: 4,
           zIndex: 0,
         }}
       />
-      {/* Buffered bar */}
+      {/* Buffered bar (sky blue) */}
       <div
         style={{
           position: "absolute",
           left: 0,
           top: 0,
-          height: 6,
+          height: 8,
           width: `${bufferedPercent}%`,
-          background: "rgba(255, 255, 255, 0.5)",
-          borderRadius: 3,
+          background: "rgba(59, 130, 246, 0.6)", // Sky blue
+          borderRadius: 4,
           zIndex: 1,
         }}
       />
-      {/* Played bar */}
+      {/* Played bar (bright sky blue) */}
       <div
         style={{
           position: "absolute",
           left: 0,
           top: 0,
-          height: 6,
+          height: 8,
           width: `${playedPercent}%`,
-          background: "rgba(255, 255, 255, 0.8)",
-          borderRadius: 3,
+          background: "rgba(59, 130, 246, 0.9)", // Bright sky blue
+          borderRadius: 4,
           zIndex: 2,
-        }}
-      />
-      {/* Red dot indicator at current position */}
-      <div
-        style={{
-          position: "absolute",
-          left: `${playedPercent}%`,
-          top: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 12,
-          height: 12,
-          background: "#ef4444", // Red color like in image
-          borderRadius: "50%",
-          zIndex: 4,
-          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
         }}
       />
       {/* Range input */}
@@ -99,15 +84,15 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
           background: "transparent",
           position: "relative",
           zIndex: 3,
-          height: 6,
+          height: 8,
           margin: 0,
           padding: 0,
           cursor: "pointer",
           outline: "none",
           WebkitAppearance: "none",
           appearance: "none",
-          WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent", // Fix iPhone touch
+          touchAction: "manipulation", // Fix iPhone touch
         }}
       />
     </div>

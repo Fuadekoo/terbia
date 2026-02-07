@@ -1,58 +1,78 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import fs from "fs";
 import path from "path";
+import {
+  verifyVideoToken,
+  resolveVideoPath,
+  fileExists,
+  getContentTypeByExt,
+} from "@/actions/api/video";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   try {
-    const { file } = req.query;
+    const { file, token } = req.query;
 
-    if (!file || typeof file !== "string") {
-      res.status(400).send("Missing or invalid file parameter");
+    if (
+      !file ||
+      !token ||
+      typeof file !== "string" ||
+      typeof token !== "string"
+    ) {
+      console.error("[Stream] Missing file/token", { file, token });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
-    const safeFile = path.basename(file);
-    const videoPath = path.resolve("./uploads/videos", safeFile);
+    // TODO: Add authentication check here
+    // Verify user has access to this video
 
-    if (!fs.existsSync(videoPath)) {
-      res.status(404).send("File not found");
+    if (!verifyVideoToken(file, token)) {
+      console.error("[Stream] Invalid token", { file });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
-    const stat = fs.statSync(videoPath);
-    const fileSize = stat.size;
+    const fullPath = resolveVideoPath(file);
+    if (!(await fileExists(fullPath))) {
+      console.error("[Stream] File not found", { fullPath });
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+
+    const stat = fs.statSync(fullPath);
+    const ext = path.extname(fullPath).toLowerCase();
+    const contentType = getContentTypeByExt(ext);
+
     const range = req.headers.range;
-
-    res.setHeader("Accept-Ranges", "bytes");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-
-    // ✅ Safari fix — handle both range and full requests
     if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const [startStr, endStr] = range.replace("bytes=", "").split("-");
+      const start = parseInt(startStr, 10);
+      const end = endStr ? parseInt(endStr, 10) : stat.size - 1;
       const chunkSize = end - start + 1;
-      const file = fs.createReadStream(videoPath, { start, end });
 
       res.writeHead(206, {
-        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Content-Range": `bytes ${start}-${end}/${stat.size}`,
+        "Accept-Ranges": "bytes",
         "Content-Length": chunkSize,
-        "Content-Type": "video/mp4",
+        "Content-Type": contentType,
       });
 
-      file.pipe(res);
-    } else {
-      // ✅ Safari fallback — send entire file
-      res.writeHead(200, {
-        "Content-Length": fileSize,
-        "Content-Type": "video/mp4",
-      });
-
-      fs.createReadStream(videoPath).pipe(res);
+      fs.createReadStream(fullPath, { start, end }).pipe(res);
+      return;
     }
+
+    res.writeHead(200, {
+      "Content-Length": stat.size,
+      "Content-Type": contentType,
+      "Accept-Ranges": "bytes",
+    });
+
+    fs.createReadStream(fullPath).pipe(res);
   } catch (error) {
-    console.error("Stream error:", error);
-    res.status(500).send("Internal server error");
+    console.error("[Stream] Internal error", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }
