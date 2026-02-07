@@ -158,8 +158,20 @@ export default function QualitySelector({
           e.currentTarget.style.background = "transparent";
         }}
       >
-        <ChevronLeft size={16} style={{ marginRight: "8px", color: "rgba(0, 0, 0, 0.7)" }} />
-        <span style={{ fontSize: "14px", fontWeight: 500, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>Quality</span>
+        <ChevronLeft
+          size={16}
+          style={{ marginRight: "8px", color: "rgba(0, 0, 0, 0.7)" }}
+        />
+        <span
+          style={{
+            fontSize: "14px",
+            fontWeight: 500,
+            fontFamily:
+              "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          }}
+        >
+          Quality
+        </span>
       </div>
 
       {/* Quality Options */}
@@ -179,83 +191,84 @@ export default function QualitySelector({
           .map((quality) => {
             const isSelected = displayQuality === quality.value;
             return (
-            <div
-              key={quality.value}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (quality.value !== "loading") {
-                  onQualityChange(quality.value);
-                  // Stay on the selector menu to show the selection
-                }
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "12px 16px",
-                cursor: "pointer",
-                transition: "background 0.2s",
-                backgroundColor: "transparent",
-              }}
-              onMouseEnter={(e) => {
-                if (!isSelected) {
-                e.currentTarget.style.background = "rgba(0, 0, 0, 0.05)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
-            >
-              {/* Radio Button - Always visible, YouTube-style */}
               <div
+                key={quality.value}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (quality.value !== "loading") {
+                    onQualityChange(quality.value);
+                    // Stay on the selector menu to show the selection
+                  }
+                }}
                 style={{
-                  width: "18px",
-                  height: "18px",
-                  minWidth: "18px",
-                  minHeight: "18px",
-                  borderRadius: "50%",
-                  border: isSelected
-                    ? "2px solid rgba(59, 130, 246, 1)"
-                    : "2px solid rgba(0, 0, 0, 0.3)",
-                  marginRight: "12px",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  position: "relative",
-                  backgroundColor: isSelected
-                    ? "rgba(59, 130, 246, 1)"
-                    : "transparent",
-                  flexShrink: 0,
-                  transition: "all 0.2s ease",
-                  boxSizing: "border-box",
+                  padding: "12px 16px",
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                  backgroundColor: "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.background = "rgba(0, 0, 0, 0.05)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
                 }}
               >
-                {isSelected && (
-                  <div
-                    style={{
-                      width: "8px",
-                      height: "8px",
-                      minWidth: "8px",
-                      minHeight: "8px",
-                      borderRadius: "50%",
-                      background: "#ffffff",
-                      display: "block",
-                    }}
-                  />
-                )}
-              </div>
-              <span
-                style={{
-                  fontSize: "14px",
-                  color: isSelected
-                    ? "rgba(0, 0, 0, 0.9)"
+                {/* Radio Button - Always visible, YouTube-style */}
+                <div
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    minWidth: "18px",
+                    minHeight: "18px",
+                    borderRadius: "50%",
+                    border: isSelected
+                      ? "2px solid rgba(59, 130, 246, 1)"
+                      : "2px solid rgba(0, 0, 0, 0.3)",
+                    marginRight: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "relative",
+                    backgroundColor: isSelected
+                      ? "rgba(59, 130, 246, 1)"
+                      : "transparent",
+                    flexShrink: 0,
+                    transition: "all 0.2s ease",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  {isSelected && (
+                    <div
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        minWidth: "8px",
+                        minHeight: "8px",
+                        borderRadius: "50%",
+                        background: "#ffffff",
+                        display: "block",
+                      }}
+                    />
+                  )}
+                </div>
+                <span
+                  style={{
+                    fontSize: "14px",
+                    color: isSelected
+                      ? "rgba(0, 0, 0, 0.9)"
                       : "rgba(0, 0, 0, 0.7)",
-                  fontWeight: isSelected ? 500 : 400,
-                  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                }}
-              >
-                {quality.label}
-              </span>
-            </div>
+                    fontWeight: isSelected ? 500 : 400,
+                    fontFamily:
+                      "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                  }}
+                >
+                  {quality.label}
+                </span>
+              </div>
             );
           })
       )}

@@ -101,10 +101,25 @@ export default function SettingsMenu({
         }}
       >
         <div>
-          <div style={{ fontSize: "14px", fontWeight: 500, marginBottom: "2px", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: 500,
+              marginBottom: "2px",
+              fontFamily:
+                "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            }}
+          >
             Quality
           </div>
-          <div style={{ fontSize: "12px", color: "rgba(0, 0, 0, 0.6)", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+          <div
+            style={{
+              fontSize: "12px",
+              color: "rgba(0, 0, 0, 0.6)",
+              fontFamily:
+                "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            }}
+          >
             {getQualityLabel()}
           </div>
         </div>
@@ -133,10 +148,25 @@ export default function SettingsMenu({
         }}
       >
         <div>
-          <div style={{ fontSize: "14px", fontWeight: 500, marginBottom: "2px", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: 500,
+              marginBottom: "2px",
+              fontFamily:
+                "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            }}
+          >
             Speed
           </div>
-          <div style={{ fontSize: "12px", color: "rgba(0, 0, 0, 0.6)", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+          <div
+            style={{
+              fontSize: "12px",
+              color: "rgba(0, 0, 0, 0.6)",
+              fontFamily:
+                "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            }}
+          >
             {getSpeedLabel(currentSpeed)}
           </div>
         </div>
@@ -145,4 +175,3 @@ export default function SettingsMenu({
     </div>
   );
 }
-
