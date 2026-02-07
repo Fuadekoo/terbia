@@ -3,9 +3,15 @@ import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 
-const UPLOAD_DIR = path.join(process.cwd(), "uploads");
-const COURSE_DIR = path.join(UPLOAD_DIR, "videos");
-const JOBS_DIR = path.join(UPLOAD_DIR, "jobs");
+export const getVideoStorageDir = () => {
+  const baseDir = process.env.VIDEO_STORAGE_DIR || "uploads/videos";
+  return path.resolve(process.cwd(), baseDir);
+};
+
+export const getJobsStorageDir = () => {
+  const baseDir = process.env.VIDEO_JOBS_DIR || "uploads/jobs";
+  return path.resolve(process.cwd(), baseDir);
+};
 
 type HlsJobStatus = "pending" | "processing" | "completed" | "failed";
 
@@ -28,14 +34,15 @@ const ensureDir = (dir: string) => {
 };
 
 const writeJob = (job: HlsJob) => {
-  ensureDir(JOBS_DIR);
-  const filePath = path.join(JOBS_DIR, `${job.id}.json`);
+  const jobsDir = getJobsStorageDir();
+  ensureDir(jobsDir);
+  const filePath = path.join(jobsDir, `${job.id}.json`);
   fs.writeFileSync(filePath, JSON.stringify(job, null, 2));
 };
 
 export const getJobStatus = (jobId: string): HlsJob | null => {
   try {
-    const filePath = path.join(JOBS_DIR, `${jobId}.json`);
+    const filePath = path.join(getJobsStorageDir(), `${jobId}.json`);
     if (!fs.existsSync(filePath)) return null;
     const raw = fs.readFileSync(filePath, "utf-8");
     return JSON.parse(raw) as HlsJob;
@@ -57,11 +64,12 @@ const updateJob = (jobId: string, patch: Partial<HlsJob>) => {
 };
 
 export const createHlsJob = (videoPath: string, baseName: string): HlsJob => {
-  ensureDir(UPLOAD_DIR);
-  ensureDir(COURSE_DIR);
-  ensureDir(JOBS_DIR);
+  const videoDir = getVideoStorageDir();
+  const jobsDir = getJobsStorageDir();
+  ensureDir(videoDir);
+  ensureDir(jobsDir);
 
-  const outputDir = path.join(COURSE_DIR, baseName);
+  const outputDir = path.join(videoDir, baseName);
   const manifestPath = path.join(outputDir, `${baseName}.m3u8`);
   const job: HlsJob = {
     id: crypto.randomUUID(),
@@ -76,6 +84,35 @@ export const createHlsJob = (videoPath: string, baseName: string): HlsJob => {
 
   writeJob(job);
   return job;
+};
+
+export const getAllJobsByBaseName = () => {
+  const jobsDir = getJobsStorageDir();
+  const jobsMap = new Map<string, HlsJob>();
+
+  if (!fs.existsSync(jobsDir)) {
+    return jobsMap;
+  }
+
+  const files = fs
+    .readdirSync(jobsDir)
+    .filter((file) => file.endsWith(".json"));
+
+  for (const file of files) {
+    const filePath = path.join(jobsDir, file);
+    try {
+      const raw = fs.readFileSync(filePath, "utf-8");
+      const job = JSON.parse(raw) as HlsJob;
+      const existing = jobsMap.get(job.baseName);
+      if (!existing || job.createdAt > existing.createdAt) {
+        jobsMap.set(job.baseName, job);
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return jobsMap;
 };
 
 export const startHlsJob = (job: HlsJob) => {
