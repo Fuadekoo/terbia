@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, memo, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Upload, Video, X } from "lucide-react";
 import { uploadVideoChunk } from "@/actions/api/video-upload";
@@ -11,25 +11,23 @@ function getTimestampUUID(ext: string) {
 }
 
 interface VideoUploadButtonProps {
-  onVideoSelect?: (file: File) => void;
-  onVideoRemove?: () => void;
-  onUploadComplete?: (filename?: string) => void;
+  onVideoSelect: (file: File) => void;
+  onVideoRemove: () => void;
+  onUploadComplete?: (filename?: string, jobId?: string) => void;
   selectedVideo?: File | null;
-  lang?: string;
+  existingVideo?: string;
+  lang: string;
   disabled?: boolean;
   showExternalProgress?: boolean;
-  coursesPackageId: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  initialData: any;
-  courseId: string;
-  chapterId: string;
 }
-export default function VideoUploadButton({
-  onVideoSelect = () => {},
-  onVideoRemove = () => {},
+
+function VideoUploadButton({
+  onVideoSelect,
+  onVideoRemove,
   onUploadComplete = () => {},
   selectedVideo,
-  lang = "en",
+  existingVideo,
+  lang,
   disabled = false,
   showExternalProgress = false,
 }: VideoUploadButtonProps) {
@@ -40,6 +38,53 @@ export default function VideoUploadButton({
   const [currentChunk, setCurrentChunk] = useState(0);
   const [totalChunks, setTotalChunks] = useState(0);
   const [uuidFilename, setUuidFilename] = useState<string | null>(null);
+  const [hlsJobId, setHlsJobId] = useState<string | null>(null);
+  const [hlsJobStatus, setHlsJobStatus] = useState<
+    "pending" | "processing" | "completed" | "failed" | null
+  >(null);
+  const [hlsJobError, setHlsJobError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!hlsJobId) {
+      setHlsJobStatus(null);
+      setHlsJobError(null);
+      return;
+    }
+
+    let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch(
+          `/api/hls-status?jobId=${encodeURIComponent(hlsJobId)}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) return;
+        const data = await response.json();
+        if (cancelled) return;
+        if (data?.status) {
+          setHlsJobStatus(data.status);
+        }
+        if (data?.error) {
+          setHlsJobError(data.error);
+        }
+        if (data?.status === "completed" || data?.status === "failed") {
+          if (intervalId) clearInterval(intervalId);
+        }
+      } catch {
+        // Ignore polling errors; next interval will retry.
+      }
+    };
+
+    void fetchStatus();
+    intervalId = setInterval(fetchStatus, 3000);
+
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [hlsJobId]);
 
   const handleChunkedUpload = async (file: File) => {
     const ext = file.name.split(".").pop() || "mp4";
@@ -51,6 +96,7 @@ export default function VideoUploadButton({
     setTotalChunks(total);
 
     try {
+      let lastJobId: string | undefined;
       for (let i = 0; i < total; i++) {
         const start = i * chunkSize;
         const end = Math.min(file.size, start + chunkSize);
@@ -63,9 +109,13 @@ export default function VideoUploadButton({
         formData.append("totalChunks", total.toString());
 
         const response = await uploadVideoChunk(formData);
-
         if (!response.success) {
           throw new Error(`Upload failed for chunk ${i}: ${response.error}`);
+        }
+
+        if (response.jobId) {
+          lastJobId = response.jobId;
+          setHlsJobId(response.jobId);
         }
 
         setUploadProgress(Math.round(((i + 1) / total) * 100));
@@ -73,32 +123,46 @@ export default function VideoUploadButton({
       }
 
       setIsUploading(false);
-      onUploadComplete(uuidName);
+      onUploadComplete(uuidName, lastJobId);
       alert(lang === "en" ? "Upload complete!" : "ስቀል ተጠናቋል!");
       setCurrentChunk(0);
       setTotalChunks(0);
     } catch (error) {
       console.error("Upload failed:", error);
       setIsUploading(false);
-      alert(lang === "en" ? "Upload failed. Please try again." : "ስቀል አልተሳካም። እባክዎ እንደገና ይሞክሩ።");
+      alert(
+        lang === "en"
+          ? "Upload failed. Please try again."
+          : "ስቀል አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+      );
     }
   };
 
   const handleFileSelect = async (file: File) => {
-    if (isUploading) return; // Prevent double upload
-    
-    if (file.type.startsWith("video/")) {
-      // Reset states for new upload
+    if (isUploading) return;
+
+    const isVideo = file.type.startsWith("video/");
+    const isHlsManifest =
+      file.name.endsWith(".m3u8") ||
+      file.type === "application/vnd.apple.mpegurl" ||
+      file.type === "application/x-mpegURL";
+
+    if (isVideo || isHlsManifest) {
       setUploadProgress(0);
       setCurrentChunk(0);
       setTotalChunks(0);
       setUuidFilename(null);
+      setHlsJobId(null);
+      setHlsJobStatus(null);
+      setHlsJobError(null);
       setIsUploading(true);
       onVideoSelect(file);
       await handleChunkedUpload(file);
     } else {
       alert(
-        lang === "en" ? "Please select a video file" : "እባክዎ የቪዲዮ ፋይል ይምረጡ"
+        lang === "en"
+          ? "Please select a video file or HLS manifest (.m3u8)"
+          : "እባክዎ የቪዲዮ ፋይል ወይም HLS manifest (.m3u8) ይምረጡ",
       );
     }
   };
@@ -132,12 +196,11 @@ export default function VideoUploadButton({
       <input
         ref={fileInputRef}
         type="file"
-        accept="video/*"
+        accept="video/*,.m3u8,application/vnd.apple.mpegurl,application/x-mpegURL"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) {
             handleFileSelect(file);
-            // Reset input to allow selecting same file again
             e.target.value = "";
           }
         }}
@@ -145,17 +208,30 @@ export default function VideoUploadButton({
         disabled={disabled || isUploading}
       />
 
-      {selectedVideo || isUploading ? (
+      {selectedVideo || existingVideo || isUploading ? (
         <div className="flex flex-col gap-4">
-          {selectedVideo && (
+          {(selectedVideo || existingVideo) && (
             <div className="flex items-center justify-between p-4 bg-primary/10 border border-primary/30 rounded-lg">
               <div className="flex items-center gap-3">
                 <Video className="w-8 h-8 text-primary" />
                 <div>
-                  <p className="font-medium text-sm">{selectedVideo.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {formatFileSize(selectedVideo.size)}
+                  <p className="font-medium text-sm">
+                    {selectedVideo
+                      ? selectedVideo.name
+                      : existingVideo
+                        ? existingVideo.split("/").pop() || existingVideo
+                        : ""}
                   </p>
+                  {selectedVideo && (
+                    <p className="text-xs text-gray-500">
+                      {formatFileSize(selectedVideo.size)}
+                    </p>
+                  )}
+                  {existingVideo && !selectedVideo && (
+                    <p className="text-xs text-gray-500">
+                      {lang === "en" ? "Existing video" : "የነበረ ቪዲዮ"}
+                    </p>
+                  )}
                   {uuidFilename && (
                     <p className="text-xs text-gray-400">
                       <strong>
@@ -167,16 +243,10 @@ export default function VideoUploadButton({
                 </div>
               </div>
               <Button
-                color="primary"
-                onClick={() => {
-                  const confirmMessage =
-                    lang === "en"
-                      ? "Are you sure you want to delete this video?"
-                      : "ይህን ቪዲዮ መሰረዝ እርግጠኛ ነዎት?";
-                  if (confirm(confirmMessage)) {
-                    onVideoRemove();
-                  }
-                }}
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => onVideoRemove()}
                 disabled={disabled || isUploading}
               >
                 <X className="w-4 h-4" />
@@ -207,22 +277,50 @@ export default function VideoUploadButton({
               )}
             </div>
           )}
+          {hlsJobId && hlsJobStatus && (
+            <div
+              className={`flex flex-col gap-1 p-3 rounded-lg border text-sm ${
+                hlsJobStatus === "completed"
+                  ? "bg-green-50 border-green-200 text-green-800"
+                  : hlsJobStatus === "failed"
+                    ? "bg-red-50 border-red-200 text-red-800"
+                    : "bg-amber-50 border-amber-200 text-amber-800"
+              }`}
+            >
+              <span className="font-medium">
+                {hlsJobStatus === "completed"
+                  ? lang === "en"
+                    ? "HLS conversion completed"
+                    : "HLS መቀየር ተጠናቋል"
+                  : hlsJobStatus === "failed"
+                    ? lang === "en"
+                      ? "HLS conversion failed"
+                      : "HLS መቀየር አልተሳካም"
+                    : lang === "en"
+                      ? "HLS conversion in progress"
+                      : "HLS መቀየር በሂደት ላይ"}
+              </span>
+              {hlsJobStatus === "failed" && hlsJobError && (
+                <span className="text-xs wrap-break-word">{hlsJobError}</span>
+              )}
+              {hlsJobStatus !== "failed" && (
+                <span className="text-xs opacity-80">Job: {hlsJobId}</span>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <div
-          className={`
-            relative border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300
-            ${
-              isDragOver
-                ? "border-primary-500 bg-primary-50 shadow-lg scale-105"
-                : "border-primary-300 hover:border-primary-400 hover:bg-primary-25"
-            }
-            ${
-              disabled || isUploading
-                ? "opacity-50 cursor-not-allowed"
-                : "cursor-pointer"
-            }
-          `}
+          className={
+            `relative border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ` +
+            (isDragOver
+              ? "border-primary-500 bg-primary-50 shadow-lg scale-105"
+              : "border-primary-300 hover:border-primary-400 hover:bg-primary-25") +
+            " " +
+            (disabled || isUploading
+              ? "opacity-50 cursor-not-allowed"
+              : "cursor-pointer")
+          }
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -245,8 +343,8 @@ export default function VideoUploadButton({
                     ? "Uploading..."
                     : "የሚስቀል..."
                   : lang === "en"
-                  ? "Upload Course Video"
-                  : "የኮርስ ቪዲዮ ይስቀሉ"}
+                    ? "Upload Course Video"
+                    : "የኮርስ ቪዲዮ ይስቀሉ"}
               </h3>
               <p className="text-sm text-gray-600 max-w-sm mx-auto leading-relaxed">
                 {lang === "en"
@@ -254,12 +352,27 @@ export default function VideoUploadButton({
                   : "የቪዲዮ ፋይልዎን እዚህ ይጎትቱ እና ይጣሉ"}
               </p>
             </div>
-            <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
-              <span className="px-2 py-1 bg-gray-100 rounded">
-                {lang === "en" ? "MP4, AVI, MOV" : "MP4፣ AVI፣ MOV"}
-              </span>
-              <span>•</span>
-              <span>{lang === "en" ? "Max 100MB" : "ከ100MB በታች"}</span>
+            <div className="flex flex-col items-center space-y-3">
+              <div className="flex items-center space-x-2 text-xs text-gray-500">
+                <span className="px-2 py-1 bg-gray-100 rounded">
+                  {lang === "en"
+                    ? "MP4, AVI, MOV, M3U8"
+                    : "MP4፣ AVI፣ MOV፣ M3U8"}
+                </span>
+                <span>•</span>
+                <span>{lang === "en" ? "Max 100MB" : "ከ100MB በታች"}</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  !disabled && !isUploading && fileInputRef.current?.click()
+                }
+                disabled={disabled || isUploading}
+              >
+                {lang === "en" ? "Choose File" : "ፋይል ምረጥ"}
+              </Button>
             </div>
           </div>
         </div>
@@ -267,3 +380,5 @@ export default function VideoUploadButton({
     </div>
   );
 }
+
+export default memo(VideoUploadButton);

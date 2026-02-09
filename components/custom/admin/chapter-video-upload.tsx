@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Video, Save, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import VideoUploadButton from "@/components/VideoUploadButton";
 import Player from "@/components/stream/Player";
 import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -40,7 +40,54 @@ export function ChapterVideoUpload({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [playerKey, setPlayerKey] = useState(0);
+  const [hlsJobId, setHlsJobId] = useState<string | null>(null);
+  const [hlsJobStatus, setHlsJobStatus] = useState<
+    "pending" | "processing" | "completed" | "failed" | null
+  >(null);
+  const [hlsJobError, setHlsJobError] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (!hlsJobId) {
+      setHlsJobStatus(null);
+      setHlsJobError(null);
+      return;
+    }
+
+    let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch(
+          `/api/hls-status?jobId=${encodeURIComponent(hlsJobId)}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) return;
+        const data = await response.json();
+        if (cancelled) return;
+        if (data?.status) {
+          setHlsJobStatus(data.status);
+        }
+        if (data?.error) {
+          setHlsJobError(data.error);
+        }
+        if (data?.status === "completed" || data?.status === "failed") {
+          if (intervalId) clearInterval(intervalId);
+        }
+      } catch {
+        // Ignore polling errors; next interval will retry.
+      }
+    };
+
+    void fetchStatus();
+    intervalId = setInterval(fetchStatus, 3000);
+
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [hlsJobId]);
 
   const handleVideoSelect = (file: File) => {
     if (isUploading) return;
@@ -49,19 +96,21 @@ export function ChapterVideoUpload({
     setIsSaved(false);
     setIsUploadComplete(false);
     setIsUploading(true);
+    setHlsJobId(null);
     const timestamp = Date.now();
     const ext = file.name.split(".").pop() || "mp4";
     setUploadedVideoUrl(
-      `${timestamp}-${Math.floor(Math.random() * 100000)}.${ext}`
+      `${timestamp}-${Math.floor(Math.random() * 100000)}.${ext}`,
     );
   };
 
-  const handleUploadComplete = (filename?: string) => {
+  const handleUploadComplete = (filename?: string, jobId?: string) => {
     setIsUploadComplete(true);
     setIsUploading(false);
     if (filename) {
       setUploadedVideoUrl(filename);
     }
+    setHlsJobId(jobId || null);
   };
 
   const handleVideoRemove = () => {
@@ -70,6 +119,7 @@ export function ChapterVideoUpload({
     setIsSaved(false);
     setIsUploadComplete(false);
     setIsUploading(false);
+    setHlsJobId(null);
   };
 
   const handleDeleteClick = () => {
@@ -84,9 +134,9 @@ export function ChapterVideoUpload({
     setIsDeleting(true);
     try {
       console.log("Deleting video:", { chapterId });
-      
+
       const result = await updateChapterVideo(chapterId, null);
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to delete video");
       }
@@ -100,7 +150,8 @@ export function ChapterVideoUpload({
       router.refresh();
     } catch (error) {
       console.error("Error deleting video:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to delete video";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete video";
       toast.error(errorMessage);
     } finally {
       setIsDeleting(false);
@@ -121,9 +172,9 @@ export function ChapterVideoUpload({
     setIsSaving(true);
     try {
       console.log("Saving video:", { chapterId, uploadedVideoUrl });
-      
+
       const result = await updateChapterVideo(chapterId, uploadedVideoUrl);
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to save video");
       }
@@ -138,13 +189,15 @@ export function ChapterVideoUpload({
       setUploadedVideoUrl(null);
       setIsSaved(true);
       setIsUploadComplete(false);
+      setHlsJobId(null);
       setPlayerKey((prev) => prev + 1);
 
       toast.success("Video saved successfully!");
       router.refresh();
     } catch (error) {
       console.error("Error saving video:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to save video";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save video";
       toast.error(errorMessage);
     } finally {
       setIsSaving(false);
@@ -154,17 +207,20 @@ export function ChapterVideoUpload({
   const getVideoSrc = () => {
     if (selectedVideo) {
       return URL.createObjectURL(selectedVideo);
-    } else {
-      const videoUrl = initialData.customVideo;
-      if (!videoUrl) return null;
-      // If it's already a filename (no path), use it directly
-      if (!videoUrl.includes('/')) {
-        return `/api/videos/${videoUrl}`;
-      }
-      // If it's a full path, extract the filename
-      const filename = videoUrl.replace(/^\/?(api\/videos\/)?/, "");
-      return `/api/videos/${filename}`;
     }
+
+    const videoUrl = initialData.customVideo;
+    if (!videoUrl) return null;
+
+    if (videoUrl.startsWith("http://") || videoUrl.startsWith("https://")) {
+      return videoUrl;
+    }
+
+    const normalized = videoUrl.split("?")[0];
+    const filename = normalized.split("/").filter(Boolean).pop();
+    if (!filename) return null;
+
+    return `/api/videos/${filename}`;
   };
 
   const getVideoType = () => {
@@ -189,7 +245,8 @@ export function ChapterVideoUpload({
   const videoType = getVideoType();
   const hasExistingVideo = initialData.customVideo || initialData.videoUrl;
   const hasCustomVideo = initialData.customVideo;
-  const shouldShowPlayer = selectedVideo || hasCustomVideo;
+  const isConverting = hlsJobId && hlsJobStatus !== "completed";
+  const shouldShowPlayer = (selectedVideo || hasCustomVideo) && !isConverting;
   const hasUnsavedVideo =
     selectedVideo && uploadedVideoUrl && !isSaved && isUploadComplete;
 
@@ -197,7 +254,7 @@ export function ChapterVideoUpload({
     <div className="space-y-4">
       <div className="mt-4">
         {videoSrc && shouldShowPlayer ? (
-          <div className="relative">
+          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black">
             <Player
               key={`player-${playerKey}-${
                 hasCustomVideo ? "custom" : "default"
@@ -207,6 +264,7 @@ export function ChapterVideoUpload({
               title={`Chapter video player - ${
                 initialData.customVideo ? "Custom Video" : "Database Video"
               }`}
+              hlsJobId={hlsJobId}
             />
             {hasUnsavedVideo && (
               <div className="absolute top-2 right-2">
@@ -235,14 +293,18 @@ export function ChapterVideoUpload({
             <div className="text-center">
               <Video className="h-12 w-12 text-slate-400 mx-auto mb-2" />
               <p className="text-sm text-slate-500">
-                {initialData.videoUrl && !initialData.customVideo
-                  ? "No custom video uploaded"
-                  : "No video uploaded"}
+                {isConverting
+                  ? "Converting video to HLS..."
+                  : initialData.videoUrl && !initialData.customVideo
+                    ? "No custom video uploaded"
+                    : "No video uploaded"}
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                {initialData.videoUrl && !initialData.customVideo
-                  ? "Upload a custom video to override the database video"
-                  : "Upload a video to get started"}
+                {isConverting
+                  ? hlsJobError || "This may take a few minutes"
+                  : initialData.videoUrl && !initialData.customVideo
+                    ? "Upload a custom video to override the database video"
+                    : "Upload a video to get started"}
               </p>
             </div>
           </div>
@@ -250,14 +312,11 @@ export function ChapterVideoUpload({
       </div>
 
       <VideoUploadButton
-        coursesPackageId={coursesPackageId}
-        initialData={initialData}
-        courseId={courseId}
-        chapterId={chapterId}
         onVideoSelect={handleVideoSelect}
         onVideoRemove={handleVideoRemove}
         onUploadComplete={handleUploadComplete}
         selectedVideo={selectedVideo}
+        existingVideo={initialData.customVideo || undefined}
         disabled={isUploading}
         lang="en"
       />
@@ -324,8 +383,8 @@ export function ChapterVideoUpload({
               Delete Custom Video
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the custom video? 
-              This action cannot be undone and will revert to the original database video.
+              Are you sure you want to delete the custom video? This action
+              cannot be undone and will revert to the original database video.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2">

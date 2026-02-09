@@ -4,42 +4,41 @@ import { Maximize, Minimize } from "lucide-react";
 interface FullscreenButtonProps {
   onClick: () => void;
   isFullscreen: boolean;
+  size?: number;
+  buttonSize?: number;
 }
 
 const FullscreenButton: React.FC<FullscreenButtonProps> = ({
   onClick,
   isFullscreen,
+  size = 20,
+  buttonSize = 36,
 }) => (
   <button
     onClick={(e) => {
       e.stopPropagation();
-      e.preventDefault();
       onClick();
     }}
     title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
     style={{
-      background: "rgba(255, 255, 255, 0.2)",
+      background: "rgba(135, 206, 235, 0.6)",
       border: "none",
       cursor: "pointer",
-      fontSize: 22,
+      fontSize: size,
       color: "#fff",
-      padding: 8,
-      borderRadius: "50%",
+      padding: 4,
+      borderRadius: 4,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      minWidth: "44px",
-      minHeight: "44px",
-      WebkitTapHighlightColor: "transparent",
-      touchAction: "manipulation",
-      zIndex: 10,
+      width: buttonSize,
+      height: buttonSize,
+      minWidth: buttonSize,
+      minHeight: buttonSize,
+      flexShrink: 0,
     }}
   >
-    {isFullscreen ? (
-      <Minimize size={20} color="#fff" />
-    ) : (
-      <Maximize size={20} color="#fff" />
-    )}
+    {isFullscreen ? <Minimize size={size} /> : <Maximize size={size} />}
   </button>
 );
 

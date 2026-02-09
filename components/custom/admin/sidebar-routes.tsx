@@ -1,6 +1,15 @@
 "use client";
 
-import { BarChart, List, Layout, Book, MessageSquare, MessageCircle, Users } from "lucide-react";
+import {
+  BarChart,
+  List,
+  Layout,
+  Book,
+  MessageSquare,
+  MessageCircle,
+  Users,
+  Video,
+} from "lucide-react";
 import { SidebarItem } from "./sidebar-item";
 import { usePathname } from "next/navigation";
 
@@ -35,6 +44,11 @@ const teacherRoutes = [
     label: "Feedbacks",
     href: "/en/admin/feedbacks",
   },
+  {
+    icon: Video,
+    label: "Video Conversion",
+    href: "/en/admin/videoConversion",
+  },
 ];
 
 const studentRoutes = [
@@ -54,7 +68,6 @@ export const SidebarRoutes = () => {
 
   return (
     <div className="flex flex-col w-full">
-      
       {routes.map((route) => (
         <SidebarItem
           key={route.href}

@@ -1,10 +1,19 @@
 "use server";
 
 import { writeFile, mkdir, readFile, rm } from "fs/promises";
+import fs from "fs";
 import { join } from "path";
+import { createHlsJob, startHlsJob } from "@/lib/hls-jobs";
 
 const UPLOAD_DIR = join(process.cwd(), "uploads");
 const COURSE_DIR = join(UPLOAD_DIR, "videos");
+
+const queueHlsConversion = (videoPath: string, baseName: string) => {
+  if (!fs.existsSync(videoPath)) return null;
+  const job = createHlsJob(videoPath, baseName);
+  startHlsJob(job);
+  return job;
+};
 
 function getTimestampUUID(ext: string) {
   return `${Date.now()}-${Math.floor(Math.random() * 100000)}.${ext}`;
@@ -13,6 +22,7 @@ function getTimestampUUID(ext: string) {
 export interface VideoUploadResult {
   success: boolean;
   filename?: string;
+  jobId?: string;
   error?: string;
 }
 
@@ -21,7 +31,7 @@ export async function uploadVideoChunk(
   chunk: File,
   filename: string,
   chunkIndex: number,
-  totalChunks: number
+  totalChunks: number,
 ): Promise<VideoUploadResult> {
   try {
     if (!chunk) {
@@ -30,15 +40,15 @@ export async function uploadVideoChunk(
 
     let finalFilename = filename;
     if (!finalFilename || finalFilename === "") {
-      const ext = chunk.name.split('.').pop() || "mp4";
+      const ext = chunk.name.split(".").pop() || "mp4";
       finalFilename = getTimestampUUID(ext);
     }
 
     const chunkFolder = join(
       COURSE_DIR,
-      finalFilename.replace(/\.[^/.]+$/, "") + "_chunks"
+      finalFilename.replace(/\.[^/.]+$/, "") + "_chunks",
     );
-    
+
     // Ensure chunk folder exists
     await mkdir(chunkFolder, { recursive: true });
 
@@ -50,7 +60,7 @@ export async function uploadVideoChunk(
     if (chunkIndex + 1 === totalChunks) {
       const baseName = finalFilename.replace(/\.[^/.]+$/, "");
       const videoPath = join(COURSE_DIR, `${baseName}.mp4`);
-      
+
       try {
         const chunks = [];
         for (let i = 0; i < totalChunks; i++) {
@@ -63,18 +73,24 @@ export async function uploadVideoChunk(
             continue;
           }
         }
-        
+
         const finalBuffer = Buffer.concat(chunks);
         await writeFile(videoPath, finalBuffer);
         await rm(chunkFolder, { recursive: true, force: true });
-        
-        return { success: true, filename: `${baseName}.mp4` };
+
+        const job = queueHlsConversion(videoPath, baseName);
+
+        return {
+          success: true,
+          filename: `${baseName}.mp4`,
+          jobId: job?.id,
+        };
       } catch (err) {
         console.error("Error joining chunks:", err);
         return { success: false, error: "Error joining chunks" };
       }
     }
-    
+
     return { success: true, filename: finalFilename };
   } catch (error) {
     console.error("Upload error:", error);
@@ -85,7 +101,7 @@ export async function uploadVideoChunk(
 // Upload complete video file (for smaller files)
 export async function uploadVideoFile(
   file: File,
-  filename?: string
+  filename?: string,
 ): Promise<VideoUploadResult> {
   try {
     if (!file) {
@@ -94,20 +110,27 @@ export async function uploadVideoFile(
 
     let finalFilename = filename;
     if (!finalFilename || finalFilename === "") {
-      const ext = file.name.split('.').pop() || "mp4";
+      const ext = file.name.split(".").pop() || "mp4";
       finalFilename = getTimestampUUID(ext);
     }
 
     // Validate file size (max 100MB for direct upload)
     if (file.size > 100 * 1024 * 1024) {
-      return { success: false, error: "File too large. Use chunked upload for files larger than 100MB." };
+      return {
+        success: false,
+        error:
+          "File too large. Use chunked upload for files larger than 100MB.",
+      };
     }
 
     const videoPath = join(COURSE_DIR, finalFilename);
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     await writeFile(videoPath, fileBuffer);
-    
-    return { success: true, filename: finalFilename };
+
+    const baseName = finalFilename.replace(/\.[^/.]+$/, "");
+    const job = queueHlsConversion(videoPath, baseName);
+
+    return { success: true, filename: finalFilename, jobId: job?.id };
   } catch (error) {
     console.error("Upload error:", error);
     return { success: false, error: "Upload failed" };
@@ -115,7 +138,9 @@ export async function uploadVideoFile(
 }
 
 // Delete video file
-export async function deleteVideoFile(filename: string): Promise<VideoUploadResult> {
+export async function deleteVideoFile(
+  filename: string,
+): Promise<VideoUploadResult> {
   try {
     if (!filename) {
       return { success: false, error: "Filename is required" };
@@ -123,7 +148,7 @@ export async function deleteVideoFile(filename: string): Promise<VideoUploadResu
 
     const videoPath = join(COURSE_DIR, filename);
     await rm(videoPath, { force: true });
-    
+
     return { success: true, filename };
   } catch (error) {
     console.error("Delete error:", error);
@@ -139,15 +164,16 @@ export async function listUploadedVideos(): Promise<{
 }> {
   try {
     const { readdir } = await import("fs/promises");
-    
+
     try {
       const files = await readdir(COURSE_DIR);
-      const videoExtensions = ['.mp4', '.avi', '.mov', '.webm', '.mkv', '.flv'];
+      const videoExtensions = [".mp4", ".avi", ".mov", ".webm", ".mkv", ".flv"];
       return {
         success: true,
-        data: files.filter(file => 
-          videoExtensions.some(ext => file.toLowerCase().endsWith(ext)) && 
-          !file.startsWith('.')
+        data: files.filter(
+          (file) =>
+            videoExtensions.some((ext) => file.toLowerCase().endsWith(ext)) &&
+            !file.startsWith("."),
         ),
       };
     } catch {
@@ -161,4 +187,3 @@ export async function listUploadedVideos(): Promise<{
     return { success: false, error: "Failed to list videos" };
   }
 }
-

@@ -6,6 +6,9 @@ interface VolumeControlProps {
   muted: boolean;
   onVolumeChange: (volume: number) => void;
   onMuteToggle: () => void;
+  vertical?: boolean; // Show vertical slider on small screens
+  iconSize?: number;
+  buttonSize?: number;
 }
 
 const VolumeControl: React.FC<VolumeControlProps> = ({
@@ -13,111 +16,86 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
   muted,
   onVolumeChange,
   onMuteToggle,
+  vertical = false,
+  iconSize = 20,
+  buttonSize = 36,
 }) => {
-  const isMobile =
-    typeof window !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
-
-  const handleVolumeIncrease = () => {
-    const newVolume = Math.min(1, volume + 0.1);
-    onVolumeChange(newVolume);
-  };
-
-  const handleVolumeDecrease = () => {
-    const newVolume = Math.max(0, volume - 0.1);
-    onVolumeChange(newVolume);
-  };
+  const sliderWidth = vertical ? 8 : 60;
+  const sliderHeight = vertical ? 60 : 8;
 
   return (
     <div
       className="volume-control"
       style={{
         display: "flex",
+        flexDirection: vertical ? "column" : "row",
         alignItems: "center",
-        gap: 8,
-        flexDirection: "row", // Always horizontal
+        gap: vertical ? 4 : 8,
+        position: vertical ? "relative" : "static",
       }}
     >
-      {/* Volume Decrease Button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleVolumeDecrease();
-        }}
-        style={{
-          background: "rgba(255, 255, 255, 0.2)",
-          border: "none",
-          padding: 6,
-          cursor: "pointer",
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minWidth: "36px",
-          minHeight: "36px",
-          WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
-        }}
-        title="Decrease Volume"
-      >
-        <span style={{ color: "#fff", fontSize: "16px", fontWeight: "bold" }}>-</span>
-      </button>
-
-      {/* Mute/Unmute Button */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           onMuteToggle();
         }}
         style={{
-          background: "rgba(255, 255, 255, 0.2)",
+          background: "rgba(59, 130, 246, 0.6)",
           border: "none",
-          padding: 8,
+          color: "#fff",
+          padding: 4,
+          borderRadius: 4,
           cursor: "pointer",
-          borderRadius: "50%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          minWidth: "44px",
-          minHeight: "44px",
-          WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
+          width: buttonSize,
+          height: buttonSize,
+          minWidth: buttonSize,
+          minHeight: buttonSize,
+          flexShrink: 0,
         }}
-        title={muted ? "Unmute" : "Mute"}
       >
-        {muted || volume === 0 ? (
-          <VolumeOff size={20} color="#fff" />
-        ) : (
-          <Volume size={20} color="#fff" />
-        )}
+        {muted || volume === 0 ? <VolumeOff size={iconSize} /> : <Volume size={iconSize} />}
       </button>
-
-      {/* Volume Increase Button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleVolumeIncrease();
-        }}
+      <div
         style={{
-          background: "rgba(255, 255, 255, 0.2)",
-          border: "none",
-          padding: 6,
-          cursor: "pointer",
-          borderRadius: "50%",
+          position: "relative",
+          width: sliderWidth,
+          height: sliderHeight,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minWidth: "36px",
-          minHeight: "36px",
-          WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
+          alignItems: vertical ? "flex-end" : "center",
+          justifyContent: vertical ? "center" : "flex-start",
         }}
-        title="Increase Volume"
       >
-        <span style={{ color: "#fff", fontSize: "16px", fontWeight: "bold" }}>+</span>
-      </button>
-
-      {/* Volume Slider (Desktop only) */}
-      {!isMobile && (
+        {/* Background bar (darker sky blue) */}
+        <div
+          style={{
+            position: "absolute",
+            left: vertical ? 0 : 0,
+            bottom: vertical ? 0 : 0,
+            top: vertical ? 0 : 0,
+            height: vertical ? "100%" : sliderHeight,
+            width: vertical ? sliderWidth : "100%",
+            background: "rgba(59, 130, 246, 0.3)", // Darker sky blue background
+            borderRadius: 4,
+            zIndex: 0,
+          }}
+        />
+        {/* Volume bar (sky blue) */}
+        <div
+          style={{
+            position: "absolute",
+            left: vertical ? 0 : 0,
+            bottom: vertical ? 0 : 0,
+            top: vertical ? `${(1 - (muted ? 0 : volume)) * 100}%` : 0,
+            height: vertical ? `${(muted ? 0 : volume) * 100}%` : sliderHeight,
+            width: vertical ? sliderWidth : `${(muted ? 0 : volume) * 100}%`,
+            background: "rgba(59, 130, 246, 0.8)", // Sky blue
+            borderRadius: 4,
+            zIndex: 1,
+          }}
+        />
         <input
           type="range"
           min={0}
@@ -129,16 +107,31 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
             onVolumeChange(Number(e.target.value));
           }}
           style={{
-            width: 60,
-            height: 4,
-            background: "rgba(255, 255, 255, 0.3)",
-            borderRadius: 2,
+            width: vertical ? sliderHeight : "100%",
+            height: vertical ? sliderWidth : sliderHeight,
+            background: "transparent",
+            position: "relative",
+            zIndex: 2,
+            margin: 0,
+            padding: 0,
+            cursor: "pointer",
             outline: "none",
             WebkitAppearance: "none",
             appearance: "none",
+            WebkitTapHighlightColor: "transparent", // Fix iPhone touch
+            touchAction: "manipulation", // Fix iPhone touch
+            transform: vertical ? "rotate(-90deg)" : "none",
+            transformOrigin: "center",
+            ...(vertical && {
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              marginLeft: `-${sliderHeight / 2}px`,
+              marginTop: `-${sliderWidth / 2}px`,
+            }),
           }}
         />
-      )}
+      </div>
     </div>
   );
 };
