@@ -9,8 +9,12 @@ interface SettingsMenuProps {
   onQualityClick: () => void;
   onSpeedClick: () => void;
   isHls?: boolean;
-  hlsLevels?: any[];
+  hlsLevels?: HlsLevel[];
   currentHlsLevel?: number;
+}
+
+interface HlsLevel {
+  height?: number;
 }
 
 export default function SettingsMenu({
