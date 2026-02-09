@@ -226,6 +226,7 @@ model wpos_wpdatatable_23 {
   controller       controller?        @relation(fields: [u_control], references: [code])
   feedback         feedback[]
   qandAQuestion    qandAQuestion[]    @relation("QandAQuestions")
+  attendances      attendance[]
 }
 
 model ustaz {
@@ -337,4 +338,12 @@ model responseUstaz {
   chat_id       String?         @default("")
   permissioned  Boolean?        @default(true)
   qandAResponse qandAResponse[] @relation("QandAResponses")
+}
+model attendance {
+  id        String   @id @default(cuid())
+  student   wpos_wpdatatable_23 @relation(fields: [studentId], references: [wdt_ID], onDelete: Cascade)
+  studentId Int
+  lastSeen  DateTime @default(now())
+
+  @@index([studentId])
 }
