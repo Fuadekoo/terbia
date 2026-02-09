@@ -7,7 +7,7 @@ import {
   checkingUpdateProhibition,
 } from "../student/finalExamResult";
 import { getAttendanceofAllStudents } from "../student/attendance";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, differenceInCalendarDays } from "date-fns";
 import { hasMatchingSubject as originalHasMatchingSubject } from "@/lib/subject-matching";
 
 // Wrapper function to handle null values for subject matching
@@ -1043,28 +1043,19 @@ export async function getStudentAnalyticsperchapter(
     },
   };
 }
-async function getLastSeen(studentId: number): Promise<string> {
-  const lastProgressUpdatedDate = await prisma.studentProgress.findFirst({
-    where: {
-      studentId,
-    },
-    select: {
-      updatedAt: true,
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-  });
+function formatLastSeen(lastSeenDate: Date | null | undefined): string {
+  if (!lastSeenDate) return "not login";
 
-  if (!lastProgressUpdatedDate) return "-";
-
-  const daysAgo = differenceInDays(
+  const daysAgo = differenceInCalendarDays(
     new Date(),
-    lastProgressUpdatedDate.updatedAt
+    lastSeenDate
   );
 
   if (daysAgo === 0) return "Today";
   if (daysAgo === 1) return "1 day ago";
+  if (daysAgo === 2) return "2 days ago";
+  if (daysAgo === 3) return "3 days ago";
+  
   if (daysAgo <= 7) return `${daysAgo} days ago`;
   if (daysAgo <= 14) return "1 week ago";
   if (daysAgo <= 30) return `${Math.floor(daysAgo / 7)} weeks ago`;
@@ -1072,6 +1063,16 @@ async function getLastSeen(studentId: number): Promise<string> {
   if (daysAgo <= 365) return `${Math.floor(daysAgo / 30)} months ago`;
   if (daysAgo <= 730) return "1 year ago";
   return `${Math.floor(daysAgo / 365)} years ago`;
+}
+
+async function getLastSeen(studentId: number): Promise<string> {
+  const attendance = await prisma.attendance.findFirst({
+    where: { studentId },
+    select: { lastSeen: true },
+    orderBy: { lastSeen: "desc" }
+  });
+
+  return formatLastSeen(attendance?.lastSeen);
 }
 export async function getStudentAnalyticsperPackage(
   searchTerm?: string,
@@ -1127,6 +1128,11 @@ export async function getStudentAnalyticsperPackage(
       status: true,
       youtubeSubject: true,
       ustazdata: { select: { ustazname: true } },
+      attendances: {
+        select: { lastSeen: true },
+        take: 1,
+        orderBy: { lastSeen: "desc" }
+      }
     },
   });
 
@@ -1245,7 +1251,7 @@ export async function getStudentAnalyticsperPackage(
         absent: 0,
       };
       const totalSessions = attendance.present + attendance.absent;
-      const lastseen = await getLastSeen(student.wdt_ID);
+      const lastseen = formatLastSeen(student.attendances[0]?.lastSeen);
 
       return {
         id: student.wdt_ID,
@@ -1318,7 +1324,7 @@ export async function getStudentAnalyticsperPackage(
         case "3days":
           return lastseen === "3 days ago";
         case "3plus":
-          return lastseen.includes("+ days ago");
+          return !["Today", "1 day ago", "2 days ago", "3 days ago", "not login", "-"].includes(lastseen);
         default:
           return true;
       }
