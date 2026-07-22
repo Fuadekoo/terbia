@@ -31,7 +31,7 @@ export async function getTelegramUser(
     const users = await prisma.wpos_wpdatatable_23.findMany({
       where: {
         chat_id: String(chatId),
-        status: { in: ["Active", "Not yet", "On progress"] },
+        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: {
         wdt_ID: true,
@@ -128,7 +128,7 @@ export async function startStudentFlow(
     const channels = await prisma.wpos_wpdatatable_23.findMany({
       where: {
         chat_id: String(chatId),
-        status: { in: ["Active", "Not yet", "On progress"] },
+        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: {
         wdt_ID: true,
@@ -372,7 +372,7 @@ export async function chooseStudentPackage(
       where: {
         chat_id: String(chatId),
         wdt_ID: studentId,
-        status: { in: ["Active", "Not yet", "On progress"] },
+        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       data: { youtubeSubject: packageId },
     });
@@ -437,7 +437,7 @@ export async function validateStudentAccess(
       where: {
         chat_id: String(chatId),
         wdt_ID: Number(studentId),
-        status: { in: ["Active", "Not yet", "On progress"] },
+        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: { wdt_ID: true },
     });
@@ -470,7 +470,7 @@ export async function getStudentFlowById(
       where: {
         chat_id: String(chatId),
         wdt_ID: studentId,
-        status: { in: ["Active", "Not yet", "On progress"] },
+        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: {
         wdt_ID: true,

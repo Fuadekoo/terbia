@@ -26,7 +26,7 @@ export async function unlockTest(
   const student = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress"] },
+      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
     },
     select: {
       wdt_ID: true,

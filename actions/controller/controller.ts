@@ -58,7 +58,7 @@ export async function getStudentAnalyticsperPackageForEachController(
   const students = await prisma.wpos_wpdatatable_23.findMany({
     where: {
       u_control: code?.code,
-      status: { in: ["Active", "Not yet", "On progress"] },
+      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       OR: subjectPackageFilters,
       ...searchFilter,
     },

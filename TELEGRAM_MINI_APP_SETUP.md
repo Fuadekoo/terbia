@@ -179,7 +179,7 @@ Fetches student data by student ID.
 2. **"Student not found or inactive"**
 
    - Verify the student exists in the database
-   - Check the student's status is "Active", "Not yet", or "On progress"
+   - Check the student's status is "Active", "Not yet", "On progress", or "terbia"
 
 3. **"No active course found"**
    - Ensure the student has an active package assigned

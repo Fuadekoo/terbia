@@ -35,7 +35,7 @@ export async function allPackages() {
       const totalStudents = orFilters.length
         ? await prisma.wpos_wpdatatable_23.count({
             where: { 
-              status: { in: ["Active", "Not yet", "On progress"] },
+              status: { in: ["Active", "Not yet", "On progress", "terbia"] },
               OR: orFilters }
           })
         : 0;
@@ -54,7 +54,7 @@ export async function getStudentById(id:number){
     // Get student by ID
     const student = await prisma.wpos_wpdatatable_23.findUnique({
         where: { wdt_ID: id,
-          status: { in: ["Active", "Not yet", "On progress"] },
+          status: { in: ["Active", "Not yet", "On progress", "terbia"] },
          },
         select: {
         name: true,

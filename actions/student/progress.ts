@@ -66,7 +66,7 @@ export async function isCompletedAllChaptersInthePackage(
   const studentwithActivePacage = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress"] },
+      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       youtubeSubject: packageId,
     },
     select: {
@@ -129,7 +129,7 @@ export async function getActivePackageProgress(wdt_ID: number) {
     const student = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
         wdt_ID: wdt_ID,
-        status: { in: ["Active", "Not yet", "On progress"] },
+        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: {
         wdt_ID: true,
@@ -187,7 +187,7 @@ export async function updatePathProgressData(wdt_ID: number) {
     const studentwithActivePacage = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
         wdt_ID: wdt_ID,
-        status: { in: ["Active", "Not yet", "On progress"] },
+        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: {
         wdt_ID: true,
@@ -426,7 +426,7 @@ export async function packageCompleted(wdt_ID: number) {
   const student = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress"] },
+      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
     },
     select: {
       wdt_ID: true,
@@ -493,7 +493,7 @@ export async function cousefailedsolve(wdt_ID: number) {
   const studentwithActivePacage = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress"] },
+      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
     },
     select: {
       wdt_ID: true,

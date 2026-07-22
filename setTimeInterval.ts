@@ -22,7 +22,7 @@ export async function sendMessagesToAllStudents() {
   const students = await prisma.wpos_wpdatatable_23.findMany({
     where: {
       chat_id: { not: null },
-      status: { in: ["Active", "Not yet", "On progress"] },
+      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       progress: {  }, // Ensure no progress exists
       activePackage: {
         isPublished: true,

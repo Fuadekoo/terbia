@@ -36,7 +36,7 @@ export async function startMiniBot() {
       const student = await prisma.wpos_wpdatatable_23.findFirst({
         where: {
           chat_id: chatId.toString(),
-          status: { in: ["Active", "Not yet", "On progress"] },
+          status: { in: ["Active", "Not yet", "On progress", "terbia"] },
         },
         select: {
           wdt_ID: true,
