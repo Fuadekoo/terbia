@@ -1074,7 +1074,7 @@ async function getLastSeen(studentId: number): Promise<string> {
 
   return formatLastSeen(attendance?.lastSeen);
 }
-export async function getStudentAnalyticsperPackage(
+async function getStudentAnalyticsperPackageData(
   searchTerm?: string,
   currentPage: number = 1,
   itemsPerPage: number = 10,
@@ -1205,45 +1205,232 @@ export async function getStudentAnalyticsperPackage(
     return `${code}${trimmed}`;
   };
 
-  // 5. Process each student
-  const studentResults = await Promise.all(
-    students.map(async (student) => {
-      const matchedPackage = subjectPackages.find(
-        (sp) =>
-          hasMatchingSubject(student.subject ?? "", sp.subject ?? "") &&
-          sp.packageType === student.package &&
-          sp.kidpackage === student.isKid
+  // 5. Resolve each student's active package (in memory, no queries)
+  const studentPackagePairs: {
+    student: (typeof students)[number];
+    activePackageId: string;
+  }[] = [];
+  for (const student of students) {
+    const matchedPackage = subjectPackages.find(
+      (sp) =>
+        hasMatchingSubject(student.subject ?? "", sp.subject ?? "") &&
+        sp.packageType === student.package &&
+        sp.kidpackage === student.isKid
+    );
+    const activePackageId = student.youtubeSubject ?? matchedPackage?.packageId;
+    if (!activePackageId) continue;
+    studentPackagePairs.push({ student, activePackageId });
+  }
+
+  const studentIds = studentPackagePairs.map((p) => p.student.wdt_ID);
+  const packageIds = [
+    ...new Set(studentPackagePairs.map((p) => p.activePackageId)),
+  ];
+
+  // 6. Batch-load chapters, package names and progress once
+  // (instead of firing several queries per student, which exhausts the
+  // connection pool in production and crashes the page)
+  const [allChapters, packages] = await Promise.all([
+    prisma.chapter.findMany({
+      where: { course: { packageId: { in: packageIds } } },
+      select: {
+        id: true,
+        title: true,
+        course: {
+          select: {
+            title: true,
+            packageId: true,
+            package: { select: { name: true } },
+          },
+        },
+      },
+    }),
+    prisma.coursePackage.findMany({
+      where: { id: { in: packageIds } },
+      select: { id: true, name: true },
+    }),
+  ]);
+
+  const packageNameById = new Map(packages.map((p) => [p.id, p.name]));
+  const chaptersByPackage = new Map<string, typeof allChapters>();
+  for (const ch of allChapters) {
+    const list = chaptersByPackage.get(ch.course.packageId);
+    if (list) list.push(ch);
+    else chaptersByPackage.set(ch.course.packageId, [ch]);
+  }
+
+  const allProgress = studentIds.length
+    ? await prisma.studentProgress.findMany({
+        where: {
+          studentId: { in: studentIds },
+          chapterId: { in: allChapters.map((c) => c.id) },
+        },
+        select: { studentId: true, chapterId: true, isCompleted: true },
+      })
+    : [];
+  const progressByStudent = new Map<
+    number,
+    { chapterId: string; isCompleted: boolean }[]
+  >();
+  for (const p of allProgress) {
+    const list = progressByStudent.get(p.studentId);
+    if (list) list.push(p);
+    else progressByStudent.set(p.studentId, [p]);
+  }
+
+  // Mirrors getStudentProgressStatus, computed from the batched data
+  const computeProgressStatus = (
+    studentWdtId: number,
+    activePackageId: string
+  ): string => {
+    const chapters = chaptersByPackage.get(activePackageId) ?? [];
+    const chapterIdSet = new Set(chapters.map((c) => c.id));
+    const progress = (progressByStudent.get(studentWdtId) ?? []).filter((p) =>
+      chapterIdSet.has(p.chapterId)
+    );
+    if (progress.length === 0) return "notstarted";
+    const completedCount = progress.filter((p) => p.isCompleted).length;
+    if (completedCount === chapters.length) return "completed";
+    const firstIncomplete = progress.find((p) => !p.isCompleted);
+    const chapter = chapters.find((ch) => ch.id === firstIncomplete?.chapterId);
+    const percent = chapters.length
+      ? Number((completedCount / chapters.length) * 100)
+      : 0;
+    return `${chapter?.course?.package?.name ?? null} > ${
+      chapter?.course?.title ?? null
+    } > ${chapter?.title ?? null} -> ${percent}%`;
+  };
+
+  const progressStatusByStudent = new Map<number, string>();
+  for (const { student, activePackageId } of studentPackagePairs) {
+    progressStatusByStudent.set(
+      student.wdt_ID,
+      computeProgressStatus(student.wdt_ID, activePackageId)
+    );
+  }
+
+  // 7. Batch-load final-exam data only for students who completed their package
+  const completedPairs = studentPackagePairs.filter(
+    ({ student }) => progressStatusByStudent.get(student.wdt_ID) === "completed"
+  );
+  const finalExamByKey = new Map<string, boolean>(); // "studentId::packageId" -> updationProhibited
+  const questionIdsByPackage = new Map<string, string[]>();
+  const correctAnswersByQuestion = new Map<string, string[]>();
+  const responsesByStudent = new Map<number, Map<string, string[]>>();
+
+  if (completedPairs.length > 0) {
+    const completedStudentIds = [
+      ...new Set(completedPairs.map((p) => p.student.wdt_ID)),
+    ];
+    const completedPackageIds = [
+      ...new Set(completedPairs.map((p) => p.activePackageId)),
+    ];
+
+    const [finalExams, questions] = await Promise.all([
+      prisma.finalExamResult.findMany({
+        where: {
+          studentId: { in: completedStudentIds },
+          packageId: { in: completedPackageIds },
+        },
+        select: { studentId: true, packageId: true, updationProhibited: true },
+      }),
+      prisma.question.findMany({
+        where: { packageId: { in: completedPackageIds } },
+        select: { id: true, packageId: true },
+      }),
+    ]);
+
+    for (const fe of finalExams) {
+      const key = `${fe.studentId}::${fe.packageId}`;
+      finalExamByKey.set(
+        key,
+        (finalExamByKey.get(key) ?? false) || fe.updationProhibited === true
       );
+    }
+    for (const q of questions) {
+      if (!q.packageId) continue;
+      const list = questionIdsByPackage.get(q.packageId);
+      if (list) list.push(q.id);
+      else questionIdsByPackage.set(q.packageId, [q.id]);
+    }
 
-      const activePackageId =
-        student.youtubeSubject ?? matchedPackage?.packageId;
-      if (!activePackageId) return undefined;
+    const allQuestionIds = questions.map((q) => q.id);
+    if (allQuestionIds.length > 0) {
+      const [questionAnswers, quizAnswers] = await Promise.all([
+        prisma.questionAnswer.findMany({
+          where: { questionId: { in: allQuestionIds } },
+          select: { questionId: true, answerId: true },
+        }),
+        prisma.studentQuizAnswer.findMany({
+          where: {
+            studentQuiz: {
+              studentId: { in: completedStudentIds },
+              questionId: { in: allQuestionIds },
+              isFinalExam: true,
+            },
+          },
+          select: {
+            selectedOptionId: true,
+            studentQuiz: { select: { questionId: true, studentId: true } },
+          },
+        }),
+      ]);
 
-      const progress = await getStudentProgressStatus(
-        student.wdt_ID,
-        activePackageId
-      );
-      const activePackage = await prisma.coursePackage.findUnique({
-        where: { id: activePackageId },
-        select: { name: true },
-      });
+      for (const qa of questionAnswers) {
+        const list = correctAnswersByQuestion.get(qa.questionId);
+        if (list) list.push(qa.answerId);
+        else correctAnswersByQuestion.set(qa.questionId, [qa.answerId]);
+      }
+      for (const ans of quizAnswers) {
+        const sid = ans.studentQuiz.studentId;
+        const qid = ans.studentQuiz.questionId;
+        let byQuestion = responsesByStudent.get(sid);
+        if (!byQuestion) {
+          byQuestion = new Map<string, string[]>();
+          responsesByStudent.set(sid, byQuestion);
+        }
+        const list = byQuestion.get(qid);
+        if (list) list.push(ans.selectedOptionId);
+        else byQuestion.set(qid, [ans.selectedOptionId]);
+      }
+    }
+  }
 
+  // 8. Build the per-student rows (no additional queries)
+  const studentResults = studentPackagePairs.map(
+    ({ student, activePackageId }) => {
+      const progress =
+        progressStatusByStudent.get(student.wdt_ID) ?? "notstarted";
       const phoneNo = formatPhoneNumber(student.phoneno, student.country);
 
       let result = { total: 0, correct: 0, score: 0 };
       let hasFinalExam = false;
       let isUpdateProhibited = false;
       if (progress === "completed") {
-        const [examData, finalExamStatus, updateProhibition] =
-          await Promise.all([
-            correctExamAnswer(activePackageId, student.wdt_ID),
-            checkFinalExamCreation(student.wdt_ID, activePackageId),
-            checkingUpdateProhibition(student.wdt_ID, activePackageId),
-          ]);
+        const key = `${student.wdt_ID}::${activePackageId}`;
+        hasFinalExam = finalExamByKey.has(key);
+        isUpdateProhibited = finalExamByKey.get(key) === true;
 
-        if (examData?.result) result = examData.result;
-        hasFinalExam = !!finalExamStatus;
-        isUpdateProhibited = !!updateProhibition;
+        // Mirrors correctExamAnswer scoring, computed from the batched data
+        const questionIds = questionIdsByPackage.get(activePackageId) ?? [];
+        const total = questionIds.length;
+        let correct = 0;
+        const responses = responsesByStudent.get(student.wdt_ID);
+        for (const questionId of questionIds) {
+          const correctAnswers = [
+            ...(correctAnswersByQuestion.get(questionId) ?? []),
+          ].sort();
+          const userAnswers = [...(responses?.get(questionId) ?? [])].sort();
+          const isCorrect =
+            correctAnswers.length === userAnswers.length &&
+            correctAnswers.every((v, i) => v === userAnswers[i]);
+          if (isCorrect) correct++;
+        }
+        result = {
+          total,
+          correct,
+          score: correct / total ? correct / total : 0,
+        };
       }
 
       const attendance = attendanceMap[student.wdt_ID] ?? {
@@ -1262,7 +1449,7 @@ export async function getStudentAnalyticsperPackage(
         whatsapplink: `https://wa.me/${phoneNo}`,
         isKid: student.isKid,
         chatid: student.chat_id,
-        activePackage: activePackage?.name ?? "",
+        activePackage: packageNameById.get(activePackageId) ?? "",
         studentProgress: progress,
         result,
         hasFinalExam,
@@ -1270,7 +1457,7 @@ export async function getStudentAnalyticsperPackage(
         isUpdateProhibited,
         attendances: `P-${attendance.present} A-${attendance.absent} T-${totalSessions}`,
       };
-    })
+    }
   );
 
   // 6. Filter by progress  
@@ -1347,6 +1534,43 @@ export async function getStudentAnalyticsperPackage(
       hasPreviousPage: currentPage > 1,
     },
   };
+}
+
+export async function getStudentAnalyticsperPackage(
+  searchTerm?: string,
+  currentPage: number = 1,
+  itemsPerPage: number = 10,
+  progressFilter?: "notstarted" | "inprogress" | "completed" | "all",
+  statusFilter?: "notstarted" | "inprogress" | "failed" | "passed" | "all",
+  lastSeenFilter?: "today" | "1day" | "2days" | "3days" | "3plus" | "all",
+  tefsirFilter?: boolean
+) {
+  try {
+    return await getStudentAnalyticsperPackageData(
+      searchTerm,
+      currentPage,
+      itemsPerPage,
+      progressFilter,
+      statusFilter,
+      lastSeenFilter,
+      tefsirFilter
+    );
+  } catch (error) {
+    // Never crash the page with a production digest error — log the real
+    // cause on the server and return an empty, safe payload instead.
+    console.error("getStudentAnalyticsperPackage failed:", error);
+    return {
+      data: [],
+      pagination: {
+        currentPage,
+        totalPages: 0,
+        itemsPerPage,
+        totalRecords: 0,
+        hasNextPage: false,
+        hasPreviousPage: currentPage > 1,
+      },
+    };
+  }
 }
 
 export async function getAvailablePackagesForStudent(studentId: number) {
