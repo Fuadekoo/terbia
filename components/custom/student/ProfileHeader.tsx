@@ -8,6 +8,7 @@ interface ProfileHeaderProps {
   role?: string;
   showBackButton?: boolean;
   chatId?: string | null;
+  studentId?: number | null;
   onNewsClick?: () => void;
   onAIClick?: () => void;
   themeColors?: {
@@ -26,13 +27,16 @@ export default function ProfileHeader({
   role = "Student",
   showBackButton = true,
   chatId,
+  studentId,
   onNewsClick,
   onAIClick,
   themeColors,
 }: ProfileHeaderProps) {
-  // Build the Telegram deep link with chatId
-  const backUrl = chatId
-    ? `https://t.me/darulkubrabot?startapp=${chatId}`
+  // The bot's start_param is read back as a wdt_ID, so send the student id here.
+  // chatId is only a fallback for callers that don't know the student id.
+  const startParam = studentId ?? chatId;
+  const backUrl = startParam
+    ? `https://t.me/darulkubrabot?startapp=${startParam}`
     : "https://t.me/darulkubrabot?startapp=";
 
   // Use Telegram theme colors or defaults

@@ -267,14 +267,16 @@ export default function Page() {
 
   useEffect(() => {
     const run = async () => {
-      if (!chatId) return;
+      // The wdt_ID in the URL is enough — anyone with the link can learn.
+      // chatId is only used for Telegram-specific extras (deep links, theme).
+      if (!wdt_ID) return;
 
       setLoading(true);
       setError(null);
 
       try {
         // wdt_ID is always present in this route since it's a URL parameter
-        const res = await getStudentFlowById(chatId, wdt_ID!);
+        const res = await getStudentFlowById(chatId, wdt_ID);
         setStartRes(res as StartSingle | StartChoose | StartError);
       } catch {
         setError("Failed to start flow");
@@ -288,7 +290,6 @@ export default function Page() {
   // Removed extra profile pre-list rendering to keep UI minimal/professional
 
   const handleChoose = async (studentId: number, packageId: string) => {
-    if (!chatId) return;
     setLoading(true);
     setError(null);
     setPendingChoice(`${studentId}:${packageId}`);
@@ -398,66 +399,6 @@ export default function Page() {
           paddingBottom: "120px",
         }}
       >
-        {!chatId && (
-          <div
-            style={{
-              padding: 16,
-              border: `1px solid ${getSecondaryBgColor()}`,
-              borderRadius: 12,
-              background: getSecondaryBgColor(),
-              marginBottom: 12,
-            }}
-          >
-            <div
-              style={{
-                fontWeight: 700,
-                marginBottom: 6,
-                color: getTextColor(),
-              }}
-            >
-              Open in Telegram
-            </div>
-            <div style={{ color: getHintColor(), marginBottom: 12 }}>
-              We couldn&apos;t detect your Telegram chat. Please open this page
-              from the Telegram Mini App.
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ? (
-                <button
-                  onClick={() => {
-                    const username = process.env
-                      .NEXT_PUBLIC_TELEGRAM_BOT_USERNAME as string;
-                    const url = `https://t.me/${username}?start=webapp`;
-                    const w = window as unknown as {
-                      Telegram?: {
-                        WebApp?: { openTelegramLink?: (u: string) => void };
-                      };
-                    };
-                    if (w.Telegram?.WebApp?.openTelegramLink) {
-                      w.Telegram.WebApp.openTelegramLink(url);
-                    } else {
-                      window.open(url, "_blank");
-                    }
-                  }}
-                  style={{
-                    padding: "10px 14px",
-                    background: getButtonColor(),
-                    color: getButtonTextColor(),
-                    border: "none",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                  }}
-                >
-                  Open Telegram
-                </button>
-              ) : null}
-              <span style={{ fontSize: 12, color: getHintColor() }}>
-                Tip: Find our bot in Telegram and tap &quot;Open&quot;.
-              </span>
-            </div>
-          </div>
-        )}
-
         {error && (
           <div
             style={{
@@ -473,7 +414,7 @@ export default function Page() {
           </div>
         )}
 
-        {chatId && (
+        {(
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {loading && (
               <div
@@ -779,8 +720,7 @@ export default function Page() {
         )}
 
         {/* Fixed ProfileHeader at Bottom */}
-        {chatId &&
-          !loading &&
+        {!loading &&
           chooseData &&
           chooseData.students.length === 1 && (
             <div className="fixed bottom-0 left-0 right-0 z-50">
@@ -788,6 +728,7 @@ export default function Page() {
                 name={chooseData.students[0].name || "Student"}
                 role="Student"
                 chatId={chatId}
+                studentId={chooseData.students[0].studentId}
                 themeColors={{
                   bg: getBgColor(),
                   text: getTextColor(),

@@ -343,15 +343,13 @@ export async function startStudentFlow(
   }
 }
 
+// chatId is optional — the student is identified by wdt_ID from the URL.
 export async function chooseStudentPackage(
-  chatId: string,
+  _chatId: string | null | undefined,
   studentId: number,
   packageId: string
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
-    if (!chatId || !String(chatId).trim()) {
-      return { success: false, error: "Missing chatId" };
-    }
     if (!studentId || !packageId) {
       return { success: false, error: "Missing studentId or packageId" };
     }
@@ -368,12 +366,14 @@ export async function chooseStudentPackage(
       return { success: false, error: "Invalid package" };
     }
 
-    await prisma.wpos_wpdatatable_23.update({
-      where: {
-        chat_id: String(chatId),
-        wdt_ID: studentId,
-        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
-      },
+    const resolvedId = await resolveStudentId(studentId);
+    if (resolvedId === null) {
+      return { success: false, error: "Student profile not found" };
+    }
+    studentId = resolvedId;
+
+    await prisma.wpos_wpdatatable_23.updateMany({
+      where: { wdt_ID: studentId },
       data: { youtubeSubject: packageId },
     });
 
@@ -424,38 +424,56 @@ export async function chooseStudentPackage(
   }
 }
 
-// Validate that a given chatId is authorized to access a specific student (wdt_ID)
+// Resolve the number that appears in /student/<id> to a real wdt_ID.
+// Normally it IS the wdt_ID, but some bot deep links pass the Telegram chat_id
+// as the start_param instead, so fall back to looking the student up by chat_id.
+// Returns null only when nothing in the table matches.
+async function resolveStudentId(idFromUrl: number): Promise<number | null> {
+  if (!idFromUrl) return null;
+
+  const byWdtId = await prisma.wpos_wpdatatable_23.findFirst({
+    where: { wdt_ID: Number(idFromUrl) },
+    select: { wdt_ID: true },
+  });
+  if (byWdtId) return byWdtId.wdt_ID;
+
+  const byChatId = await prisma.wpos_wpdatatable_23.findFirst({
+    where: { chat_id: String(idFromUrl) },
+    select: { wdt_ID: true },
+    orderBy: { wdt_ID: "asc" },
+  });
+  return byChatId?.wdt_ID ?? null;
+}
+
+// Validate access to a specific student (wdt_ID).
+// Access is granted by the link alone: anyone holding /student/<wdt_ID> can learn,
+// as long as the student record exists and has a learning-eligible status.
+// chatId is optional and no longer required to match the registered Telegram chat.
 export async function validateStudentAccess(
-  chatId: string,
+  _chatId: string | null | undefined,
   studentId: number
 ): Promise<{ authorized: boolean }> {
   try {
-    if (!chatId || !String(chatId).trim() || !studentId) {
+    if (!studentId) {
       return { authorized: false };
     }
-    const exists = await prisma.wpos_wpdatatable_23.findFirst({
-      where: {
-        chat_id: String(chatId),
-        wdt_ID: Number(studentId),
-        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
-      },
-      select: { wdt_ID: true },
-    });
-    return { authorized: Boolean(exists) };
+    // No status filter: the link itself grants access, whatever the student's
+    // status is. Only a completely unknown id is rejected.
+    const resolved = await resolveStudentId(Number(studentId));
+    return { authorized: resolved !== null };
   } catch {
     return { authorized: false };
   }
 }
 
-// Get flow data for a specific student by ID
+// Get flow data for a specific student by ID.
+// chatId is optional — the wdt_ID in the URL is what identifies the student, so the
+// page works both inside the Telegram Mini App and from a plain browser link.
 export async function getStudentFlowById(
-  chatId: string,
+  _chatId: string | null | undefined,
   studentId: number
 ): Promise<StartFlowResult> {
   try {
-    if (!chatId || !String(chatId).trim()) {
-      return { success: false, error: "Missing chatId" };
-    }
     if (!studentId) {
       return { success: false, error: "Missing studentId" };
     }
@@ -465,12 +483,17 @@ export async function getStudentFlowById(
       return { success: false, error: "Missing BASE_URL configuration" };
     }
 
-    // Get the specific student record
+    // The URL number is normally the wdt_ID, but older bot links pass chat_id.
+    const resolvedId = await resolveStudentId(studentId);
+    if (resolvedId === null) {
+      return { success: false, error: "Student profile not found" };
+    }
+    studentId = resolvedId;
+
+    // Get the specific student record. No status filter — the link grants access.
     const student = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
-        chat_id: String(chatId),
         wdt_ID: studentId,
-        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: {
         wdt_ID: true,

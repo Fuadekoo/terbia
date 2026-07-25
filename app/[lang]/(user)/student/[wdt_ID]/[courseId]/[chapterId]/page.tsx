@@ -284,9 +284,10 @@ function Page() {
     }
   }, [chatId]);
 
+  // Access is granted by the link itself — no Telegram chat id required.
   useEffect(() => {
     (async () => {
-      if (!chatId || !wdt_ID) return;
+      if (!wdt_ID) return;
       const res = await validateStudentAccess(chatId, wdt_ID);
       setAuthorized(res.authorized);
     })();
@@ -393,8 +394,8 @@ function Page() {
             borderColor: themeColors.hint,
           }}
         >
-          Access denied. Please open from Telegram using your registered
-          account.
+          This learning link is not valid. Please check the link or contact the
+          admin.
         </div>
       </motion.div>
     );
@@ -1036,8 +1037,8 @@ function Page() {
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                   <a
                                     href={
-                                      chatId
-                                        ? `https://t.me/darulkubrabot?startapp=${chatId}`
+                                      wdt_ID
+                                        ? `https://t.me/darulkubrabot?startapp=${wdt_ID}`
                                         : "https://t.me/darulkubrabot?startapp="
                                     }
                                     className="flex-shrink-0"
