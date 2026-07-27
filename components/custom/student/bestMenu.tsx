@@ -511,7 +511,11 @@ export default function MainMenu({ data, className, themeColors }: MainMenuProps
                   </div>
                 ) : (
                   <Link
-                    href={`/en/student/${data?.wdt_ID}/finalexam/${data?.activePackage?.id}`}
+                    href={
+                      data?.wdt_ID && data?.activePackage?.id
+                        ? `/en/student/${data.wdt_ID}/finalexam/${data.activePackage.id}`
+                        : "#"
+                    }
                     className="w-full px-4 py-3 text-left transition-colors duration-200 flex items-center gap-3"
                     style={{ background: bgColor }}
                   >

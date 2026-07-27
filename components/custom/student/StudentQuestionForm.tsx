@@ -5,6 +5,7 @@ import useAction from "@/hooks/useAction";
 import { correctAnswer, submitAnswers } from "@/actions/student/question";
 import { getstudentId } from "@/actions/student/dashboard";
 import { updatePathProgressData } from "@/actions/student/progress";
+import { buildStudentProgressPath } from "@/lib/utils";
 import { toast } from "sonner";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -115,6 +116,8 @@ const StudentQuestionForm = ({
 
     wdt_ID
   );
+  // Guarded: returns null rather than a path containing "undefined".
+  const nextPath = buildStudentProgressPath(wdt_ID, progressData);
   const [, refetchSubmit, submitLoading] = useAction(submitAnswers, [
     ,
     async () => {
@@ -192,10 +195,8 @@ const StudentQuestionForm = ({
 
     try {
       const an = refetchSubmit(answers, wdt_ID, courseId, chapterId);
-      if (an === undefined && progressData) {
-        router.push(
-          `/en/student/${wdt_ID}/${progressData[0]}/${progressData[1]}`
-        );
+      if (an === undefined && nextPath) {
+        router.push(nextPath);
         console.log("Answer", an);
       }
     } catch (e) {
@@ -406,15 +407,13 @@ const StudentQuestionForm = ({
                 ) : null}
                 መልሱን ይላኩ
               </Button>
-              {showCorrect && feedback?.result?.score === 1 && progressData ? (
+              {showCorrect && feedback?.result?.score === 1 && nextPath ? (
                 <Button
                   asChild
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold text-base py-2 px-6 rounded-md shadow-md transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                   aria-label="Go to next chapter"
                 >
-                  <Link
-                    href={`/en/student/${wdt_ID}/${progressData[0]}/${progressData[1]}`}
-                  >
+                  <Link href={nextPath}>
                     ወደ ቀጣይ ክፍል ይሂዱ
                   </Link>
                 </Button>

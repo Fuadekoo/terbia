@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/db";
+import { FINAL_EXAM_SEGMENT } from "@/lib/utils";
 
 export async function noProgress(
   wdt_ID: number,
@@ -545,7 +546,11 @@ export async function cousefailedsolve(wdt_ID: number) {
   });
 
   if (progress.filter((p) => p.isCompleted).length === allChapterIds.length) {
-    return ["finalExam", studentwithActivePacage?.activePackage?.id];
+    const activePackageId = studentwithActivePacage?.activePackage?.id;
+    // Without a package id there is no final exam to route to — returning the
+    // sentinel anyway produced `/student/<id>/finalexam/undefined`.
+    if (!activePackageId) return false;
+    return [FINAL_EXAM_SEGMENT, activePackageId];
   } else {
     const CompletedlastChapterId = progress.findLast((p) => p.isCompleted)
       ?.chapter.id;
@@ -585,7 +590,8 @@ export async function cousefailedsolve(wdt_ID: number) {
           },
         },
       });
-      return [lastChapter?.chapter.course.id, lastChapter?.chapter.id];
+      if (!lastChapter) return false;
+      return [lastChapter.chapter.course.id, lastChapter.chapter.id];
     }else{
       return false;
     }

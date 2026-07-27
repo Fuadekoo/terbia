@@ -1,21 +1,20 @@
 "use client";
-import {LucideIcon} from "lucide-react";
-import {usePathname,useRouter} from "next/navigation";
-import {cn} from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
-interface SidebarItemProps{
-    icon:LucideIcon;
-    label:string;
-    href:string;
-};
-export const SidebarItem =({
-    icon:Icon,
-    label,
-    href,
-}:SidebarItemProps)=>{
+interface SidebarItemProps {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+}
+
+export const SidebarItem = ({
+  icon: Icon,
+  label,
+  href,
+}: SidebarItemProps) => {
   const pathname = usePathname();
-
-  
   const router = useRouter();
 
   const isActive =
@@ -23,32 +22,37 @@ export const SidebarItem =({
     pathname === href ||
     pathname?.startsWith(`${href}/`);
 
-  const onClick = () => {
-    router.push(href);
-  };
   return (
     <button
-      onClick={onClick}
+      onClick={() => router.push(href)}
       type="button"
+      aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex items-center gap-x-2 text-slate-500 text-sm font-medium pl-6 transition-all hover:text-slate-600 hover:bg-slate-300/20",
-        isActive &&
-          "text-sky-700 bg-sky-200/20 hover:bg-sky-300/20 hover:text-sky-700"
+        "group focus-ring relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium",
+        "transition-all duration-200 ease-out-soft",
+        isActive
+          ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-xs"
+          : "text-sidebar-foreground/75 hover:bg-sidebar-accent/55 hover:text-sidebar-foreground"
       )}
     >
-      <div className="flex items-center gap-x-2 py-4">
-        <Icon
-          size={22}
-          className={cn("text-slate-500", isActive && "text-sky-700")}
-        />
-        {label}
-      </div>
-      <div
+      {/* Active rail */}
+      <span
         className={cn(
-          "ml-auto opacity-0 border-2 border-sky-700 transition-all h-14",
-          isActive && "opacity-100"
+          "absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-sidebar-primary",
+          "transition-all duration-200",
+          isActive ? "opacity-100" : "opacity-0 scale-y-50"
         )}
       />
+      <Icon
+        size={18}
+        className={cn(
+          "shrink-0 transition-colors",
+          isActive
+            ? "text-sidebar-primary"
+            : "text-sidebar-foreground/55 group-hover:text-sidebar-foreground/85"
+        )}
+      />
+      <span className="truncate text-left">{label}</span>
     </button>
   );
-}
+};

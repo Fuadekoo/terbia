@@ -124,12 +124,14 @@ export default function MainMenu({ data, className }: MainMenuProps) {
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
+  const finalExamPackageId = data?.activePackage?.id;
+  const canOpenFinalExam =
+    allCoursesCompleted && !!data?.wdt_ID && !!finalExamPackageId;
+
   const handleFinalExamClick = () => {
-    if (allCoursesCompleted) {
-      router.push(
-        `/en/student/${data?.wdt_ID}/finalexam/${data?.activePackage?.id}`
-      );
-    }
+    // Guarded so a missing package id can never produce `/finalexam/undefined`.
+    if (!canOpenFinalExam) return;
+    router.push(`/en/student/${data!.wdt_ID}/finalexam/${finalExamPackageId}`);
   };
 
   return (

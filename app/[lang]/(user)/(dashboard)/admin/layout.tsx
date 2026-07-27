@@ -1,5 +1,5 @@
 import { Sidebar } from "@/components/custom/admin/sidebar";
-// import { Navbar } from "@/components/custom/admin/navbar";
+import { Navbar } from "@/components/custom/admin/navbar";
 
 export default async function DashboardLayout({
   children,
@@ -7,15 +7,22 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-dvh overflow-hidden grid ">
-      {/* <div className="h-[80px] md:pl-56 fixed inset-y-0 w-full z-50 bg-blue-50">
-        <Navbar />
-      </div> */}
-      <div className="hidden md:flex h-full w-56 flex-col fixed inset-y-0 z-50 bg-blue-50">
+    <div className="h-dvh overflow-hidden">
+      {/* Desktop sidebar */}
+      <aside className="fixed inset-y-0 z-50 hidden w-60 flex-col md:flex">
         <Sidebar />
-      </div>
-      <main className="h-[calc(100dvh-0px)] md:pl-56 grid overflow-hidden bg-blue-50">
-        {children}
+      </aside>
+
+      {/* Mobile top bar — the only way to reach navigation below md */}
+      <header className="fixed inset-x-0 top-0 z-40 h-14 md:hidden">
+        <Navbar />
+      </header>
+
+      {/* The outer frame is fixed-height; the inner wrapper is the scroll
+          container. Pages that manage their own scrolling (PageShell) sit at
+          h-full inside it and never make it scroll. */}
+      <main className="app-canvas flex h-dvh flex-col overflow-hidden pt-14 md:pl-60 md:pt-0">
+        <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
       </main>
     </div>
   );

@@ -45,89 +45,90 @@ export default function ProfileHeader({
   const hintColor = themeColors?.hint || "#9ca3af";
   const linkColor = themeColors?.link || "#0ea5e9";
 
+  // Shared styling for the circular icon buttons on both ends of the header.
+  const iconButtonClass =
+    "grid place-items-center size-9 rounded-full transition-all duration-200 " +
+    "hover:brightness-110 active:scale-95 focus-visible:outline-none " +
+    "focus-visible:ring-2 focus-visible:ring-offset-1";
+  const iconButtonStyle = {
+    background: `${linkColor}1a`,
+    border: `1px solid ${linkColor}33`,
+    // Keeps the focus ring visible on any Telegram background
+    ["--tw-ring-color" as string]: `${linkColor}80`,
+    ["--tw-ring-offset-color" as string]: bgColor,
+  } as React.CSSProperties;
+
   return (
     <div
-      className="w-full px-4 pb-3 pt-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md profile-header"
+      className="profile-header sticky top-0 z-50 flex w-full items-center justify-between gap-3 px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl"
       style={{
         background: `${bgColor}f0`,
         borderBottom: `1px solid ${themeColors?.secondaryBg || "#374151"}40`,
       }}
     >
-      {/* Left Side - Back Button + Profile */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        {/* Back Button */}
+      {/* Left — back button + identity */}
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         {showBackButton && (
-          <a href={backUrl} className="flex-shrink-0">
-            <button
-              className="p-2 rounded-full transition-all duration-200 hover:opacity-80"
-              style={{
-                background: `${linkColor}20`,
-                border: `1px solid ${linkColor}40`,
-              }}
-              aria-label="Back to Darelkubra"
-            >
-              <ArrowLeft className="w-5 h-5" style={{ color: linkColor }} />
-            </button>
+          <a
+            href={backUrl}
+            className={`${iconButtonClass} shrink-0`}
+            style={iconButtonStyle}
+            aria-label="Back to Darelkubra"
+          >
+            <ArrowLeft className="size-4.5" style={{ color: linkColor }} />
           </a>
         )}
 
-        {/* Profile Picture */}
-        <div className="relative flex-shrink-0">
+        <div className="relative shrink-0">
           <Image
             src="/userProfileIcon.png"
-            alt={name}
-            width={48}
-            height={48}
-            className="rounded-full object-cover"
-            style={{
-              border: `2px solid ${linkColor}40`,
-            }}
+            alt=""
+            width={44}
+            height={44}
+            className="size-11 rounded-full object-cover"
+            style={{ border: `2px solid ${linkColor}40` }}
           />
         </div>
 
-        {/* Name and Role */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <h2
-            className="text-base font-bold truncate"
+            className="truncate text-[0.9375rem] font-semibold leading-tight"
             style={{ color: textColor }}
           >
             {name}
           </h2>
-          <p className="text-sm truncate" style={{ color: hintColor }}>
+          <p
+            className="truncate text-xs leading-tight"
+            style={{ color: hintColor }}
+          >
             {role}
           </p>
         </div>
       </div>
 
-      {/* Right Side - News & AI Icons */}
-      <div className="flex items-center gap-2">
-        {/* News Icon */}
+      {/* Right — quick actions */}
+      <div className="flex shrink-0 items-center gap-2">
         {onNewsClick && (
           <button
+            type="button"
             onClick={onNewsClick}
-            className="p-2 rounded-full transition-all duration-200 hover:opacity-80"
-            style={{
-              background: `${linkColor}15`,
-              border: `1px solid ${linkColor}30`,
-            }}
+            className={iconButtonClass}
+            style={iconButtonStyle}
             aria-label="News"
           >
-            <Newspaper className="w-4 h-4" style={{ color: linkColor }} />
+            <Newspaper className="size-4" style={{ color: linkColor }} />
           </button>
         )}
 
-        {/* AI/Chat Icon */}
         {onAIClick && (
           <button
+            type="button"
             onClick={onAIClick}
-            className="p-2 rounded-full transition-all duration-200 hover:opacity-80"
-            style={{
-              background: `${linkColor}15`,
-              border: `1px solid ${linkColor}30`,
-            }}
+            className={iconButtonClass}
+            style={iconButtonStyle}
             aria-label="AI Assistant"
           >
-            <Bot className="w-4 h-4" style={{ color: linkColor }} />
+            <Bot className="size-4" style={{ color: linkColor }} />
           </button>
         )}
       </div>

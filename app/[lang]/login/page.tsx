@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2, Lock, Phone } from "lucide-react";
 import useAction from "@/hooks/useAction";
 
 type FormValues = z.infer<typeof loginSchema>;
@@ -30,6 +30,7 @@ function LoginPage() {
   });
 
   const [pending, setPending] = useState(false);
+  const [showPasscode, setShowPasscode] = useState(false);
   const [] = useAction(authenticate, [, () => {}]);
 
   const onSubmit = async (values: FormValues) => {
@@ -79,104 +80,147 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 px-4 py-8">
-      <div className="w-full max-w-md bg-white border border-gray-200 shadow-lg rounded-2xl p-8 animate-in fade-in duration-500 ease-out">
-        <div className="flex justify-center mb-6">
-          <Image
-            src="/logo.png"
-            alt="Darelkubra Logo"
-            width={64}
-            height={64}
-            className="h-16 w-auto object-contain"
-            priority
-          />
+    <div className="app-canvas relative min-h-dvh flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-[26rem] animate-rise-in">
+        {/* Brand */}
+        <div className="flex flex-col items-center gap-3 mb-7">
+          <div className="grid place-items-center size-16 rounded-2xl bg-card border border-border shadow-md">
+            <Image
+              src="/logo.png"
+              alt="Darelkubra"
+              width={44}
+              height={44}
+              className="h-10 w-auto object-contain"
+              priority
+            />
+          </div>
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">
+              Welcome back
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Sign in to the Darelkubra portal
+            </p>
+          </div>
         </div>
 
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
-            Admin Portal
-          </h1>
-          <p className="text-sm text-gray-500">Sign in to continue</p>
-        </div>
-
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-5"
-          noValidate
-        >
-          <div>
-            <label
-              htmlFor="phoneno"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Phone Number
-            </label>
-            <Input
-              id="phoneno"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="09*********"
-              aria-invalid={!!errors.phoneno || undefined}
-              aria-describedby={errors.phoneno ? "phoneno-error" : undefined}
-              disabled={pending}
-              {...register("phoneno")}
-            />
-            {errors.phoneno && (
-              <p id="phoneno-error" className="text-sm text-red-600 mt-1">
-                {errors.phoneno.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="passcode"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Passcode
-            </label>
-            <Input
-              id="passcode"
-              type="password"
-              autoComplete="current-password"
-              placeholder="********"
-              aria-invalid={!!errors.passcode || undefined}
-              aria-describedby={errors.passcode ? "passcode-error" : undefined}
-              disabled={pending}
-              {...register("passcode")}
-            />
-            {errors.passcode && (
-              <p id="passcode-error" className="text-sm text-red-600 mt-1">
-                {errors.passcode.message}
-              </p>
-            )}
-          </div>
-
-          {errors.root?.message && (
-            <div
-              role="alert"
-              className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm p-3"
-            >
-              {errors.root.message}
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full flex justify-center items-center gap-2"
-            disabled={pending}
-            aria-busy={pending}
+        <div className="surface shadow-lg p-6 sm:p-7">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-5"
+            noValidate
           >
-            {pending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Signing in…
-              </>
-            ) : (
-              "Sign in"
+            <div className="space-y-1.5">
+              <label
+                htmlFor="phoneno"
+                className="block text-sm font-medium text-foreground"
+              >
+                Phone number
+              </label>
+              <div className="relative">
+                <Phone className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  id="phoneno"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="09*********"
+                  className="pl-9.5"
+                  aria-invalid={!!errors.phoneno || undefined}
+                  aria-describedby={
+                    errors.phoneno ? "phoneno-error" : undefined
+                  }
+                  disabled={pending}
+                  {...register("phoneno")}
+                />
+              </div>
+              {errors.phoneno && (
+                <p
+                  id="phoneno-error"
+                  className="text-sm text-destructive-tint-fg"
+                >
+                  {errors.phoneno.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="passcode"
+                className="block text-sm font-medium text-foreground"
+              >
+                Passcode
+              </label>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  id="passcode"
+                  type={showPasscode ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  className="pl-9.5 pr-10"
+                  aria-invalid={!!errors.passcode || undefined}
+                  aria-describedby={
+                    errors.passcode ? "passcode-error" : undefined
+                  }
+                  disabled={pending}
+                  {...register("passcode")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasscode((v) => !v)}
+                  disabled={pending}
+                  className="focus-ring absolute right-1.5 top-1/2 -translate-y-1/2 grid place-items-center size-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  aria-label={showPasscode ? "Hide passcode" : "Show passcode"}
+                >
+                  {showPasscode ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </button>
+              </div>
+              {errors.passcode && (
+                <p
+                  id="passcode-error"
+                  className="text-sm text-destructive-tint-fg"
+                >
+                  {errors.passcode.message}
+                </p>
+              )}
+            </div>
+
+            {errors.root?.message && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg bg-destructive/10 border border-destructive/25 text-destructive-tint-fg text-sm p-3"
+              >
+                <AlertCircle className="size-4 mt-0.5 shrink-0" />
+                <span>{errors.root.message}</span>
+              </div>
             )}
-          </Button>
-        </form>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={pending}
+              aria-busy={pending}
+            >
+              {pending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Signing in…
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </Button>
+          </form>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Darelkubra Academy · Learning portal
+        </p>
       </div>
     </div>
   );

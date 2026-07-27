@@ -8,9 +8,11 @@ import {
 } from "next/navigation";
 import { updatePathProgressData } from "@/actions/student/progress";
 import useAction from "@/hooks/useAction";
+import { buildStudentProgressPath } from "@/lib/utils";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { wdt_ID, courseId, chapterId } = useParams() as {
+  const { lang, wdt_ID, courseId, chapterId } = useParams() as {
+    lang: string;
     wdt_ID: string;
     courseId: string;
     chapterId: string;
@@ -24,44 +26,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     wdtIdNum
   );
 
-  const updatedCourseId = update ? update[0] : courseId;
-  const updatedChapterId = update ? update[1] : chapterId;
-
   const router = useRouter();
 
-  console.log("🔧 Layout Debug:");
-  console.log("  isClicked:", isClicked);
-  console.log("  Current courseId:", courseId);
-  console.log("  Current chapterId:", chapterId);
-  console.log("  Updated courseId:", updatedCourseId);
-  console.log("  Updated chapterId:", updatedChapterId);
-  console.log("  Update data:", update);
+  // `update` is [courseId, chapterId] or [FINAL_EXAM_SEGMENT, packageId], and is
+  // `false` when there is nowhere to move on to. The builder returns null for
+  // anything it cannot turn into a real route, so we never navigate to a path
+  // containing "undefined".
+  const nextPath = buildStudentProgressPath(wdtIdNum, update, lang || "en");
+  const currentPath = `/${lang || "en"}/student/${wdtIdNum}/${courseId}/${chapterId}`;
 
   useEffect(() => {
-    if (
-      !isClicked &&
-      ((updatedCourseId && updatedCourseId !== courseId) ||
-        (updatedChapterId && updatedChapterId !== chapterId))
-    ) {
-      console.log(
-        "🚀 Layout redirecting to:",
-        `/en/student/${wdtIdNum}/${updatedCourseId}/${updatedChapterId}`
-      );
-      redirect(
-        `/en/student/${wdtIdNum}/${updatedCourseId}/${updatedChapterId}`
-      );
-    } else {
-      console.log("ℹ️ No redirect needed or isClicked=true");
+    if (!isClicked && nextPath && nextPath !== currentPath) {
+      redirect(nextPath);
     }
-  }, [
-    updatedCourseId,
-    updatedChapterId,
-    wdtIdNum,
-    courseId,
-    chapterId,
-    router,
-    isClicked,
-  ]);
+  }, [nextPath, currentPath, router, isClicked]);
 
   return <div className="overflow-auto grid">{children}</div>;
 }

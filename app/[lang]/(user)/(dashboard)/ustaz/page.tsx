@@ -15,7 +15,10 @@ import {
   LogOut,
   User,
   ChevronDown,
+  AlertTriangle,
 } from "lucide-react";
+import { StatCard } from "@/components/custom/common/page-shell";
+import { cn } from "@/lib/utils";
 import {
   getCurrentUstaz,
   logout,
@@ -291,20 +294,13 @@ export default function UstazDashboard() {
 
   if (isLoading && retryCount === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="app-canvas flex min-h-dvh items-center justify-center px-4">
         <div className="text-center">
-          <div className="relative">
-            <RefreshCw className="h-12 w-12 animate-spin mx-auto mb-6 text-blue-500" />
-            <div className="absolute inset-0 rounded-full border-4 border-blue-200"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
-          </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Loading Dashboard</h3>
-          <p className="text-slate-600 mb-4">Fetching your questions and responses...</p>
-          <div className="flex items-center justify-center space-x-1">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-          </div>
+          <RefreshCw className="mx-auto mb-5 size-10 animate-spin text-primary" />
+          <h3 className="mb-1 text-lg font-semibold">Loading dashboard</h3>
+          <p className="text-sm text-muted-foreground">
+            Fetching your questions and responses…
+          </p>
         </div>
       </div>
     );
@@ -312,34 +308,31 @@ export default function UstazDashboard() {
 
   if (hasError && !isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="rounded-full bg-red-100 p-4 w-16 h-16 mx-auto mb-6 flex items-center justify-center">
-            <RefreshCw className="h-8 w-8 text-red-500" />
+      <div className="app-canvas flex min-h-dvh items-center justify-center px-4">
+        <div className="surface mx-auto max-w-md p-7 text-center shadow-lg">
+          <div className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-destructive/10">
+            <AlertTriangle className="size-7 text-destructive-tint-fg" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Failed to Load Dashboard</h3>
-          <p className="text-slate-600 mb-6">
-            We encountered an error while loading your dashboard. This might be due to a network issue or server problem.
+          <h3 className="mb-2 text-lg font-semibold">
+            Failed to load dashboard
+          </h3>
+          <p className="mb-6 text-sm text-muted-foreground">
+            We hit an error loading your dashboard. This might be a network or
+            server issue.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col justify-center gap-2.5 sm:flex-row">
             <Button
               onClick={() => {
                 setHasError(false);
                 setRetryCount(0);
                 fetchData();
               }}
-              className="flex items-center gap-2"
             >
-              <RefreshCw className="h-4 w-4" />
-              Try Again
+              <RefreshCw className="size-4" />
+              Try again
             </Button>
-            <Button
-              onClick={() => window.location.reload()}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh Page
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Refresh page
             </Button>
           </div>
         </div>
@@ -354,370 +347,327 @@ export default function UstazDashboard() {
     ? "All Course Packages" 
     : coursePackages.find(pkg => pkg.id === selectedCoursePackage)?.name || "Unknown Package";
 
+  const packageChip = (courseName: string) => (
+    <Badge
+      variant="info"
+      className="cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation();
+        const packageId = coursePackages.find(
+          (pkg) => pkg.name === courseName
+        )?.id;
+        if (packageId) handleCoursePackageChange(packageId);
+      }}
+    >
+      {courseName}
+    </Badge>
+  );
+
+  const questionMeta = (question: Question) => (
+    <div className="space-y-1.5 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2">{packageChip(question.courseName)}</div>
+      <p>Student: {question.studentName}</p>
+      <p>Asked: {new Date(question.createdAt).toLocaleDateString()}</p>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="h-screen flex flex-col">
-        {/* Header */}
-        <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-4 sm:px-6 lg:px-8 py-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-blue-100 p-2">
-                  <User className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-                    Welcome, {ustazData?.ustazname || "Ustaz"}
-                  </h1>
-                  <p className="text-sm sm:text-base text-slate-600">
-                    Manage student questions and responses
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => fetchData()}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                  disabled={isLoading}
-                >
-                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </Button>
-                <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  className="flex items-center gap-2 w-fit"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
-              </div>
+    <div className="app-canvas flex h-dvh flex-col overflow-hidden">
+      {/* Header */}
+      <div className="surface-glass shrink-0 shadow-xs">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+              <User className="size-5" />
             </div>
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
+                Welcome, {ustazData?.ustazname || "Ustaz"}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Manage student questions and responses
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              onClick={() => fetchData()}
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+            >
+              <RefreshCw className={isLoading ? "size-4 animate-spin" : "size-4"} />
+              Refresh
+            </Button>
+            <Button onClick={handleLogout} variant="outline" size="sm">
+              <LogOut className="size-4" />
+              Logout
+            </Button>
           </div>
         </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24">
-              {/* Stats Cards */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-slate-900">
-                    Questions for: {selectedPackageName}
-                  </h2>
-                  {lastFetchTime && (
-                    <p className="text-xs text-slate-500">
-                      Last updated: {lastFetchTime.toLocaleTimeString()}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-sm">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Total Questions
-                    </CardTitle>
-                    <MessageCircle className="h-4 w-4 text-blue-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-xl sm:text-2xl font-bold text-slate-900">
-                      {questions.length}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-sm">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Pending
-                    </CardTitle>
-                    <Clock className="h-4 w-4 text-orange-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-xl sm:text-2xl font-bold text-orange-600">
-                      {unansweredQuestions.length}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-sm">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Answered
-                    </CardTitle>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-xl sm:text-2xl font-bold text-green-600">
-                      {answeredQuestions.length}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Course Package Filter */}
-              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-sm mb-6 sm:mb-8">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                    Filter by Course Package
-                    {selectedCoursePackage !== "all" && (
-                      <Badge className="bg-blue-100 text-blue-700 text-xs">
-                        Filtered
-                      </Badge>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <select
-                        value={selectedCoursePackage}
-                        onChange={(e) => handleCoursePackageChange(e.target.value)}
-                        className="w-full appearance-none bg-white border border-slate-300 rounded-lg px-4 py-3 pr-10 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        disabled={isLoading}
-                      >
-                        <option value="all">All Course Packages ({questions.length} questions)</option>
-                        {coursePackages.map((pkg) => (
-                          <option key={pkg.id} value={pkg.id}>
-                            {pkg.name} ({pkg._count.qandAQuestion} questions)
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
-                    </div>
-                    {selectedCoursePackage !== "all" && (
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-slate-600">
-                          Showing questions from: <span className="font-semibold text-blue-700">{selectedPackageName}</span>
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCoursePackageChange("all")}
-                          className="text-xs"
-                        >
-                          Show All
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Questions Section */}
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                  Questions & Answers - {selectedPackageName}
-                </h2>
-                <p className="text-sm text-slate-600">
-                  {selectedCoursePackage === "all" 
-                    ? "Showing all questions from all course packages" 
-                    : `Showing questions from ${selectedPackageName} only`}
-                </p>
-              </div>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-                {/* Pending Questions */}
-                <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-orange-500" />
-                      Pending Questions ({unansweredQuestions.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 max-h-80 overflow-y-auto">
-                    {unansweredQuestions.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Clock className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500">
-                          {selectedCoursePackage === "all" 
-                            ? "No pending questions in any course package" 
-                            : `No pending questions in ${selectedPackageName}`}
-                        </p>
-                      </div>
-                    ) : (
-                      unansweredQuestions.map((question) => (
-                        <div
-                          key={question.id}
-                          onClick={() => handleSelectQuestion(question)}
-                          className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-all ${
-                            selectedQuestion?.id === question.id
-                              ? "border-blue-500 bg-blue-50"
-                              : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                          }`}
-                        >
-                          <div className="space-y-2">
-                            <div className="flex items-start justify-between">
-                              <h4 className="font-medium text-slate-900 text-sm">
-                                {question.question}
-                              </h4>
-                              <Badge variant="outline" className="text-xs">
-                                Pending
-                              </Badge>
-                            </div>
-                            <div className="text-xs text-slate-500 space-y-1">
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant="secondary" 
-                                  className="text-xs bg-blue-100 text-blue-700 cursor-pointer hover:bg-blue-200 transition-colors"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const packageId = coursePackages.find(pkg => pkg.name === question.courseName)?.id;
-                                    if (packageId) {
-                                      handleCoursePackageChange(packageId);
-                                    }
-                                  }}
-                                >
-                                  {question.courseName}
-                                </Badge>
-                              </div>
-                              <p>Student: {question.studentName}</p>
-                              <p>
-                                Asked:{" "}
-                                {new Date(
-                                  question.createdAt
-                                ).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Answered Questions */}
-                <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                      Answered Questions ({answeredQuestions.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 max-h-80 overflow-y-auto">
-                    {answeredQuestions.length === 0 ? (
-                      <div className="text-center py-8">
-                        <CheckCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500">
-                          {selectedCoursePackage === "all" 
-                            ? "No answered questions in any course package" 
-                            : `No answered questions in ${selectedPackageName}`}
-                        </p>
-                      </div>
-                    ) : (
-                      answeredQuestions.map((question) => (
-                        <div
-                          key={question.id}
-                          className="p-3 sm:p-4 border rounded-lg border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all"
-                        >
-                          <div className="space-y-2">
-                            <div className="flex items-start justify-between">
-                              <h4 className="font-medium text-slate-900 text-sm">
-                                {question.question}
-                              </h4>
-                              <Badge className="text-xs bg-green-100 text-green-800">
-                                Answered
-                              </Badge>
-                            </div>
-                            <div className="text-xs text-slate-500 space-y-1">
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant="secondary" 
-                                  className="text-xs bg-blue-100 text-blue-700 cursor-pointer hover:bg-blue-200 transition-colors"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const packageId = coursePackages.find(pkg => pkg.name === question.courseName)?.id;
-                                    if (packageId) {
-                                      handleCoursePackageChange(packageId);
-                                    }
-                                  }}
-                                >
-                                  {question.courseName}
-                                </Badge>
-                              </div>
-                              <p>Student: {question.studentName}</p>
-                              <p>
-                                Asked:{" "}
-                                {new Date(
-                                  question.createdAt
-                                ).toLocaleDateString()}
-                              </p>
-                            </div>
-                            {question.response && (
-                              <div className="mt-2 p-2 bg-green-50 rounded text-xs">
-                                <p className="font-medium text-green-800">
-                                  Your Response:
-                                </p>
-                                <p className="text-green-700 mt-1">
-                                  {question.response}
-                                </p>
-                              </div>
-                            )}
-                            <div className="flex gap-2 mt-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditResponse(question)}
-                                className="text-xs"
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() =>
-                                  question.responseId &&
-                                  handleDeleteResponse(question.responseId)
-                                }
-                                disabled={isDeleting}
-                                className="text-xs"
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Dialog open={!!selectedQuestion} onOpenChange={() => {
-                setSelectedQuestion(null);
-                setResponse("");
-                setIsEditing(false);
-              }}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{isEditing ? "Edit Response" : "Respond to Question"}</DialogTitle>
-                    <p className="text-sm text-slate-600 font-medium">{selectedQuestion?.question}</p>
-                    <p className="text-xs text-slate-500">Student: {selectedQuestion?.studentName} | Course: {selectedQuestion?.courseName}</p>
-                  </DialogHeader>
-                  <Textarea
-                    placeholder="Type your response here..."
-                    value={response}
-                    onChange={(e) => setResponse(e.target.value)}
-                    className="min-h-[120px]"
-                  />
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => {
-                      setSelectedQuestion(null);
-                      setResponse("");
-                      setIsEditing(false);
-                    }}>Cancel</Button>
-                    <Button onClick={handleSubmitResponse} disabled={isSubmitting || !response.trim()}>
-                      {isSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                      {isEditing ? "Update" : "Submit"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+      {/* Body */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-7xl px-4 py-6 pb-20 sm:px-6 lg:px-8">
+          {/* Stats */}
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="min-w-0 truncate text-base font-semibold">
+              Questions for: {selectedPackageName}
+            </h2>
+            {lastFetchTime && (
+              <p className="shrink-0 text-xs text-muted-foreground">
+                Updated {lastFetchTime.toLocaleTimeString()}
+              </p>
+            )}
           </div>
+
+          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+            <StatCard
+              label="Total Questions"
+              value={questions.length}
+              icon={MessageCircle}
+              tone="primary"
+            />
+            <StatCard
+              label="Pending"
+              value={unansweredQuestions.length}
+              icon={Clock}
+              tone="warning"
+            />
+            <StatCard
+              label="Answered"
+              value={answeredQuestions.length}
+              icon={CheckCircle}
+              tone="success"
+            />
+          </div>
+
+          {/* Filter */}
+          <Card className="mb-6 gap-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                Filter by course package
+                {selectedCoursePackage !== "all" && (
+                  <Badge variant="info">Filtered</Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="relative">
+                <select
+                  value={selectedCoursePackage}
+                  onChange={(e) => handleCoursePackageChange(e.target.value)}
+                  className="focus-ring w-full appearance-none rounded-lg border border-input bg-card px-3.5 py-2.5 pr-10 text-sm text-foreground transition-colors hover:border-ring/45 disabled:opacity-60"
+                  disabled={isLoading}
+                >
+                  <option value="all">
+                    All course packages ({questions.length} questions)
+                  </option>
+                  {coursePackages.map((pkg) => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.name} ({pkg._count.qandAQuestion} questions)
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              </div>
+              {selectedCoursePackage !== "all" && (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="min-w-0 truncate text-sm text-muted-foreground">
+                    Showing:{" "}
+                    <span className="font-medium text-foreground">
+                      {selectedPackageName}
+                    </span>
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleCoursePackageChange("all")}
+                  >
+                    Show all
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Question columns */}
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-2">
+            {/* Pending */}
+            <Card className="gap-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Clock className="size-4.5 text-warning-tint-fg" />
+                  Pending ({unansweredQuestions.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="max-h-96 space-y-2.5 overflow-y-auto">
+                {unansweredQuestions.length === 0 ? (
+                  <div className="py-10 text-center">
+                    <Clock className="mx-auto mb-3 size-10 text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">
+                      No pending questions
+                      {selectedCoursePackage === "all"
+                        ? ""
+                        : ` in ${selectedPackageName}`}
+                    </p>
+                  </div>
+                ) : (
+                  unansweredQuestions.map((question) => (
+                    <button
+                      key={question.id}
+                      type="button"
+                      onClick={() => handleSelectQuestion(question)}
+                      className={cn(
+                        "focus-ring w-full rounded-lg border p-3.5 text-left transition-all duration-200 ease-out-soft sm:p-4",
+                        selectedQuestion?.id === question.id
+                          ? "border-primary bg-primary/8 shadow-xs"
+                          : "border-border hover:border-primary/35 hover:bg-accent/50"
+                      )}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="text-sm font-medium">
+                            {question.question}
+                          </h4>
+                          <Badge variant="warning" className="shrink-0">
+                            Pending
+                          </Badge>
+                        </div>
+                        {questionMeta(question)}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Answered */}
+            <Card className="gap-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CheckCircle className="size-4.5 text-success-tint-fg" />
+                  Answered ({answeredQuestions.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="max-h-96 space-y-2.5 overflow-y-auto">
+                {answeredQuestions.length === 0 ? (
+                  <div className="py-10 text-center">
+                    <CheckCircle className="mx-auto mb-3 size-10 text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">
+                      No answered questions
+                      {selectedCoursePackage === "all"
+                        ? ""
+                        : ` in ${selectedPackageName}`}
+                    </p>
+                  </div>
+                ) : (
+                  answeredQuestions.map((question) => (
+                    <div
+                      key={question.id}
+                      className="rounded-lg border border-border p-3.5 transition-colors hover:bg-accent/40 sm:p-4"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="text-sm font-medium">
+                            {question.question}
+                          </h4>
+                          <Badge variant="success" className="shrink-0">
+                            Answered
+                          </Badge>
+                        </div>
+                        {questionMeta(question)}
+                        {question.response && (
+                          <div className="rounded-md border border-success/20 bg-success/8 p-2.5 text-xs">
+                            <p className="font-medium text-success-tint-fg">
+                              Your response
+                            </p>
+                            <p className="mt-1 text-foreground/80">
+                              {question.response}
+                            </p>
+                          </div>
+                        )}
+                        <div className="flex gap-2 pt-0.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditResponse(question)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() =>
+                              question.responseId &&
+                              handleDeleteResponse(question.responseId)
+                            }
+                            disabled={isDeleting}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Dialog
+            open={!!selectedQuestion}
+            onOpenChange={() => {
+              setSelectedQuestion(null);
+              setResponse("");
+              setIsEditing(false);
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {isEditing ? "Edit response" : "Respond to question"}
+                </DialogTitle>
+                <p className="text-sm font-medium text-foreground">
+                  {selectedQuestion?.question}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Student: {selectedQuestion?.studentName} · Course:{" "}
+                  {selectedQuestion?.courseName}
+                </p>
+              </DialogHeader>
+              <Textarea
+                placeholder="Type your response here…"
+                value={response}
+                onChange={(e) => setResponse(e.target.value)}
+                className="min-h-30"
+              />
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedQuestion(null);
+                    setResponse("");
+                    setIsEditing(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitResponse}
+                  disabled={isSubmitting || !response.trim()}
+                >
+                  {isSubmitting ? (
+                    <RefreshCw className="size-4 animate-spin" />
+                  ) : (
+                    <Send className="size-4" />
+                  )}
+                  {isEditing ? "Update" : "Submit"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

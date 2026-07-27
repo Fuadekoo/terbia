@@ -126,7 +126,12 @@ function Page() {
   // Renamed from 'page' to 'Page' for React component naming convention
   const params = useParams();
   const wdt_ID = Number(params?.wdt_ID);
-  const coursesPackageId = String(params?.coursesPackageId);
+  // Guard against a literal "undefined" segment reaching the server action.
+  const rawPackageId = params?.coursesPackageId;
+  const coursesPackageId =
+    typeof rawPackageId === "string" && rawPackageId !== "undefined"
+      ? rawPackageId
+      : "";
   const theme = useTelegramTheme();
 
   // Assuming getQuestionForActivePackageFinalExam returns an object like { coursesPackage: { questions: [...] } }

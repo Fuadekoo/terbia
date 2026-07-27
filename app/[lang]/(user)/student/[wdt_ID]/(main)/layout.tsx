@@ -3,7 +3,8 @@ import React, { createContext, useContext, useState } from "react";
 import MainMenu from "@/components/custom/student/main-menu";
 import MenuTitle from "@/components/custom/student/menu-title";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
-import { MenuIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MenuIcon, X } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import useAction from "@/hooks/useAction";
 import { getPackageData } from "@/actions/student/package";
@@ -33,39 +34,48 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="md:grid md:grid-cols-[250px_1fr] h-auto overflow-hidden">
-      <MainMenu data={data} className="hidden md:flex bg-blue-50" />
+    <div className="h-auto overflow-hidden md:grid md:grid-cols-[250px_1fr]">
+      <MainMenu
+        data={data}
+        className="hidden border-r border-sidebar-border bg-sidebar md:flex"
+      />
       {isMobile && (
-        <div className="p-4 flex justify-between bg-blue-100 md:hidden sticky top-0 left-0  border-b border-border">
+        <div className="surface-glass sticky left-0 top-0 z-40 flex items-center justify-between gap-3 px-4 py-3 shadow-xs md:hidden">
           <MenuTitle />
           {/* Hamburger button outside Drawer */}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="p-2 rounded-md hover:bg-sky-100"
+            className="focus-ring grid size-9 shrink-0 place-items-center rounded-lg text-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
             aria-label="Open menu"
           >
-            <MenuIcon />
+            <MenuIcon className="size-5" />
           </button>
           <Drawer
             direction="right"
             open={mobileMenuOpen}
             onOpenChange={(open) => setMobileMenuOpen(open)}
           >
-            <DrawerContent>
-              <MainMenu data={data} className="w-64 h-dvh" />
-              {/* Close button inside Drawer */}
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="mt-4 px-4 py-2 bg-sky-200 rounded w-69"
-              >
-                Close
-              </button>
+            <DrawerContent className="flex h-dvh w-72 flex-col bg-sidebar p-0">
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <MainMenu data={data} className="w-full" />
+              </div>
+              {/* Close button pinned to the bottom of the drawer */}
+              <div className="shrink-0 border-t border-sidebar-border p-3">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <X className="size-4" />
+                  Close
+                </Button>
+              </div>
             </DrawerContent>
           </Drawer>
         </div>
       )}
       <MenuContext.Provider value={{ refresh }}>
-        <div className="h-dvh overflow-hidden grid">{children}</div>
+        <div className="grid h-dvh overflow-hidden">{children}</div>
       </MenuContext.Provider>
     </div>
   );

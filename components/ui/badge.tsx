@@ -14,9 +14,17 @@ const badgeVariants = cva(
         secondary:
           "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
         destructive:
-          "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "border-transparent bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        // Tinted status pills — readable in both themes, unlike solid fills
+        success:
+          "border-success/25 bg-success/12 text-success-tint-fg [a&]:hover:bg-success/20",
+        warning:
+          "border-warning/30 bg-warning/15 text-warning-tint-fg [a&]:hover:bg-warning/25",
+        info: "border-info/25 bg-info/12 text-info-tint-fg [a&]:hover:bg-info/20",
+        muted:
+          "border-transparent bg-muted text-muted-foreground [a&]:hover:bg-muted/80",
       },
     },
     defaultVariants: {

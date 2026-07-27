@@ -29,3 +29,41 @@ export function shuffleArray<T>(array: T[]): T[] {
 
   return array;
 }
+
+/**
+ * Sentinel returned by `updatePathProgressData` / `cousefailedsolve` in place of
+ * a course id when the student has finished every chapter and should be sent to
+ * the final exam instead of another chapter.
+ *
+ * MUST stay lowercase — it is used verbatim as the URL segment and the route
+ * folder is `app/[lang]/(user)/student/[wdt_ID]/(main)/finalexam`.
+ */
+export const FINAL_EXAM_SEGMENT = "finalexam";
+
+/** Shape returned by `updatePathProgressData`. */
+export type ProgressPath = readonly (string | undefined)[] | false | undefined | null;
+
+/**
+ * Builds the next destination for a student from a progress tuple.
+ *
+ * The tuple is either `[courseId, chapterId]` or `[FINAL_EXAM_SEGMENT, packageId]`.
+ * Returns `null` when the tuple is missing or contains an empty segment, so
+ * callers never navigate to a path like `/en/student/1/finalExam/undefined`.
+ */
+export function buildStudentProgressPath(
+  wdt_ID: number | string,
+  progress: ProgressPath,
+  lang = "en"
+): string | null {
+  if (!progress || !Array.isArray(progress)) return null;
+
+  const [first, second] = progress;
+  if (!wdt_ID || !first || !second) return null;
+  if (first === "undefined" || second === "undefined") return null;
+
+  if (first === FINAL_EXAM_SEGMENT) {
+    return `/${lang}/student/${wdt_ID}/${FINAL_EXAM_SEGMENT}/${second}`;
+  }
+
+  return `/${lang}/student/${wdt_ID}/${first}/${second}`;
+}

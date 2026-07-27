@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation";
 const teacherRoutes = [
   {
     icon: List,
-    label: "Courses Packages",
+    label: "Course Packages",
     href: "/en/admin/coursesPackages",
   },
   {
@@ -26,12 +26,12 @@ const teacherRoutes = [
   },
   {
     icon: Users,
-    label: "ustazs",
+    label: "Ustazs",
     href: "/en/admin/ustazs",
   },
   {
     icon: Book,
-    label: "CourseMaterials",
+    label: "Course Materials",
     href: "/en/admin/courseMaterials",
   },
   {
@@ -41,7 +41,7 @@ const teacherRoutes = [
   },
   {
     icon: MessageSquare,
-    label: "Feedbacks",
+    label: "Feedback",
     href: "/en/admin/feedbacks",
   },
   {
@@ -67,7 +67,7 @@ export const SidebarRoutes = () => {
   const routes = isTeacherPage ? teacherRoutes : studentRoutes;
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex w-full flex-col gap-0.5">
       {routes.map((route) => (
         <SidebarItem
           key={route.href}
