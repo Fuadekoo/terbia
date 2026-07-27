@@ -6,7 +6,8 @@ import {
 } from "@/actions/admin/analysis";
 import useAction from "@/hooks/useAction";
 import Link from "next/link";
-import { ArrowLeft, Filter, BookOpen } from "lucide-react";
+import { ArrowLeft, Filter, BookOpen, Package } from "lucide-react";
+import { cn } from "@/lib/utils";
 import CustomViewAllTable from "@/components/custom/admin/custom-view-all-table";
 import {
   Dialog,
@@ -113,51 +114,51 @@ function Page() {
       : [];
   console.log("rows", rows);
   return (
-    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-lg">
-        <div className="px-3 py-3 sm:px-4 sm:py-4">
-          <div className="flex items-center justify-between">
-            <Link
-              href="/en/admin/analytics"
-              className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-all duration-200 bg-blue-50 px-4 py-2.5 rounded-lg border border-blue-200 hover:bg-blue-100 hover:shadow-md"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Back to Analytics</span>
-              <span className="sm:hidden">Back</span>
-            </Link>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-                <span className="hidden sm:inline">Student Analytics Dashboard</span>
-                <span className="sm:hidden">Analytics</span>
-              </h1>
-              {tefsirFilter && (
-                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-md px-2 py-1">
-                  <BookOpen className="h-3 w-3 mr-1" />
-                  <span className="hidden sm:inline">Tefsir</span>
-                </Badge>
-              )}
-            </div>
+      <div className="surface-glass sticky top-0 z-30 shrink-0 shadow-xs">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+          <Link
+            href="/en/admin/analytics"
+            className="focus-ring group inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium shadow-xs transition-colors hover:bg-accent"
+          >
+            <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
+            <span className="hidden sm:inline">Back to Analytics</span>
+            <span className="sm:hidden">Back</span>
+          </Link>
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <h1 className="truncate text-lg font-bold tracking-tight sm:text-xl lg:text-2xl">
+              <span className="hidden sm:inline">Student Analytics</span>
+              <span className="sm:hidden">Analytics</span>
+            </h1>
+            {tefsirFilter && (
+              <Badge variant="info">
+                <BookOpen className="size-3" />
+                <span className="hidden sm:inline">Tefsir</span>
+              </Badge>
+            )}
           </div>
         </div>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="p-4 sm:p-6 lg:p-8">
-          {/* Professional Filter Card */}
-          <Card className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-purple-200 shadow-lg mb-6">
-            <CardHeader className="pb-6 px-6 pt-6">
-              <CardTitle className="flex items-center gap-3 text-xl font-semibold text-purple-800">
-                <Filter className="h-6 w-6" />
+          {/* Filters */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2.5 text-lg">
+                <span className="grid size-9 place-items-center rounded-lg bg-primary/12 text-primary">
+                  <Filter className="size-4.5" />
+                </span>
                 Advanced Filters
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-6 pb-6">
+            <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                  {/* Progress Filter */}
                  <div className="space-y-3">
-                   <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                   <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                      📈 Progress Status
                    </label>
                    <select
@@ -172,7 +173,7 @@ function Page() {
                        );
                        setCurrentPage(1);
                      }}
-                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm transition-all duration-200 hover:border-purple-400 shadow-sm"
+                     className="focus-ring w-full rounded-lg border border-input bg-card px-3.5 py-2.5 text-sm shadow-xs transition-colors hover:border-ring/45"
                    >
                     <option value="">All Students</option>
                     <option value="notstarted">Not Started</option>
@@ -183,7 +184,7 @@ function Page() {
 
                  {/* Final Exam Status Filter */}
                  <div className="space-y-3">
-                   <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                   <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                      🎯 Exam Status
                    </label>
                    <select
@@ -199,7 +200,7 @@ function Page() {
                        );
                        setCurrentPage(1);
                      }}
-                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm transition-all duration-200 hover:border-purple-400 shadow-sm"
+                     className="focus-ring w-full rounded-lg border border-input bg-card px-3.5 py-2.5 text-sm shadow-xs transition-colors hover:border-ring/45"
                    >
                     <option value="">All Exams</option>
                     <option value="notstarted">Not Started</option>
@@ -211,7 +212,7 @@ function Page() {
 
                  {/* Last Seen Filter */}
                  <div className="space-y-3">
-                   <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                   <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                      ⏰ Last Active
                    </label>
                    <select
@@ -228,7 +229,7 @@ function Page() {
                        );
                        setCurrentPage(1);
                      }}
-                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm transition-all duration-200 hover:border-purple-400 shadow-sm"
+                     className="focus-ring w-full rounded-lg border border-input bg-card px-3.5 py-2.5 text-sm shadow-xs transition-colors hover:border-ring/45"
                    >
                     <option value="">All Time</option>
                     <option value="today">Today</option>
@@ -241,7 +242,7 @@ function Page() {
 
                  {/* Tefsir Filter */}
                  <div className="space-y-3">
-                   <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                   <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                      <BookOpen className="h-4 w-4" />
                      Tefsir Filter
                    </label>
@@ -252,7 +253,7 @@ function Page() {
                          setTefsirFilter(e.target.value === "tefsir_only");
                          setCurrentPage(1);
                        }}
-                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm transition-all duration-200 hover:border-purple-400 appearance-none shadow-sm"
+                       className="focus-ring w-full appearance-none rounded-lg border border-input bg-card px-3.5 py-2.5 text-sm shadow-xs transition-colors hover:border-ring/45"
                      >
                       <option value="">All Students (Default)</option>
                       <option value="tefsir_only">
@@ -273,81 +274,64 @@ function Page() {
                        setCurrentPage(1);
                      }}
                      variant="outline"
-                     className="w-full py-3 text-sm font-medium border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 transition-all duration-200 shadow-sm"
+                     className="w-full"
+                     size="lg"
                    >
-                     Clear All Filters
+                     Clear all filters
                    </Button>
                  </div>
               </div>
 
                {/* Active Filter Summary */}
-               <div className="mt-6 pt-6 border-t border-gray-200">
-                 <div className="flex flex-wrap gap-3">
-                {(progressFilter ||
-                  statusFilter ||
-                  lastSeenFilter ||
-                  tefsirFilter) && (
-                  <>
-                     <span className="text-sm text-gray-700 font-semibold">
-                       Active Filters:
+               {(progressFilter ||
+                 statusFilter ||
+                 lastSeenFilter ||
+                 tefsirFilter) && (
+                 <div className="mt-5 border-t border-border pt-5">
+                   <div className="flex flex-wrap items-center gap-2">
+                     <span className="text-sm font-medium text-muted-foreground">
+                       Active filters:
                      </span>
-                    {progressFilter && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-blue-100 text-blue-800 text-xs"
-                      >
-                        Progress: {progressFilter}
-                      </Badge>
-                    )}
-                    {statusFilter && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-green-100 text-green-800 text-xs"
-                      >
-                        Exam: {statusFilter}
-                      </Badge>
-                    )}
-                    {lastSeenFilter && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-orange-100 text-orange-800 text-xs"
-                      >
-                        Last Seen: {lastSeenFilter}
-                      </Badge>
-                    )}
-                    {tefsirFilter && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-purple-100 text-purple-800 text-xs"
-                      >
-                        <BookOpen className="h-3 w-3 mr-1" />
-                        Tefsir: On Progress Only
-                      </Badge>
-                    )}
-                 </>
-               )}
+                     {progressFilter && (
+                       <Badge variant="info">Progress: {progressFilter}</Badge>
+                     )}
+                     {statusFilter && (
+                       <Badge variant="success">Exam: {statusFilter}</Badge>
+                     )}
+                     {lastSeenFilter && (
+                       <Badge variant="warning">
+                         Last seen: {lastSeenFilter}
+                       </Badge>
+                     )}
+                     {tefsirFilter && (
+                       <Badge variant="secondary">
+                         <BookOpen className="size-3" />
+                         Tefsir: On Progress only
+                       </Badge>
+                     )}
+                   </div>
                  </div>
-               </div>
+               )}
              </CardContent>
            </Card>
-         
+
          {/* Results Section */}
-         <div className="mt-8 space-y-6">
+         <div className="mt-6 space-y-5">
            {/* Results Header */}
-           <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-             <div className="flex items-center justify-between">
-               <div className="flex items-center gap-4">
-                 <h2 className="text-2xl font-bold text-gray-900">
+           <div className="surface p-4 sm:p-5">
+             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+               <div className="flex flex-wrap items-center gap-3">
+                 <h2 className="text-xl font-bold tracking-tight">
                    Student Results
                  </h2>
                  {tefsirFilter && (
-                   <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-md px-3 py-1">
-                     <BookOpen className="h-4 w-4 mr-2" />
-                     Tefsir: On Progress Only
+                   <Badge variant="info">
+                     <BookOpen className="size-3" />
+                     Tefsir: On Progress only
                    </Badge>
                  )}
                </div>
-               <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+               <div className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground">
                  Showing {(currentPage - 1) * itemsPerPage + 1}-
                  {Math.min(
                    currentPage * itemsPerPage,
@@ -383,72 +367,65 @@ function Page() {
             onOpenChange={setIsPackageDialogOpen}
           >
             <DialogContent className="w-[95vw] max-w-lg sm:max-w-2xl lg:max-w-4xl h-[85vh] sm:h-[80vh] p-6">
-              <DialogHeader className="mb-6">
-                <DialogTitle className="text-xl font-bold text-gray-900">
-                  Package Details - {selectedStudentName}
+              <DialogHeader className="mb-5">
+                <DialogTitle className="text-xl font-bold tracking-tight">
+                  Package details — {selectedStudentName}
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+              <div className="max-h-[70vh] space-y-3 overflow-y-auto">
               {availablePackages.map((pkg) => (
                 <div
                   key={pkg.id}
-                  className={`p-4 border rounded-lg ${
+                  className={cn(
+                    "rounded-xl border p-4 shadow-xs transition-colors",
                     pkg.isActive
-                      ? "border-blue-500 bg-blue-50 shadow-sm"
-                      : "border-gray-200 bg-white shadow-sm"
-                  }`}
+                      ? "border-primary/40 bg-primary/6"
+                      : "border-border bg-card"
+                  )}
                 >
-                  <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                      <h3
-                        className={`text-lg font-semibold ${
-                          pkg.isActive ? "text-blue-900" : "text-gray-900"
-                        }`}
-                      >
-                        {pkg.name}
-                      </h3>
-                      {pkg.isActive && (
-                        <Badge className="bg-blue-600 text-white text-sm px-3 py-1 w-fit">
-                          Active Package
-                        </Badge>
-                      )}
+                  <div className="space-y-3.5">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                      <h3 className="text-base font-semibold">{pkg.name}</h3>
+                      {pkg.isActive && <Badge>Active package</Badge>}
                     </div>
 
                     {pkg.status === "inprogress" && pkg.progressDetails && (
-                      <div
-                        className={`text-xs sm:text-sm p-2 rounded ${
-                          pkg.isActive ? "bg-blue-100" : "bg-gray-100"
-                        }`}
-                      >
-                        <div className="font-medium mb-1">Current:</div>
-                        <div className="break-words">{pkg.progressDetails}</div>
+                      <div className="rounded-lg bg-muted p-2.5 text-xs sm:text-sm">
+                        <div className="mb-0.5 font-medium">Current</div>
+                        <div className="break-words text-muted-foreground">
+                          {pkg.progressDetails}
+                        </div>
                       </div>
                     )}
 
                     {(pkg.status === "inprogress" ||
                       pkg.status === "completed") && (
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <div className="flex justify-between text-xs sm:text-sm">
-                          <span>
+                          <span className="text-muted-foreground">
                             {pkg.completedChapters}/{pkg.totalChapters} chapters
                           </span>
-                          <span className="font-bold">
+                          <span className="font-semibold tabular-nums">
                             {pkg.progressPercentage}%
                           </span>
                         </div>
                         <div
-                          className={`h-1.5 sm:h-2 rounded-full ${
-                            pkg.isActive ? "bg-blue-200" : "bg-gray-200"
-                          }`}
+                          className="h-2 overflow-hidden rounded-full bg-muted"
+                          role="progressbar"
+                          aria-valuenow={pkg.progressPercentage}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-label={`${pkg.name} progress`}
                         >
                           <div
-                            className={`h-full rounded-full ${
+                            className={cn(
+                              "h-full rounded-full transition-[width] duration-500 ease-out-soft",
                               pkg.status === "completed"
-                                ? "bg-green-500"
+                                ? "bg-success"
                                 : pkg.isActive
-                                ? "bg-blue-600"
-                                : "bg-gray-500"
-                            }`}
+                                ? "bg-primary"
+                                : "bg-muted-foreground/50"
+                            )}
                             style={{ width: `${pkg.progressPercentage}%` }}
                           />
                         </div>
@@ -456,31 +433,31 @@ function Page() {
                     )}
 
                     <Badge
-                      className={`text-xs ${
+                      variant={
                         pkg.status === "completed"
-                          ? "bg-green-100 text-green-800"
+                          ? "success"
                           : pkg.status === "inprogress"
                           ? pkg.isActive
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
+                            ? "info"
+                            : "warning"
+                          : "muted"
+                      }
                     >
                       {pkg.status === "completed"
-                        ? "✅ Done"
+                        ? "Done"
                         : pkg.status === "inprogress"
-                        ? "🔄 Progress"
-                        : "⏳ Pending"}
+                        ? "In progress"
+                        : "Pending"}
                     </Badge>
                   </div>
                 </div>
               ))}
               {availablePackages.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 text-3xl sm:text-5xl mb-2">
-                    📦
-                  </div>
-                  <p className="text-gray-500 text-sm">No packages available</p>
+                <div className="py-10 text-center">
+                  <Package className="mx-auto mb-3 size-10 text-muted-foreground/40" />
+                  <p className="text-sm text-muted-foreground">
+                    No packages available
+                  </p>
                 </div>
               )}
               </div>

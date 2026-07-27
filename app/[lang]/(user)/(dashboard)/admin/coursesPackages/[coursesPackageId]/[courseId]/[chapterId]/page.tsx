@@ -64,28 +64,31 @@ const ChapterIdPage = async ({
           label="This chapter is unpublished, It will not be visible in the course"
         />
       )}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 overflow-auto">
-        <div className="container mx-auto px-6 py-8">
+      <div className="overflow-auto">
+        <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
           <div className="mb-8">
             <Link
               href={`/${lang}/admin/coursesPackages/${coursesPackageId}/${courseId}`}
-              className="inline-flex items-center text-sm text-slate-600 hover:text-slate-900 transition-colors mb-6 group"
+              className="focus-ring group mb-6 inline-flex items-center gap-2 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+              <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
               Back to Course Setup
             </Link>
-            
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-slate-900">Chapter Management</h1>
-                <div className="flex items-center gap-3">
-                  <Badge variant={isComplete ? "default" : "secondary"} className="px-3 py-1">
-                    {isComplete ? (
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                    ) : null}
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                  Chapter Management
+                </h1>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge
+                    variant={isComplete ? "success" : "muted"}
+                    className="px-2.5 py-1"
+                  >
+                    {isComplete ? <CheckCircle className="size-3" /> : null}
                     {completionText} Complete
                   </Badge>
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-muted-foreground">
                     {chapter.title || "Untitled Chapter"}
                   </span>
                 </div>
@@ -103,11 +106,11 @@ const ChapterIdPage = async ({
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {/* Chapter Details Section */}
             <div className="space-y-6">
-              <Card className="shadow-sm border-0 bg-white/70 backdrop-blur-sm">
+              <Card>
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <IconBadge icon={LayoutDashboard} variant="default" />
-                    <h2 className="text-xl font-semibold text-slate-800">Chapter Details</h2>
+                    <h2 className="text-lg font-semibold">Chapter Details</h2>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -120,11 +123,11 @@ const ChapterIdPage = async ({
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm border-0 bg-white/70 backdrop-blur-sm">
+              <Card>
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <IconBadge icon={FileQuestion} variant="default" />
-                    <h2 className="text-xl font-semibold text-slate-800">Assessment Questions</h2>
+                    <h2 className="text-lg font-semibold">Assessment Questions</h2>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -140,11 +143,11 @@ const ChapterIdPage = async ({
 
             {/* Video Section */}
             <div className="space-y-6">
-              <Card className="shadow-sm border-0 bg-white/70 backdrop-blur-sm">
+              <Card>
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <IconBadge icon={Video} variant="default" />
-                    <h2 className="text-xl font-semibold text-slate-800">Chapter Video</h2>
+                    <h2 className="text-lg font-semibold">Chapter Video</h2>
                   </div>
                 </CardHeader>
                 <CardContent>

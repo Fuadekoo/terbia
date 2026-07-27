@@ -2,6 +2,7 @@
 import prisma from "@/lib/db";
 import { getAvailablePacakges } from "@/actions/student/package";
 import { updatePathProgressData } from "@/actions/student/progress";
+import { buildStudentProgressPath } from "@/lib/utils";
 
 type TelegramUser = {
   wdt_ID: number;
@@ -409,15 +410,22 @@ export async function chooseStudentPackage(
     }
 
     const update = await updatePathProgressData(studentId);
-    if (!update) {
-      return { success: false, error: "Failed to compute progress path" };
+    // Handles both [courseId, chapterId] and the final-exam tuple, and returns
+    // null rather than a path containing "undefined".
+    const relativePath = buildStudentProgressPath(studentId, update);
+    if (!relativePath) {
+      console.error("Could not resolve progress path", {
+        studentId,
+        packageId,
+        update,
+      });
+      return {
+        success: false,
+        error: "We could not open your course yet. Please try again shortly.",
+      };
     }
-    const [courseId, chapterId] = update;
-    const lang = "en";
-    const stud = "student";
-    const url = `${BASE_URL}/${lang}/${stud}/${studentId}/${courseId}/${chapterId}`;
 
-    return { success: true, url };
+    return { success: true, url: `${BASE_URL}${relativePath}` };
   } catch (error) {
     console.error("Error in chooseStudentPackage:", error);
     return { success: false, error: "Failed to set package" };
@@ -598,6 +606,14 @@ export async function getStudentFlowById(
         },
       });
 
+      // `activePackage` is derived from `youtubeSubject` (see schema). With only
+      // one package available, activate it here — otherwise the student has no
+      // active package and updatePathProgressData below cannot resolve a path.
+      await prisma.wpos_wpdatatable_23.updateMany({
+        where: { wdt_ID: studentId },
+        data: { youtubeSubject: packageId },
+      });
+
       const firstChapterId =
         firstPackageCourse?.courses?.[0]?.chapters?.[0]?.id;
       if (firstChapterId) {
@@ -612,14 +628,23 @@ export async function getStudentFlowById(
       }
 
       const progressPath = await updatePathProgressData(studentId);
-      if (!progressPath) {
-        return { success: false, error: "Failed to compute progress path" };
+      const relativePath = buildStudentProgressPath(studentId, progressPath);
+      if (!relativePath) {
+        console.error("Could not resolve progress path", {
+          studentId,
+          packageId,
+          firstChapterId,
+          progressPath,
+        });
+        return {
+          success: false,
+          error: firstChapterId
+            ? "We could not open your course yet. Please try again shortly."
+            : "This package does not have any lessons yet.",
+        };
       }
 
-      const [courseId, chapterId] = progressPath;
-      const lang = "en";
-      const stud = "student";
-      const url = `${BASE_URL}/${lang}/${stud}/${studentId}/${courseId}/${chapterId}`;
+      const url = `${BASE_URL}${relativePath}`;
 
       return {
         success: true,

@@ -29,7 +29,7 @@ const QuestionsofThePackagePage = async ({
     return redirect("/en");
   }
   return (
-    <div className="bg-blue-50 grid overflow-hidden p-6 rounded-lg shadow-sm space-y-6">
+    <div className="grid space-y-6 overflow-hidden p-6">
       <div>
         <Link
           href={`/en/admin/coursesPackages/${coursesPackageId}`}

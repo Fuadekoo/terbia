@@ -47,7 +47,7 @@ const CourseIdPage = async ({
   const isComplete = requiredFields.every(Boolean);
   const lang = "en";
   return (
-    <div className="grid overflow-hidden bg-blue-50 scrollbar-hide">
+    <div className="grid overflow-hidden">
       {!course.isPublished && (
         <Banner
           variant="warning"
@@ -67,7 +67,7 @@ const CourseIdPage = async ({
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex flex-col gap-y-1.5">
             <h1 className="text-2xl font-medium">Course Setup</h1>
-            <span className="text-sm text-slate-700">
+            <span className="text-sm text-muted-foreground">
               Complete all fields {completionText}
             </span>
           </div>

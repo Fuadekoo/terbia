@@ -89,7 +89,7 @@ function Page() {
   };
 
   return (
-    <div className="m-2 bg-blue-50 overflow-y-auto">
+    <div className="m-2 overflow-y-auto">
       <Link
         href={`/en/admin/coursesPackages/${coursesPackageId}/${courseId}`}
         className="flex items-center text-sm hover:opacity-75 transition mb-6"
@@ -126,7 +126,7 @@ function Page() {
           <Button
             type="button"
             disabled={isLoading||selectedRowIds.size === 0}
-            className="mb-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow"
+            className="mb-2"
           >
             Assign
           </Button>

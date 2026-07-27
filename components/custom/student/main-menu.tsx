@@ -137,12 +137,12 @@ export default function MainMenu({ data, className }: MainMenuProps) {
   return (
     <nav
       className={cn(
-        "overflow-y-hidden py-4 px-2 flex flex-col gap-4 bg-gradient-to-b from-sky-50 to-sky-100 dark:from-sky-900 dark:to-sky-950 shadow transition-all duration-300",
+        "flex flex-col gap-3 overflow-y-hidden bg-sidebar px-3 py-4 text-sidebar-foreground transition-all duration-300",
         className
       )}
       aria-label="Main navigation"
     >
-      <header className="border-b border-sky-200 dark:border-sky-800 pb-2 mb-2">
+      <header className="border-b border-sidebar-border pb-3">
         <MenuTitle
           title={data?.name || "Student"}
           subtitle={data?.subject || ""}
@@ -153,19 +153,19 @@ export default function MainMenu({ data, className }: MainMenuProps) {
         />
       </header>
 
-      <div className="flex-1 overflow-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto pr-0.5">
         {isLoading ? (
-          <div className="flex justify-center items-center py-8">
+          <div className="flex items-center justify-center py-8">
             <Loading />
           </div>
         ) : !data || !data.activePackage ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
+          <div className="py-8 text-center text-sm text-muted-foreground">
             No active package found.
           </div>
         ) : (
           <>
             <motion.h3
-              className="text-base font-semibold text-sky-800 dark:text-sky-100 mb-3"
+              className="mb-3 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
               variants={itemVariants}
               initial="hidden"
               animate="visible"
@@ -173,86 +173,65 @@ export default function MainMenu({ data, className }: MainMenuProps) {
               {data.activePackage.name}
             </motion.h3>
             <TooltipProvider>
-              <Accordion type="single" collapsible className="space-y-2 w-full">
+              <Accordion type="single" collapsible className="w-full space-y-2">
                 <AnimatePresence>
-                  {data.activePackage.courses.map((course) => (
-                    <motion.div
-                      key={course.id}
-                      variants={itemVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                    >
-                      <AccordionItem
-                        value={`course-${course.id}`}
-                        className={cn(
-                          "border border-sky-200 dark:border-sky-800 rounded-lg bg-white/80 dark:bg-sky-900/80 shadow-sm"
-                        )}
+                  {data.activePackage.courses.map((course) => {
+                    const progress = getCourseProgress(course.chapters);
+                    return (
+                      <motion.div
+                        key={course.id}
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
                       >
-                        <AccordionTrigger
-                          className={cn(
-                            "px-3 py-2 text-sm font-semibold text-sky-800 dark:text-sky-200 hover:bg-sky-100/50 dark:hover:bg-sky-800/50 rounded-t-lg"
-                          )}
+                        <AccordionItem
+                          value={`course-${course.id}`}
+                          className="overflow-hidden rounded-xl border border-border bg-card shadow-xs"
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sky-600 dark:text-sky-400 font-bold">
-                              {course.order}.
-                            </span>
-                            <span className="truncate">{course.title}</span>
-                            <span className="ml-auto text-xs font-medium text-gray-500 dark:text-gray-400">
-                              {getCourseProgress(course.chapters)}%
-                            </span>
+                          <AccordionTrigger className="px-3 py-2.5 text-sm font-semibold hover:bg-accent/50 hover:no-underline">
+                            <div className="flex min-w-0 flex-1 items-center gap-2">
+                              <span className="shrink-0 font-bold text-primary">
+                                {course.order}.
+                              </span>
+                              <span className="truncate">{course.title}</span>
+                              <span className="ml-auto shrink-0 pl-2 text-xs font-medium tabular-nums text-muted-foreground">
+                                {progress}%
+                              </span>
+                            </div>
+                          </AccordionTrigger>
+
+                          {/* Progress bar sits flush under the trigger */}
+                          <div
+                            className="h-1 w-full bg-muted"
+                            role="progressbar"
+                            aria-valuenow={progress}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label={`${course.title} progress`}
+                          >
+                            <div
+                              className="h-full rounded-r-full bg-primary transition-[width] duration-500 ease-out-soft"
+                              style={{ width: `${progress}%` }}
+                            />
                           </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-3 py-2 space-y-2 rounded-b-lg">
-                          {course.chapters.map((chapter) => {
-                            const isCompleted = chapterProgress?.[chapter.id];
-                            const chapterLink = `/en/student/${wdt_ID}/${course.id}/${chapter.id}`;
-                            return (
-                              <motion.div
-                                key={chapter.id}
-                                className={cn(
-                                  "flex items-center p-2 rounded-md transition-all duration-200 hover:bg-sky-100/50 dark:hover:bg-sky-800/50 group border border-sky-200 dark:border-sky-700"
-                                )}
-                                variants={itemVariants}
-                              >
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span
-                                      className={cn(
-                                        "flex items-center text-xs font-semibold",
-                                        isCompleted === true
-                                          ? "text-green-500"
-                                          : isCompleted === false
-                                          ? "text-gray-400"
-                                          : "text-yellow-500"
-                                      )}
-                                    >
-                                      {isCompleted === true ? (
-                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                      ) : isCompleted === false ? (
-                                        <PlayCircle className="w-4 h-4 mr-2" />
-                                      ) : (
-                                        <Lock className="w-4 h-4 mr-2" />
-                                      )}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="right">
-                                    {isCompleted === true
-                                      ? "Completed"
-                                      : isCompleted === false
-                                      ? "In Progress"
-                                      : "Locked"}
-                                  </TooltipContent>
-                                </Tooltip>
-                                <button
+
+                          <AccordionContent className="space-y-1.5 p-2">
+                            {course.chapters.map((chapter) => {
+                              const isCompleted = chapterProgress?.[chapter.id];
+                              const chapterLink = `/en/student/${wdt_ID}/${course.id}/${chapter.id}`;
+                              const statusLabel =
+                                isCompleted === true
+                                  ? "Completed"
+                                  : isCompleted === false
+                                  ? "In Progress"
+                                  : "Locked";
+                              return (
+                                <motion.button
+                                  key={chapter.id}
+                                  type="button"
                                   disabled={!isCompleted}
-                                  className={cn(
-                                    "text-left text-xs font-medium ml-1 truncate",
-                                    isCompleted
-                                      ? "text-sky-600 dark:text-sky-400 hover:underline"
-                                      : "text-slate-400 dark:text-slate-500 cursor-not-allowed"
-                                  )}
+                                  variants={itemVariants}
                                   onClick={() => {
                                     if (isCompleted) {
                                       router.push(
@@ -260,58 +239,78 @@ export default function MainMenu({ data, className }: MainMenuProps) {
                                       );
                                     }
                                   }}
-                                  tabIndex={isCompleted ? 0 : -1}
                                   aria-disabled={!isCompleted}
-                                  type="button"
-                                  aria-label={`Go to ${chapter.title} ${
-                                    isCompleted ? "" : "(Locked)"
-                                  }`}
+                                  aria-label={`Lesson ${chapter.position}: ${chapter.title} — ${statusLabel}`}
+                                  className={cn(
+                                    "focus-ring flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors duration-200",
+                                    isCompleted
+                                      ? "hover:bg-accent"
+                                      : "cursor-not-allowed opacity-60"
+                                  )}
                                 >
-                                  <span>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span
+                                        className={cn(
+                                          "flex shrink-0 items-center",
+                                          isCompleted === true
+                                            ? "text-success-tint-fg"
+                                            : isCompleted === false
+                                            ? "text-primary"
+                                            : "text-muted-foreground"
+                                        )}
+                                      >
+                                        {isCompleted === true ? (
+                                          <CheckCircle className="size-4" />
+                                        ) : isCompleted === false ? (
+                                          <PlayCircle className="size-4" />
+                                        ) : (
+                                          <Lock className="size-4" />
+                                        )}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">
+                                      {statusLabel}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <span className="truncate text-xs font-medium">
                                     Lesson {chapter.position}: {chapter.title}
                                   </span>
-                                </button>
-                              </motion.div>
-                            );
-                          })}
-                        </AccordionContent>
-                      </AccordionItem>
-                    </motion.div>
-                  ))}
+                                </motion.button>
+                              );
+                            })}
+                          </AccordionContent>
+                        </AccordionItem>
+                      </motion.div>
+                    );
+                  })}
 
-                  {/* Final Exam Accordion Item */}
+                  {/* Final exam */}
                   <motion.div
                     variants={itemVariants}
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
                   >
-                    <AccordionItem
-                      value="final-exam"
+                    <button
+                      type="button"
+                      onClick={handleFinalExamClick}
+                      disabled={!canOpenFinalExam}
                       className={cn(
-                        "border border-blue-300 dark:border-blue-700 rounded-lg bg-blue-50/80 dark:bg-blue-900/80 shadow"
+                        "focus-ring flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 ease-out-soft",
+                        canOpenFinalExam
+                          ? "border-primary/30 bg-primary/8 text-primary hover:bg-primary/14 hover:shadow-xs"
+                          : "cursor-not-allowed border-border bg-muted/50 text-muted-foreground"
                       )}
                     >
-                      <AccordionTrigger
-                        onClick={handleFinalExamClick}
-                        className={cn(
-                          "px-3 py-2 text-sm font-semibold text-blue-800 dark:text-blue-200 hover:bg-blue-100/50 dark:hover:bg-blue-800/50 rounded-lg",
-                          !allCoursesCompleted &&
-                            "cursor-not-allowed opacity-50"
-                        )}
-                        disabled={!allCoursesCompleted}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Trophy className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                          <span className="truncate">Final Exam</span>
-                          {!allCoursesCompleted && (
-                            <span className="ml-auto text-xs font-medium text-gray-500 dark:text-gray-400">
-                              (Complete all to unlock)
-                            </span>
-                          )}
-                        </div>
-                      </AccordionTrigger>
-                    </AccordionItem>
+                      <Trophy className="size-4.5 shrink-0" />
+                      <span className="truncate">Final Exam</span>
+                      {!canOpenFinalExam && (
+                        <span className="ml-auto shrink-0 pl-2 text-[0.6875rem] font-medium">
+                          Complete all to unlock
+                        </span>
+                      )}
+                    </button>
                   </motion.div>
                 </AnimatePresence>
               </Accordion>
@@ -320,18 +319,17 @@ export default function MainMenu({ data, className }: MainMenuProps) {
         )}
       </div>
 
-      <footer className="flex items-center justify-between gap-2 pt-2 border-t border-sky-200 dark:border-sky-800 mt-2">
+      <footer className="mt-1 flex items-center justify-between gap-2 border-t border-sidebar-border pt-3">
         <button
-          className="flex items-center gap-1 px-2 py-1 rounded-lg font-medium"
-          onClick={() => {
-            router.push(`/en/student/${wdt_ID}/profile`);
-          }}
+          className="focus-ring flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-accent hover:text-sidebar-foreground"
+          onClick={() => router.push(`/en/student/${wdt_ID}/profile`)}
           type="button"
-          aria-label="Go to Student Dashboard"
+          aria-label="Go to student profile"
         >
-          <UserCircle className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+          <UserCircle className="size-5" />
+          <span>Profile</span>
         </button>
-        <LightDarkToggle className="ml-auto p-1 rounded-full bg-sky-200 dark:bg-sky-800 hover:bg-sky-300 dark:hover:bg-sky-700 transition-colors duration-200 shadow-sm" />
+        <LightDarkToggle className="ml-auto rounded-full p-1.5 transition-colors duration-200 hover:bg-accent" />
       </footer>
     </nav>
   );

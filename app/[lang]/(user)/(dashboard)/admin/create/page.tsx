@@ -59,100 +59,97 @@ const CreatePage = () => {
   };
 
   return (
-    <div className="p-6 overflow-auto">
+    <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
       {success && <Confetti numberOfPieces={200} recycle={false} />}
+
       <Link
         href={`/${lang}/admin/coursesPackages`}
-        className="flex items-center text-sm hover:opacity-75 transition mb-6"
+        className="focus-ring mb-6 inline-flex items-center gap-2 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4 mr-2" />
+        <ArrowLeft className="size-4" />
         Back to Course Packages
       </Link>
-      <div className="max-w-2xl mx-auto flex md:items-center md:justify-center h-full p-6">
-        <div className="w-full bg-white/90 rounded-xl shadow-xl p-8 border border-gray-100 animate-fade-in hover:shadow-2xl transition-shadow duration-300">
-          {success ? (
-            <div className="flex flex-col items-center justify-center py-12 transition-all">
-              <CheckCircle2 className="h-16 w-16 text-green-500 mb-4 animate-bounce-in" />
-              <h2 className="text-2xl font-bold mb-2 text-green-700">Success!</h2>
-              <p className="text-muted-foreground mb-2 text-center">
-                Your course package has been created.
-              </p>
-              <span className="text-xs text-gray-400">Redirecting...</span>
+
+      <div className="surface animate-rise-in p-6 shadow-lg sm:p-8">
+        {success ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="mb-4 grid size-16 place-items-center rounded-full bg-success/12">
+              <CheckCircle2 className="size-8 text-success-tint-fg" />
             </div>
-          ) : (
-            <>
-              <h1 className="text-3xl font-bold mb-2 text-blue-900 animate-fade-in-slow">
-                Name your Course Package
-              </h1>
-              <p className="mb-6 text-gray-600 animate-fade-in-slow">
-                What would you like to name your course package? Don&apos;t worry, you can change this later.
-              </p>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 mt-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center gap-2">
-                          <FormLabel className="text-base">Course Package name</FormLabel>
-                          <span
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
-                            className="relative cursor-pointer"
-                          >
-                            <Info className="h-4 w-4 text-blue-400" />
-                            {showTooltip && (
-                              <span className="absolute left-6 top-0 z-10 bg-blue-50 text-blue-900 text-xs rounded px-2 py-1 shadow-lg animate-fade-in-fast">
-                                Choose a clear, descriptive name!
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                        <FormControl>
-                          <Input
-                            disabled={isPending}
-                            placeholder="e.g. 'Programming Languages'"
-                            {...field}
-                            className="focus:ring-2 focus:ring-blue-400 transition-all duration-200 focus:scale-105"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          What courses will you teach in this course package?
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex items-center gap-x-2">
-                    <Link href={`/${lang}/admin/coursesPackages`}>
-                      <Button type="button" variant="ghost">
-                        Cancel
-                      </Button>
-                    </Link>
-                    <Button
-                      type="submit"
-                      disabled={!form.formState.isValid || isPending}
-                      className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 transition-all duration-200 shadow-md hover:scale-105"
-                    >
-                      {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {isPending ? "Creating..." : "Continue"}
-                    </Button>
-                  </div>
-                  {isPending && (
-                    <div className="w-full mt-4">
-                      <div className="h-2 rounded bg-blue-100 overflow-hidden">
-                        <div className="h-full bg-blue-500 animate-progress-bar" />
+            <h2 className="mb-1 text-2xl font-bold">Success</h2>
+            <p className="mb-1 text-sm text-muted-foreground">
+              Your course package has been created.
+            </p>
+            <span className="text-xs text-muted-foreground">Redirecting…</span>
+          </div>
+        ) : (
+          <>
+            <h1 className="mb-1.5 text-2xl font-bold tracking-tight">
+              Name your course package
+            </h1>
+            <p className="mb-7 text-sm text-muted-foreground">
+              What would you like to call it? You can change this later.
+            </p>
+
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-7"
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-1.5">
+                        <FormLabel>Course package name</FormLabel>
+                        <span
+                          onMouseEnter={() => setShowTooltip(true)}
+                          onMouseLeave={() => setShowTooltip(false)}
+                          className="relative cursor-help"
+                        >
+                          <Info className="size-3.5 text-muted-foreground" />
+                          {showTooltip && (
+                            <span className="absolute left-5 top-0 z-10 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md">
+                              Choose a clear, descriptive name
+                            </span>
+                          )}
+                        </span>
                       </div>
-                    </div>
+                      <FormControl>
+                        <Input
+                          disabled={isPending}
+                          placeholder="e.g. 'Programming Languages'"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        What courses will you teach in this package?
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </form>
-              </Form>
-            </>
-          )}
-        </div>
+                />
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="submit"
+                    disabled={!form.formState.isValid || isPending}
+                  >
+                    {isPending && <Loader2 className="size-4 animate-spin" />}
+                    {isPending ? "Creating…" : "Continue"}
+                  </Button>
+                  <Link href={`/${lang}/admin/coursesPackages`}>
+                    <Button type="button" variant="ghost">
+                      Cancel
+                    </Button>
+                  </Link>
+                </div>
+              </form>
+            </Form>
+          </>
+        )}
       </div>
-      {/* Global styles remain unchanged */}
     </div>
   );
 };

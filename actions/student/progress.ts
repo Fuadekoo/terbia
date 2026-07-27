@@ -545,6 +545,11 @@ export async function cousefailedsolve(wdt_ID: number) {
     },
   });
 
+  // A student with no active package (or a package with no chapters) has
+  // `allChapterIds.length === 0`, which the equality check below would read as
+  // "every chapter is complete" and route to the final exam. Bail out first.
+  if (allChapterIds.length === 0) return false;
+
   if (progress.filter((p) => p.isCompleted).length === allChapterIds.length) {
     const activePackageId = studentwithActivePacage?.activePackage?.id;
     // Without a package id there is no final exam to route to — returning the

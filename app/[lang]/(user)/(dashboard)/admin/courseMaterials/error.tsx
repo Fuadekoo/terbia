@@ -23,7 +23,7 @@ export default function Error({
             </div>
             <button
               onClick={reset}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="focus-ring rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
             >
               Try again
             </button>

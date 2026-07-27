@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Spinner from "@/components/ui/spinner";
+import { StatCard } from "@/components/custom/common/page-shell";
 import toast from "react-hot-toast";
 
 interface VideoFile {
@@ -286,78 +287,54 @@ export default function VideoConversionPage() {
   const pendingVideos = videos.filter((video) => !video.isConverted);
 
   return (
-    <div className="flex h-screen flex-col">
-      <div className="sticky top-0 z-40 border-b bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="surface-glass sticky top-0 z-30 shrink-0 shadow-xs">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
               Video Conversion
             </h1>
-            <p className="text-sm text-gray-600">
-              Convert MP4 videos to HLS format for better streaming performance.
+            <p className="text-sm text-muted-foreground">
+              Convert MP4 videos to HLS for better streaming performance
             </p>
           </div>
           {pendingVideos.length > 0 && (
             <Button
-              className="gap-2"
               onClick={handleConvertAll}
               disabled={converting.includes("__ALL__")}
             >
               {converting.includes("__ALL__") ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
-                <Video className="h-4 w-4" />
+                <Video className="size-4" />
               )}
-              Convert All ({pendingVideos.length})
+              Convert all ({pendingVideos.length})
             </Button>
           )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-slate-50">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardContent className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Videos</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {stats.total}
-                  </p>
-                </div>
-                <div className="rounded-full bg-blue-100 p-3">
-                  <Video className="h-5 w-5 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Converted</p>
-                  <p className="text-2xl font-semibold text-emerald-600">
-                    {stats.converted}
-                  </p>
-                </div>
-                <div className="rounded-full bg-emerald-100 p-3">
-                  <CheckCircle className="h-5 w-5 text-emerald-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-semibold text-amber-600">
-                    {stats.pending}
-                  </p>
-                </div>
-                <div className="rounded-full bg-amber-100 p-3">
-                  <Clock className="h-5 w-5 text-amber-600" />
-                </div>
-              </CardContent>
-            </Card>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
+            <StatCard
+              label="Total Videos"
+              value={stats.total}
+              icon={Video}
+              tone="primary"
+            />
+            <StatCard
+              label="Converted"
+              value={stats.converted}
+              icon={CheckCircle}
+              tone="success"
+            />
+            <StatCard
+              label="Pending"
+              value={stats.pending}
+              icon={Clock}
+              tone="warning"
+            />
           </div>
 
           <div className="flex items-center justify-between">
@@ -379,8 +356,8 @@ export default function VideoConversionPage() {
                   <Spinner />
                 ) : videos.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-                    <Video className="h-10 w-10 text-gray-400" />
-                    <p className="text-sm text-gray-600">
+                    <Video className="size-10 text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">
                       No MP4 videos found.
                     </p>
                   </div>
@@ -398,8 +375,8 @@ export default function VideoConversionPage() {
                         <TableRow key={video.filename}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <Video className="h-4 w-4 text-gray-400" />
-                              <span className="font-mono text-sm text-gray-700">
+                              <Video className="size-4 text-muted-foreground" />
+                              <span className="font-mono text-sm">
                                 {video.filename}
                               </span>
                             </div>
@@ -407,54 +384,41 @@ export default function VideoConversionPage() {
                           <TableCell>
                             {video.isConverted ||
                             video.status === "completed" ? (
-                              <Badge className="bg-emerald-100 text-emerald-700">
-                                Converted
-                              </Badge>
+                              <Badge variant="success">Converted</Badge>
                             ) : video.status === "processing" ? (
-                              <Badge className="bg-blue-100 text-blue-700">
-                                <span className="flex items-center gap-1">
-                                  <span className="h-2 w-2 animate-pulse rounded-full bg-blue-600" />
-                                  Processing
-                                </span>
+                              <Badge variant="info">
+                                <span className="size-2 animate-pulse rounded-full bg-current" />
+                                Processing
                               </Badge>
                             ) : video.status === "queued" ? (
-                              <Badge className="bg-slate-100 text-slate-700">
-                                Queued
-                              </Badge>
+                              <Badge variant="muted">Queued</Badge>
                             ) : video.status === "failed" ? (
-                              <Badge className="bg-red-100 text-red-700">
-                                Failed
-                              </Badge>
+                              <Badge variant="destructive">Failed</Badge>
                             ) : (
-                              <Badge className="bg-amber-100 text-amber-700">
-                                Pending
-                              </Badge>
+                              <Badge variant="warning">Pending</Badge>
                             )}
                           </TableCell>
                           <TableCell>
                             {video.isConverted ||
                             video.status === "completed" ? (
-                              <Badge className="bg-emerald-100 text-emerald-700">
-                                <CheckCircle className="h-3 w-3" />
+                              <Badge variant="success">
+                                <CheckCircle className="size-3" />
                                 Ready
                               </Badge>
                             ) : video.status === "processing" ||
                               video.status === "queued" ? (
-                              <Badge className="bg-slate-100 text-slate-700">
-                                In progress
-                              </Badge>
+                              <Badge variant="muted">In progress</Badge>
                             ) : video.status === "failed" ? (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="gap-2"
                                 onClick={() => handleConvert(video.filename)}
                                 disabled={converting.includes(video.filename)}
                               >
                                 {converting.includes(video.filename) ? (
-                                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+                                  <div className="size-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                                 ) : (
-                                  <AlertTriangle className="h-3 w-3" />
+                                  <AlertTriangle className="size-3" />
                                 )}
                                 Retry
                               </Button>
