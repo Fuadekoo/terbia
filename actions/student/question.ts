@@ -647,8 +647,9 @@ export async function examsubmitAnswers(
   const results = [];
   const student = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
+      // Identified by wdt_ID + the package being submitted for. Access is
+      // granted by the student link; `status` is uncontrolled free text.
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       youtubeSubject: coursesPackageId,
     },
     select: {
