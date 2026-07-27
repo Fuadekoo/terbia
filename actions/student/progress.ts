@@ -66,8 +66,9 @@ export async function isCompletedAllChaptersInthePackage(
 ) {
   const studentwithActivePacage = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
+      // See note above: identified by wdt_ID (+ the package being asked about),
+      // not by status.
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       youtubeSubject: packageId,
     },
     select: {
@@ -129,8 +130,11 @@ export async function getActivePackageProgress(wdt_ID: number) {
     // Fetch student with active package, courses, and chapters
     const student = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
+        // Identified by wdt_ID only — see note in isCompletedAllChaptersInthePackage.
+        // Gating on status made this return null for students outside the
+        // "Active/Not yet/On progress/terbia" set, so their progress path could
+        // not be computed even though the link had already granted them access.
         wdt_ID: wdt_ID,
-        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: {
         wdt_ID: true,
@@ -187,8 +191,11 @@ export async function updatePathProgressData(wdt_ID: number) {
   try {
     const studentwithActivePacage = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
+        // Identified by wdt_ID only — see note in isCompletedAllChaptersInthePackage.
+        // Gating on status made this return null for students outside the
+        // "Active/Not yet/On progress/terbia" set, so their progress path could
+        // not be computed even though the link had already granted them access.
         wdt_ID: wdt_ID,
-        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: {
         wdt_ID: true,
@@ -426,8 +433,13 @@ export async function packageCompleted(wdt_ID: number) {
   // Get student data with courses and ordered chapters
   const student = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
+      // Identified by wdt_ID only. These functions compute *where a student is*,
+      // they do not authorise entry — that is the caller's job, and the student
+      // flow deliberately grants access by link regardless of status. Gating on
+      // status here made the lookup return null for any student outside the
+      // "Active/Not yet/On progress/terbia" set, which silently produced "no
+      // progress" instead of their real position.
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
     },
     select: {
       wdt_ID: true,
@@ -493,8 +505,13 @@ export async function packageCompleted(wdt_ID: number) {
 export async function cousefailedsolve(wdt_ID: number) {
   const studentwithActivePacage = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
+      // Identified by wdt_ID only. These functions compute *where a student is*,
+      // they do not authorise entry — that is the caller's job, and the student
+      // flow deliberately grants access by link regardless of status. Gating on
+      // status here made the lookup return null for any student outside the
+      // "Active/Not yet/On progress/terbia" set, which silently produced "no
+      // progress" instead of their real position.
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
     },
     select: {
       wdt_ID: true,

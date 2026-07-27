@@ -10,8 +10,8 @@ export default async function getCertificateData(
     // 1. Fetch the certificate data for the student and package
     const student = await prisma.wpos_wpdatatable_23.findFirst({
       where: {
+        // Identified by wdt_ID only — access is granted by the student link.
         wdt_ID: studentId,
-        status: { in: ["Active", "Not yet", "On progress", "terbia"] },
       },
       select: {
         wdt_ID: true,

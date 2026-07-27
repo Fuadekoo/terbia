@@ -25,8 +25,8 @@ export async function unlockTest(
   // Get student data with courses and ordered chapters
   const student = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
+      // Identified by wdt_ID only — access is granted by the student link.
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
     },
     select: {
       wdt_ID: true,

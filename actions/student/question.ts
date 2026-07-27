@@ -11,8 +11,10 @@ export async function getQuestionForActivePackageLastChapter(wdt_ID: number) {
   // get student
   const student = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
+      // Identified by wdt_ID only. Access is granted by the student link (see
+      // getStudentFlowById); `status` is uncontrolled free text, so gating on it
+      // here silently broke any student whose value fell outside this set.
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
     },
     select: {
       wdt_ID: true,
@@ -456,8 +458,10 @@ export async function submitAnswers(
   const results = [];
   const student = await prisma.wpos_wpdatatable_23.findFirst({
     where: {
+      // Identified by wdt_ID only. Access is granted by the student link (see
+      // getStudentFlowById); `status` is uncontrolled free text, so gating on it
+      // here silently broke any student whose value fell outside this set.
       wdt_ID: wdt_ID,
-      status: { in: ["Active", "Not yet", "On progress", "terbia"] },
     },
     select: {
       wdt_ID: true,
