@@ -3,7 +3,7 @@
 import { getQuestionForActivePackageFinalExam } from "@/actions/student/test";
 import FinalExamForm from "@/components/custom/student/FinalExamForm";
 import useAction from "@/hooks/useAction";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState, useMemo } from "react";
 
 // Telegram Theme Types
@@ -125,7 +125,9 @@ function useTelegramTheme() {
 function Page() {
   // Renamed from 'page' to 'Page' for React component naming convention
   const params = useParams();
+  const router = useRouter();
   const wdt_ID = Number(params?.wdt_ID);
+  const lang = typeof params?.lang === "string" ? params.lang : "en";
   // Guard against a literal "undefined" segment reaching the server action.
   const rawPackageId = params?.coursesPackageId;
   const coursesPackageId =
@@ -258,24 +260,55 @@ function Page() {
     data.coursesPackage.questions.length === 0
   ) {
     return (
-      <div 
-        className="min-h-screen flex items-center justify-center pt-[5px]"
+      <div
+        className="min-h-screen flex items-center justify-center p-4 pt-[5px]"
         style={{ background: themeColors.bg }}
       >
-        <div 
-          className="p-8 rounded-lg shadow-lg text-center"
+        <div
+          className="p-8 rounded-2xl shadow-lg text-center max-w-md w-full"
           style={{ background: themeColors.secondaryBg }}
         >
-          <h2 
-            className="text-2xl font-bold mb-4"
+          <div
+            className="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center text-3xl"
+            style={{ background: `${themeColors.link}20` }}
+          >
+            ⏳
+          </div>
+          <h2
+            className="text-2xl font-bold mb-3"
             style={{ color: themeColors.text }}
           >
-            የፈተና ዳታ አልተገኘም
+            ማጠቃለያ ፈተናው በቅርቡ ይለቀቃል
           </h2>
-          <p style={{ color: themeColors.hint }}>
-            ለዚህ ፈተና ምንም አይነት ጥያቄ ማግኘት አልተቻለም። እባክዎ ቆይተው እንደገና ይሞክሩ።
+          <p className="leading-relaxed mb-2" style={{ color: themeColors.text }}>
+            የመጨረሻው ፈተና ገና አልተጫነም። እባክዎ በትዕግስት ይጠብቁ — በቅርቡ ይመጣል።
           </p>
-          
+          <p className="leading-relaxed mb-6" style={{ color: themeColors.hint }}>
+            እስከዚያው ድረስ ሌሎች ትምህርቶችዎን መማርዎን ይቀጥሉ።
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push(`/${lang}/student/${wdt_ID}/dashboard`)}
+              className="w-full py-3 rounded-xl font-semibold transition-opacity"
+              style={{
+                background: themeColors.button,
+                color: themeColors.buttonText,
+              }}
+            >
+              ወደ ትምህርት ተመለስ
+            </button>
+            <button
+              onClick={() => refetch()}
+              className="w-full py-3 rounded-xl font-medium no-theme border transition-opacity"
+              style={{
+                background: "transparent",
+                color: themeColors.link,
+                borderColor: themeColors.hint,
+              }}
+            >
+              እንደገና ሞክር
+            </button>
+          </div>
         </div>
       </div>
     );
