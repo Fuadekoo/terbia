@@ -6,6 +6,7 @@ import { LightDarkToggle } from "@/components/ui/light-dark-toggle";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle,
+  LayoutDashboard,
   PlayCircle,
   Lock,
   Trophy,
@@ -319,7 +320,16 @@ export default function MainMenu({ data, className }: MainMenuProps) {
         )}
       </div>
 
-      <footer className="mt-1 flex items-center justify-between gap-2 border-t border-sidebar-border pt-3">
+      <footer className="mt-1 flex items-center justify-between gap-1 border-t border-sidebar-border pt-3">
+        <button
+          className="focus-ring flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-accent hover:text-sidebar-foreground"
+          onClick={() => router.push(`/en/student/${wdt_ID}/dashboard`)}
+          type="button"
+          aria-label="Go to dashboard"
+        >
+          <LayoutDashboard className="size-5" />
+          <span>Dashboard</span>
+        </button>
         <button
           className="focus-ring flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-accent hover:text-sidebar-foreground"
           onClick={() => router.push(`/en/student/${wdt_ID}/profile`)}
