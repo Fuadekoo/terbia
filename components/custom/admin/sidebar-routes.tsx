@@ -8,6 +8,7 @@ import {
   MessageSquare,
   MessageCircle,
   Users,
+  GraduationCap,
   Video,
 } from "lucide-react";
 import { SidebarItem } from "./sidebar-item";
@@ -23,6 +24,11 @@ const teacherRoutes = [
     icon: BarChart,
     label: "Analytics",
     href: "/en/admin/analytics",
+  },
+  {
+    icon: GraduationCap,
+    label: "Students",
+    href: "/en/admin/students",
   },
   {
     icon: Users,
