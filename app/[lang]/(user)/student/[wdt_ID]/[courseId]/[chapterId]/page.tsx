@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import useAction from "@/hooks/useAction";
+import { isRelearnRequested } from "@/lib/utils";
 import { packageCompleted } from "@/actions/student/progress";
 import { getQuestionForActivePackageChapterUpdate } from "@/actions/student/test";
 import { noProgress } from "@/actions/student/progress";
@@ -173,30 +174,18 @@ function Page() {
   const [authorized, setAuthorized] = React.useState<boolean | null>(null);
   const [chatId, setChatId] = React.useState<string | null>(null);
 
-  // Check if user is re-learning (coming from "Re-Learn Course" button)
-  const [isRelearning, setIsRelearning] = React.useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const searchParams = new URLSearchParams(window.location.search);
-      const isClicked = searchParams.get("isClicked");
-
-      console.log("🔄 Checking re-learning status...");
-      console.log("📍 Current URL:", window.location.href);
-      console.log("🔗 isClicked parameter:", isClicked);
-
-      if (isClicked === "true") {
-        console.log("✅ Re-learning mode activated!");
-        setIsRelearning(true);
-        // Remove the parameter from URL to keep it clean
-        const newUrl = window.location.pathname;
-        console.log("🧹 Cleaning URL to:", newUrl);
-        window.history.replaceState({}, "", newUrl);
-      } else {
-        console.log("ℹ️ Normal mode (not re-learning)");
-      }
-    }
-  }, []);
+  // Re-learn mode: the student opened this lesson from the course sidebar (or
+  // the "Re-Learn Course" button) instead of being routed here by progress.
+  //
+  // Read straight from the live search params rather than latching it into
+  // state on mount. Picking a second lesson in the sidebar is a client-side
+  // navigation that does NOT remount this page, so a mount-only effect would
+  // keep the first visit's answer forever. The flag is also deliberately left
+  // in the URL — the layout re-reads it on every render to decide whether the
+  // progress redirect may fire, so erasing it drops the student back onto the
+  // final exam on the next reload.
+  const searchParams = useSearchParams();
+  const isRelearning = isRelearnRequested(searchParams);
 
   // Use Telegram theme hook
   const theme = useTelegramTheme();
@@ -358,20 +347,10 @@ function Page() {
 
   // Determine default tab based on URL query
   let defaultTab = "mainmenu";
-  if (typeof window !== "undefined") {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("isClicked") === "true") {
-      // Check if specific tab is requested
-      const requestedTab = urlParams.get("tab");
-      if (requestedTab === "quiz") {
-        defaultTab = "quiz";
-      } else if (requestedTab === "mainmenu") {
-        defaultTab = "mainmenu";
-      } else {
-        // Default to quiz for backward compatibility
-        defaultTab = "quiz";
-      }
-    }
+  if (isRelearning) {
+    const requestedTab = searchParams?.get("tab");
+    // Default to quiz for backward compatibility when no tab is named.
+    defaultTab = requestedTab === "mainmenu" ? "mainmenu" : "quiz";
   }
 
   const [activeTab, setActiveTab] = React.useState(defaultTab);

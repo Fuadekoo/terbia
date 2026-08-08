@@ -18,7 +18,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { isRelearnRequested, withRelearnParam } from "@/lib/utils";
 
 // SVG Icons
 const CheckIcon = () => (
@@ -97,6 +98,8 @@ const StudentQuestionForm = ({
   const [error, setError] = useState<string | null>(null);
   const [count, setCount] = useState(30);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isRelearning = isRelearnRequested(searchParams);
   interface Feedback {
     studentResponse?: Record<string, string[]>;
     questionAnswers?: Record<string, string[]>;
@@ -194,10 +197,12 @@ const StudentQuestionForm = ({
     console.log("Selected answers in handle submit", answers);
 
     try {
-      const an = refetchSubmit(answers, wdt_ID, courseId, chapterId);
-      if (an === undefined && nextPath) {
+      refetchSubmit(answers, wdt_ID, courseId, chapterId);
+      // Re-learning a lesson must never fling the student to their progress
+      // position. They stay here with the marked answers; moving on is a
+      // deliberate click on the next-chapter button below.
+      if (!isRelearning && nextPath) {
         router.push(nextPath);
-        console.log("Answer", an);
       }
     } catch (e) {
       setError("Failed to submit answers.");
@@ -413,7 +418,11 @@ const StudentQuestionForm = ({
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold text-base py-2 px-6 rounded-md shadow-md transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                   aria-label="Go to next chapter"
                 >
-                  <Link href={nextPath}>
+                  {/* Carry the flag forward so a re-learning student isn't
+                      redirected again the moment they land on the next page. */}
+                  <Link
+                    href={isRelearning ? withRelearnParam(nextPath) : nextPath}
+                  >
                     ወደ ቀጣይ ክፍል ይሂዱ
                   </Link>
                 </Button>

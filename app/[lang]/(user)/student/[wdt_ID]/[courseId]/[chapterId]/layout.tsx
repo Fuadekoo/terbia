@@ -8,7 +8,7 @@ import {
 } from "next/navigation";
 import { updatePathProgressData } from "@/actions/student/progress";
 import useAction from "@/hooks/useAction";
-import { buildStudentProgressPath } from "@/lib/utils";
+import { buildStudentProgressPath, isRelearnRequested } from "@/lib/utils";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { lang, wdt_ID, courseId, chapterId } = useParams() as {
@@ -19,7 +19,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
   const wdtIdNum = Number(wdt_ID);
   const searchParams = useSearchParams();
-  const isClicked = searchParams?.get("isClicked");
+  const isRelearning = isRelearnRequested(searchParams);
   const [update] = useAction(
     updatePathProgressData,
     [true, () => {}],
@@ -36,10 +36,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const currentPath = `/${lang || "en"}/student/${wdtIdNum}/${courseId}/${chapterId}`;
 
   useEffect(() => {
-    if (!isClicked && nextPath && nextPath !== currentPath) {
+    // While re-learning, the student picked this lesson on purpose — never pull
+    // them forward to their progress position (which, once the package is
+    // finished, is the final exam).
+    if (isRelearning) return;
+    if (nextPath && nextPath !== currentPath) {
       redirect(nextPath);
     }
-  }, [nextPath, currentPath, router, isClicked]);
+  }, [nextPath, currentPath, router, isRelearning]);
 
   return <div className="overflow-auto grid">{children}</div>;
 }

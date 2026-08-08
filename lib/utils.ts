@@ -40,6 +40,35 @@ export function shuffleArray<T>(array: T[]): T[] {
  */
 export const FINAL_EXAM_SEGMENT = "finalexam";
 
+/**
+ * Query flag that puts a chapter page into "re-learn" mode: the student opened
+ * this lesson deliberately (from the course sidebar) rather than being routed
+ * here by their progress. While it is set, nothing may bounce them onward to
+ * the next chapter or the final exam — they stay on the lesson for as long as
+ * they want.
+ *
+ * The flag MUST survive in the URL. Stripping it (or reading it once on mount)
+ * lets a reload or a client-side navigation drop the student straight back into
+ * the progress-driven redirect.
+ */
+export const RELEARN_PARAM = "isClicked";
+
+/** Spellings accepted for {@link RELEARN_PARAM} — links get typed by hand. */
+const RELEARN_PARAM_ALIASES = [RELEARN_PARAM, "isclick", "isClick", "isclicked"];
+
+/** Reads the re-learn flag from any URLSearchParams-like object. */
+export function isRelearnRequested(
+  params: { get(name: string): string | null } | null | undefined
+): boolean {
+  if (!params) return false;
+  return RELEARN_PARAM_ALIASES.some((key) => params.get(key) === "true");
+}
+
+/** Appends the re-learn flag to a path, preserving any existing query string. */
+export function withRelearnParam(path: string): string {
+  return `${path}${path.includes("?") ? "&" : "?"}${RELEARN_PARAM}=true`;
+}
+
 /** Shape returned by `updatePathProgressData`. */
 export type ProgressPath = readonly (string | undefined)[] | false | undefined | null;
 
